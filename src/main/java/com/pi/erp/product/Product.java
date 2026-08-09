@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "products")
@@ -20,12 +21,12 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     @Column(name = "product_id")
-    private Long product_id;
+    private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "sku")
+    @Column(name = "sku", nullable = false, unique = true)
     private String sku;
 
     @ManyToOne
@@ -36,10 +37,10 @@ public class Product {
     @JoinColumn(name = "brand_id")
     private Brand brand_id;
 
-    @Column(name = "cost")
+    @Column(name = "cost", nullable = false, unique = true)
     private BigDecimal cost;
 
-    @Column(name = "price")
+    @Column(name = "price", nullable = false, unique = true)
     private BigDecimal price;
 
     @Column(name = "weight_kg")
@@ -48,5 +49,23 @@ public class Product {
     @Column(name = "color")
     private String color;
 
+    @Column(name = "dimension_x")
+    private BigDecimal dimension_x;
 
+    @Column(name = "dimension_y")
+    private BigDecimal dimension_y;
+
+    @Column(name = "dimension_z")
+    private BigDecimal dimension_z;
+
+    // Faltam os dados fiscais
+
+    @Column(name = "active", nullable = false)
+    private boolean active;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime created_at;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updated_at;
 }

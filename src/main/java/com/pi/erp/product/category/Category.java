@@ -1,5 +1,6 @@
 package com.pi.erp.product.category;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pi.erp.product.Product;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,9 +22,10 @@ public class Category {
     @Column(name = "category_id")
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "category")
+    @JsonIgnore
+    @OneToMany(mappedBy = "category_id")
     private List<Product> products;
 }

@@ -1,8 +1,8 @@
 # Configuração do servidor
 server:
-  port: 8087  # Define a porta em que o servidor será iniciado. A aplicação será acessível via http://localhost:8087
-  servlet:
-    context-path: '/usuario/'  # Define o contexto base para os endpoints da aplicação. No exemplo, todos os endpoints começarão com /usuario/.
+  port: 8080  # Define a porta em que o servidor será iniciado. A aplicação será acessível via http://localhost:8087
+#  servlet:
+#    context-path: '/usuario/'  # Define o contexto base para os endpoints da aplicação. No exemplo, todos os endpoints começarão com /usuario/.
 
 # Configuração do Springdoc para a geração da documentação da API
 springdoc:

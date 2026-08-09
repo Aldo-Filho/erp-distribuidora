@@ -29,7 +29,7 @@ CREATE TABLE users (
     email         VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP,
     last_login_at TIMESTAMP,
     role_id       BIGINT NOT NULL REFERENCES roles(role_id),
     active        BOOLEAN NOT NULL DEFAULT TRUE
@@ -78,7 +78,7 @@ CREATE TABLE products (
 
     active           BOOLEAN NOT NULL DEFAULT TRUE,
     created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at       TIMESTAMP NOT NULL DEFAULT NOW()
+    updated_at       TIMESTAMP
 );
 
 CREATE TABLE warehouses (
@@ -126,7 +126,7 @@ CREATE TABLE suppliers (
     avg_delivery_days INT,
     active            BOOLEAN NOT NULL DEFAULT TRUE,
     created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMP NOT NULL DEFAULT NOW()
+    updated_at        TIMESTAMP
 );
 
 CREATE TABLE supplier_addresses (
@@ -179,7 +179,7 @@ CREATE TABLE price_tables (
     end_date      DATE,
     active        BOOLEAN NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMP NOT NULL DEFAULT NOW()
+    updated_at    TIMESTAMP
 );
 
 CREATE TABLE price_table_items (
@@ -204,7 +204,7 @@ CREATE TABLE customers (
     whatsapp           VARCHAR(20),
     active             BOOLEAN NOT NULL DEFAULT TRUE,
     created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at         TIMESTAMP,
     price_table_id     BIGINT REFERENCES price_tables(price_table_id),
     CONSTRAINT uk_customer_tax_id UNIQUE (tax_id)
 );
@@ -234,7 +234,7 @@ CREATE TABLE orders (
     payment_method VARCHAR(20) CHECK (payment_method IN ('CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'BOLETO', 'PIX', 'BANK_TRANSFER')),
     status        VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'CONFIRMED', 'INVOICED', 'CANCELED')),
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP,
     customer_id   BIGINT NOT NULL REFERENCES customers(customer_id),
     user_id       BIGINT REFERENCES users(user_id) -- opcional: pedido pode nascer de um atendimento automático (WhatsApp)
 );
@@ -269,7 +269,7 @@ CREATE TABLE purchases (
     purchase_suggestion_id BIGINT REFERENCES purchase_suggestions(purchase_suggestion_id),
     status            VARCHAR(20) NOT NULL CHECK (status IN ('DRAFT', 'SENT', 'CONFIRMED', 'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELED')),
     created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMP,
     expected_delivery_date DATE,
     total_amount      NUMERIC(12,2) NOT NULL DEFAULT 0
 );
@@ -346,7 +346,7 @@ CREATE TABLE accounts_receivable (
     due_date          DATE NOT NULL,
     status            VARCHAR(20) NOT NULL CHECK (status IN ('OPEN', 'PARTIAL', 'PAID', 'OVERDUE', 'CANCELED')),
     issued_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMP NOT NULL DEFAULT NOW()
+    updated_at        TIMESTAMP
 );
 
 CREATE TABLE accounts_payable (
@@ -359,7 +359,7 @@ CREATE TABLE accounts_payable (
     due_date          DATE NOT NULL,
     status            VARCHAR(20) NOT NULL CHECK (status IN ('OPEN', 'PARTIAL', 'PAID', 'OVERDUE', 'CANCELED')),
     issued_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMP NOT NULL DEFAULT NOW()
+    updated_at        TIMESTAMP
 );
 
 CREATE TABLE accounts_receivable_payments (

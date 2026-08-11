@@ -26,6 +26,10 @@ public class Category {
     private String name;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "category_id")
+    @OneToMany(mappedBy = "category")
     private List<Product> products;
+
+    public Category(RequestCategoryDTO requestCategoryDTO) {
+        this.name = requestCategoryDTO.name();
+    }
 }

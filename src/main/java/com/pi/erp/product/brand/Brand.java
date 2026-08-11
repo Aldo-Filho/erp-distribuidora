@@ -25,8 +25,8 @@ public class Brand {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "brand_id")
     @JsonIgnore
+    @OneToMany(mappedBy = "brand")
     private List<Product> products;
 
     public Brand(RequestBrandDTO requestBrandDTO) {

@@ -54,7 +54,7 @@ CREATE TABLE products (
     product_id       BIGSERIAL PRIMARY KEY,
     name             VARCHAR(150) NOT NULL,
     sku              VARCHAR(50) NOT NULL UNIQUE,
-    category_id      BIGINT NOT NULL REFERENCES categories(category_id),
+    category_id      BIGINT REFERENCES categories(category_id),
     brand_id         BIGINT NOT NULL REFERENCES brands(brand_id),
     cost             NUMERIC(12,2) NOT NULL DEFAULT 0,
     price            NUMERIC(12,2) NOT NULL DEFAULT 0,

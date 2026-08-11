@@ -17,9 +17,9 @@ public class ProductController {
     @Autowired
     private ProductService service;
 
-    @GetMapping
-    public ResponseEntity<List<Product>> getAll() {
-        return ResponseEntity.ok(repository.findAll());
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> search(ProductFilter filter) {
+        return ResponseEntity.ok(service.search(filter));
     }
 
     @PostMapping

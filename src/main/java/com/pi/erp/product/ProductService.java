@@ -5,7 +5,10 @@ import com.pi.erp.product.brand.BrandRepository;
 import com.pi.erp.product.category.Category;
 import com.pi.erp.product.category.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ProductService {
@@ -16,6 +19,45 @@ public class ProductService {
     private BrandRepository brandRepository;
     @Autowired
     private CategoryRepository categoryRepository;
+
+    public List<Product> search(ProductFilter filter) {
+        Specification<Product> spec = Specification.allOf();
+
+        if (filter.name() != null && !filter.name().isBlank()){
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.like(
+                                    cb.lower(root.get("name")),
+                                    "%" + filter.name().toLowerCase() + "%"
+                            )
+            );
+        }
+        if (filter.sku() != null && !filter.sku().isBlank()) {
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.equal(root.get("sku"), filter.sku())
+            );
+        }
+        if (filter.categoryId() != null) {
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.equal(
+                                    root.get("category").get("id"),
+                                    filter.categoryId()
+                            )
+            );
+        }
+        if (filter.brandId() != null) {
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.equal(
+                                    root.get("brand").get("id"),
+                                    filter.brandId()
+                            )
+            );
+        }
+        return repository.findAll(spec);
+    }
 
     public Product register(RequestProductDTO data) {
 

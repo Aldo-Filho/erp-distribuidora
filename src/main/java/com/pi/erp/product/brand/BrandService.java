@@ -21,7 +21,6 @@ public class BrandService {
 
     // Verifica se a marca a ser cadastrada já existe
     public Brand register(RequestBrandDTO data) {
-
         if (repository.existsByNameIgnoreCase(data.name())) {
             throw new IllegalArgumentException("This brand already exists.");
         }

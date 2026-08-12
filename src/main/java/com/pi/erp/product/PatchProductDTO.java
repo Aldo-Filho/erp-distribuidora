@@ -1,22 +1,12 @@
 package com.pi.erp.product;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 import java.math.BigDecimal;
 
-public record RequestProductDTO(
-        @NotBlank
+public record PatchProductDTO(
         String name,
-        // Ajustar SKU para geração automática
-        @NotBlank
-        String sku,
-        @NotNull
         Long brandId,
         Long categoryId,
-        @NotNull
         BigDecimal cost,
-        @NotNull
         BigDecimal price,
         BigDecimal weightKg,
         String color,
@@ -24,6 +14,5 @@ public record RequestProductDTO(
         BigDecimal dimensionY,
         BigDecimal dimensionZ,
         String size
-
 ) {
 }

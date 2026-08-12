@@ -13,7 +13,6 @@ import java.util.List;
 public class ProductController {
     @Autowired
     private ProductRepository repository;
-
     @Autowired
     private ProductService service;
 
@@ -28,11 +27,14 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(product);
     }
 
-//    @PatchMapping
-//    public ResponseEntity<Product> update(@RequestBody @Valid RequestProductDTO data) {
-//
-//        return ResponseEntity.ok(update);
-//    }
+    @PatchMapping("/{id}")
+    public ResponseEntity<Product> update(
+            @PathVariable Long id,
+            @RequestBody PatchProductDTO data
+    ) {
+        Product product = service.update(id, data);
+        return ResponseEntity.ok(product);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Product> delete(@PathVariable Long id) {

@@ -13,7 +13,6 @@ import java.util.List;
 public class BrandController {
     @Autowired
     private BrandRepository repository;
-
     @Autowired
     private BrandService service;
 

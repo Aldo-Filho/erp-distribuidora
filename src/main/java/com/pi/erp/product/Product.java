@@ -58,6 +58,9 @@ public class Product {
     @Column(name = "dimension_z")
     private BigDecimal dimensionZ;
 
+    @Column(name = "size")
+    private String size;
+
     // Faltam os dados fiscais
 
     @Column(name = "active", nullable = false)

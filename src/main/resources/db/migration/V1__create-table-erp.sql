@@ -63,6 +63,7 @@ CREATE TABLE products (
     dimension_x      NUMERIC(10,2),
     dimension_y      NUMERIC(10,2),
     dimension_z      NUMERIC(10,2),
+    size             VARCHAR(10),
 
     -- dados fiscais
     ncm              VARCHAR(8),
@@ -89,14 +90,14 @@ CREATE TABLE warehouses (
 
 CREATE TABLE warehouse_addresses (
     warehouse_address_id BIGSERIAL PRIMARY KEY,
-    warehouse_id  BIGINT NOT NULL REFERENCES warehouses(warehouse_id),
-    state         VARCHAR(50),
-    city          VARCHAR(100),
-    street        VARCHAR(150),
-    neighborhood  VARCHAR(100),
-    number        VARCHAR(10),
-    complement    VARCHAR(100),
-    zip_code      VARCHAR(9)
+    warehouse_id  BIGINT NOT NULL UNIQUE REFERENCES warehouses(warehouse_id),
+    state         VARCHAR(50)  NOT NULL,
+    city          VARCHAR(100) NOT NULL,
+    street        VARCHAR(150) NOT NULL,
+    neighborhood  VARCHAR(100) NOT NULL,
+    number        VARCHAR(10)  NOT NULL,
+    complement    VARCHAR(100) NOT NULL,
+    zip_code      VARCHAR(9)   NOT NULL
 );
 
 CREATE TABLE stock_items (

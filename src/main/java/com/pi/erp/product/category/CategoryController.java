@@ -13,7 +13,6 @@ import java.util.List;
 public class CategoryController {
     @Autowired
     private CategoryRepository repository;
-
     @Autowired
     private CategoryService service;
 

@@ -56,6 +56,12 @@ public class ProductService {
                             )
             );
         }
+        if (filter.active() != null) {
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.equal(root.get("active"), filter.active())
+            );
+        }
         return repository.findAll(spec);
     }
 
@@ -75,6 +81,59 @@ public class ProductService {
         }
 
         Product product = new Product(data, brand, category);
+        return repository.save(product);
+    }
+
+    public Product update(Long id, PatchProductDTO data) {
+        Product product = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (data.name() != null && !data.name().isBlank()) {
+            product.setName(data.name());
+        }
+
+        if (data.brandId() != null) {
+            Brand brand = brandRepository.findById(data.brandId())
+                    .orElseThrow(() -> new RuntimeException("Brand not found"));
+            product.setBrand(brand);
+        }
+
+        if (data.categoryId() != null) {
+            Category category = categoryRepository.findById(data.categoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            product.setCategory(category);
+        }
+
+        if (data.cost() != null) {
+            product.setCost(data.cost());
+        }
+
+        if (data.price() != null) {
+            product.setPrice(data.price());
+        }
+
+        if (data.weightKg() != null) {
+            product.setWeightKg(data.weightKg());
+        }
+
+        if (data.color() != null && !data.color().isBlank()) {
+            product.setColor(data.color());
+        }
+
+        if (data.dimensionX() != null) {
+            product.setDimensionX(data.dimensionX());
+        }
+        if (data.dimensionY() != null) {
+            product.setDimensionY(data.dimensionY());
+        }
+        if (data.dimensionZ() != null) {
+            product.setDimensionZ(data.dimensionZ());
+        }
+
+        if (data.size() != null && !data.size().isBlank()) {
+            product.setSize(data.size());
+        }
+
         return repository.save(product);
     }
 }

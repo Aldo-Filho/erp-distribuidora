@@ -43,4 +43,16 @@ public class WarehouseAddress {
 
     @Column(name = "zip_code")
     private String zipCode;
+
+    public WarehouseAddress(RequestWarehouseAddressDTO requestWarehouseAddressDTO, Warehouse warehouse) {
+        this.warehouse = warehouse;
+        this.city = requestWarehouseAddressDTO.city();
+        this.state = requestWarehouseAddressDTO.state();
+        this.street = requestWarehouseAddressDTO.street();
+        this.neighborhood = requestWarehouseAddressDTO.neighborhood();
+        this.number = requestWarehouseAddressDTO.number();
+        this.complement = requestWarehouseAddressDTO.complement();
+        this.zipCode = requestWarehouseAddressDTO.zipCode();
+    }
+    
 }

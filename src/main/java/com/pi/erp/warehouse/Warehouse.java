@@ -32,7 +32,7 @@ public class Warehouse {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private WarehouseAddress warehouseAddresses;
+    private WarehouseAddress warehouseAddress;
 
     public Warehouse (RequestWarehouseDTO requestWarehouseDTO) {
         this.name = requestWarehouseDTO.name();

@@ -38,7 +38,7 @@ public class WarehouseController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Warehouse> delete(@PathVariable Long id) {
-        repository.deleteById(id);
+        service.delete(id);
         return ResponseEntity.noContent().build();
     }
 

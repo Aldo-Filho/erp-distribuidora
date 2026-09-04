@@ -1,7 +1,9 @@
 package com.pi.erp.product.category;
 
+import com.pi.erp.warehouse.Warehouse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +29,14 @@ public class CategoryService {
         }
         Category category = new Category(data);
         return repository.save(category);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Category category = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found."));
+
+        repository.delete(category);
     }
 
 }

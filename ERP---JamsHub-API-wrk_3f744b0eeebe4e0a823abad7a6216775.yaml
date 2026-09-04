@@ -45,12 +45,12 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ _.base_url }}/warehouse/1"
+      - url: "{{ _.base_url }}/warehouse/2"
         name: Remover armazém
         meta:
           id: req_169cc92f2e0d4790be825e2541ccdb36
           created: 1788304060808
-          modified: 1788304060808
+          modified: 1788473255440
           isPrivate: false
           description: DELETE /warehouse/{id}. Substitua o {id} na URL por um ID existente.
           sortKey: 2100
@@ -183,7 +183,7 @@ collection:
             meta:
               id: req_a025e0baf1704ef89a72482f782ff4b8
               created: 1788400088642
-              modified: 1788401047667
+              modified: 1788474025536
               isPrivate: false
               description: ""
               sortKey: -1788400088642
@@ -192,7 +192,7 @@ collection:
               mimeType: application/json
               text: |-
                 {
-                	"warehouseId": 2,
+                	"warehouseId": 4,
                 	"state": "Pernambuco",
                 	"city": "Caruaru",
                 	"street": "Av. Joaquim José de Freitas",
@@ -246,12 +246,12 @@ collection:
                 send: true
                 store: true
               rebuildPath: true
-          - url: "{{ _.base_url }}/warehouseAddress/1"
+          - url: "{{ _.base_url }}/warehouseAddress/7"
             name: Remover Endereço
             meta:
               id: req_f5fd6370cc46440ba571720791652d89
               created: 1788400463144
-              modified: 1788401009322
+              modified: 1788476544945
               isPrivate: false
               description: ""
               sortKey: -1788400463144
@@ -303,12 +303,12 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ _.base_url }}/product/1"
+      - url: "{{ _.base_url }}/product/100"
         name: Remover produto
         meta:
           id: req_5c9e0c99a96e4961951884f6aab9d2ff
           created: 1788304060808
-          modified: 1788304060808
+          modified: 1788476470561
           isPrivate: false
           description: DELETE /product/{id}. Substitua o {id} na URL por um ID existente.
           sortKey: 600
@@ -366,7 +366,7 @@ collection:
         meta:
           id: req_65d0a5d6218949378be98008194bf950
           created: 1788304060808
-          modified: 1788400774837
+          modified: 1788476444079
           isPrivate: false
           description: "GET /product/search. Todos os filtros são opcionais
             (ProductFilter): name, sku, brandId, categoryId, active. Habilite os
@@ -376,7 +376,7 @@ collection:
         parameters:
           - name: name
             value: A54
-            disabled: false
+            disabled: true
           - name: sku
             value: SKU-0001
             disabled: true

@@ -1,7 +1,9 @@
 package com.pi.erp.product.brand;
 
+import com.pi.erp.warehouse.Warehouse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,6 +28,14 @@ public class BrandService {
         }
         Brand brand = new Brand(data);
         return repository.save(brand);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Brand brand = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Brand not found."));
+
+        repository.delete(brand);
     }
 
 }

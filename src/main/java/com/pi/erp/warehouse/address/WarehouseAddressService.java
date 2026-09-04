@@ -5,6 +5,7 @@ import com.pi.erp.warehouse.WarehouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -148,5 +149,16 @@ public class WarehouseAddressService {
         }
 
         return repository.save(address);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        WarehouseAddress address = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Warehouse address not found."));
+
+        Warehouse warehouse = address.getWarehouse();
+        warehouse.setWarehouseAddress(null); // desfaz o lado do cascade/orphanRemoval
+
+        repository.delete(address);
     }
 }

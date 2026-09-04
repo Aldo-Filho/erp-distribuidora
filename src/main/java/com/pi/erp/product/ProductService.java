@@ -4,9 +4,11 @@ import com.pi.erp.product.brand.Brand;
 import com.pi.erp.product.brand.BrandRepository;
 import com.pi.erp.product.category.Category;
 import com.pi.erp.product.category.CategoryRepository;
+import com.pi.erp.warehouse.Warehouse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -135,5 +137,13 @@ public class ProductService {
         }
 
         return repository.save(product);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Product product = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found."));
+
+        repository.delete(product);
     }
 }

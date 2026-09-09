@@ -1,5 +1,6 @@
 package com.pi.erp.warehouse.address;
 
+import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.warehouse.Warehouse;
 import com.pi.erp.warehouse.WarehouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +105,7 @@ public class WarehouseAddressService {
         }
 
         Warehouse warehouse = warehouseRepository.findById(data.warehouseId())
-                .orElseThrow(() -> new IllegalArgumentException("Warehouse not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found"));
 
         WarehouseAddress address = new WarehouseAddress(data, warehouse);
         return repository.save(address);
@@ -112,11 +113,11 @@ public class WarehouseAddressService {
 
     public WarehouseAddress update(Long id, PatchWarehouseAddressDTO data) {
         WarehouseAddress address = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Warehouse Address not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse Address not found"));
 
         if (data.warehouseId() != null) {
             Warehouse warehouse = warehouseRepository.findById(data.warehouseId())
-                    .orElseThrow(() -> new IllegalArgumentException("Warehouse not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found"));
             address.setWarehouse(warehouse);
         }
 
@@ -154,7 +155,7 @@ public class WarehouseAddressService {
     @Transactional
     public void delete(Long id) {
         WarehouseAddress address = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Warehouse address not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse address not found."));
 
         Warehouse warehouse = address.getWarehouse();
         warehouse.setWarehouseAddress(null); // desfaz o lado do cascade/orphanRemoval

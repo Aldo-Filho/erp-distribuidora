@@ -1,10 +1,10 @@
 package com.pi.erp.product;
 
+import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.product.brand.Brand;
 import com.pi.erp.product.brand.BrandRepository;
 import com.pi.erp.product.category.Category;
 import com.pi.erp.product.category.CategoryRepository;
-import com.pi.erp.warehouse.Warehouse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -74,12 +74,12 @@ public class ProductService {
         }
 
         Brand brand = brandRepository.findById(data.brandId())
-                .orElseThrow(() -> new IllegalArgumentException("Brand not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
 
         Category category = null;
         if (data.categoryId() != null) {
             category = categoryRepository.findById(data.categoryId())
-                    .orElseThrow(() -> new IllegalArgumentException("Category not found."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
         }
 
         Product product = new Product(data, brand, category);
@@ -88,7 +88,7 @@ public class ProductService {
 
     public Product update(Long id, PatchProductDTO data) {
         Product product = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         if (data.name() != null && !data.name().isBlank()) {
             product.setName(data.name());
@@ -96,13 +96,13 @@ public class ProductService {
 
         if (data.brandId() != null) {
             Brand brand = brandRepository.findById(data.brandId())
-                    .orElseThrow(() -> new RuntimeException("Brand not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Brand not found"));
             product.setBrand(brand);
         }
 
         if (data.categoryId() != null) {
             Category category = categoryRepository.findById(data.categoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
             product.setCategory(category);
         }
 
@@ -142,7 +142,7 @@ public class ProductService {
     @Transactional
     public void delete(Long id) {
         Product product = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
         repository.delete(product);
     }

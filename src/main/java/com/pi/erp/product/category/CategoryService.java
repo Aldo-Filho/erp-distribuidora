@@ -1,6 +1,6 @@
 package com.pi.erp.product.category;
 
-import com.pi.erp.warehouse.Warehouse;
+import com.pi.erp.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +34,7 @@ public class CategoryService {
     @Transactional
     public void delete(Long id) {
         Category category = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
 
         repository.delete(category);
     }

@@ -213,14 +213,13 @@ CREATE TABLE customers (
 CREATE TABLE customer_addresses (
     customer_address_id BIGSERIAL PRIMARY KEY,
     customer_id   BIGINT NOT NULL REFERENCES customers(customer_id),
-    country       VARCHAR(50),
-    state         VARCHAR(50),
-    city          VARCHAR(100),
-    street        VARCHAR(150),
-    neighborhood  VARCHAR(100),
-    number        VARCHAR(10),
-    complement    VARCHAR(100),
-    zip_code      VARCHAR(9),
+    state         VARCHAR(50)  NOT NULL,
+    city          VARCHAR(100) NOT NULL,
+    street        VARCHAR(150) NOT NULL,
+    neighborhood  VARCHAR(100) NOT NULL,
+    number        VARCHAR(10)  NOT NULL,
+    complement    VARCHAR(100) NOT NULL,
+    zip_code      VARCHAR(9)   NOT NULL,
     address_type  VARCHAR(20) CHECK (address_type IN ('BILLING', 'SHIPPING', 'MAIN'))
 );
 

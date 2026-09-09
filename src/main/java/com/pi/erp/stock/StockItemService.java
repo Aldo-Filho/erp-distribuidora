@@ -1,5 +1,6 @@
 package com.pi.erp.stock;
 
+import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.product.Product;
 import com.pi.erp.product.ProductRepository;
 import com.pi.erp.warehouse.Warehouse;
@@ -60,29 +61,20 @@ public class StockItemService {
             throw new IllegalArgumentException("Maximum quantity cannot be negative.");
         }
         if (data.maxQuantity() != null && data.minQuantity() > data.maxQuantity()) {
-            throw new IllegalArgumentException(
-                    "Minimum quantity cannot be greater than maximum quantity."
-            );
+            throw new IllegalArgumentException("Minimum quantity cannot be greater than maximum quantity.");
         }
         if (data.reservedQuantity() > data.quantity()) {
-            throw new IllegalArgumentException(
-                    "Reserved quantity cannot be greater than quantity."
-            );
+            throw new IllegalArgumentException("Reserved quantity cannot be greater than quantity.");
         }
-        if (repository.existsByWarehouseIdAndProductId(
-                data.warehouseId(),
-                data.productId()
-        )) {
-            throw new IllegalArgumentException(
-                    "This product already exists in this warehouse."
-            );
+        if (repository.existsByWarehouseIdAndProductId(data.warehouseId(), data.productId())) {
+            throw new IllegalArgumentException("This product already exists in this warehouse.");
         }
 
         Warehouse warehouse = warehouseRepository.findById(data.warehouseId())
-                .orElseThrow(() -> new IllegalArgumentException("Warehouse not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
         Product product = productRepository.findById(data.productId())
-                .orElseThrow(() -> new IllegalArgumentException("Product not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
         StockItem stockItem = new StockItem(data, warehouse, product);
         return repository.save(stockItem);
@@ -90,15 +82,11 @@ public class StockItemService {
 
     public StockItem update(Long id, PatchStockItemDTO data) {
         StockItem stockItem = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Stock item not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
 
-        Long warehouseId = data.warehouseId() != null
-                ? data.warehouseId()
-                : stockItem.getWarehouse().getId();
+        Long warehouseId = data.warehouseId() != null ? data.warehouseId() : stockItem.getWarehouse().getId();
 
-        Long productId = data.productId() != null
-                ? data.productId()
-                : stockItem.getProduct().getId();
+        Long productId = data.productId() != null ? data.productId() : stockItem.getProduct().getId();
 
         if (repository.existsByWarehouseIdAndProductIdAndIdNot(
                 warehouseId,
@@ -112,13 +100,13 @@ public class StockItemService {
 
         if (data.warehouseId() != null) {
             Warehouse warehouse = warehouseRepository.findById(data.warehouseId())
-                    .orElseThrow(() -> new IllegalArgumentException("Warehouse not found."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
             stockItem.setWarehouse(warehouse);
         }
         if (data.productId() != null) {
             Product product = productRepository.findById(data.productId())
-                    .orElseThrow(() -> new IllegalArgumentException("Product not found."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
             stockItem.setProduct(product);
         }
@@ -169,7 +157,7 @@ public class StockItemService {
     @Transactional
     public void delete(Long id) {
         StockItem stockItem = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Stock item not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
 
         repository.delete(stockItem);
     }

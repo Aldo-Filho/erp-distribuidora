@@ -1,6 +1,6 @@
 package com.pi.erp.product.brand;
 
-import com.pi.erp.warehouse.Warehouse;
+import com.pi.erp.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +33,7 @@ public class BrandService {
     @Transactional
     public void delete(Long id) {
         Brand brand = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Brand not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
 
         repository.delete(brand);
     }

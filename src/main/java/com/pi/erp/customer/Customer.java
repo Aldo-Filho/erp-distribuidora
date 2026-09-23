@@ -11,13 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(
-        name = "customers",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_customer_tax_id",
-                columnNames = {"tax_id"}
-        )
-)
+@Table
 
 @Getter
 @Setter

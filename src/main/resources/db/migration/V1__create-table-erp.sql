@@ -194,7 +194,7 @@ CREATE TABLE price_table_items (
 CREATE TABLE customers (
     customer_id       BIGSERIAL PRIMARY KEY,
     person_type       VARCHAR(2) NOT NULL CHECK (person_type IN ('PF', 'PJ')),
-    tax_id             VARCHAR(14) NOT NULL, -- CPF ou CNPJ
+    tax_id             VARCHAR(14) UNIQUE NOT NULL, -- CPF ou CNPJ
     legal_name         VARCHAR(150) NOT NULL,
     trade_name         VARCHAR(150),
     birth_date         DATE,
@@ -233,7 +233,7 @@ CREATE TABLE customer_addresses (
 CREATE TABLE orders (
     order_id      BIGSERIAL PRIMARY KEY,
     total_amount  NUMERIC(12,2) NOT NULL DEFAULT 0,
-    payment_method VARCHAR(20) CHECK (payment_method IN ('CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'BOLETO', 'PIX', 'BANK_TRANSFER')),
+    payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'BOLETO', 'PIX', 'BANK_TRANSFER')),
     status        VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'CONFIRMED', 'INVOICED', 'CANCELED')),
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP,

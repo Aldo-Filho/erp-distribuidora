@@ -220,7 +220,9 @@ CREATE TABLE customer_addresses (
     number        VARCHAR(10)  NOT NULL,
     complement    VARCHAR(100) NOT NULL,
     zip_code      VARCHAR(9)   NOT NULL,
-    address_type  VARCHAR(20) CHECK (address_type IN ('BILLING', 'SHIPPING', 'MAIN'))
+    address_type  VARCHAR(20) NOT NULL
+        CHECK (address_type IN ('BILLING', 'SHIPPING', 'MAIN')),
+    CONSTRAINT uk_customer_address_type UNIQUE (customer_id, address_type)
 );
 
 

@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(
@@ -85,12 +86,12 @@ public class Customer {
     private PriceTable priceTable;
 
     @JsonIgnore
-    @OneToOne(
+    @OneToMany(
             mappedBy = "customer",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private CustomerAddress customerAddress;
+    private List<CustomerAddress> customerAddresses;
 
     public Customer(RequestCustomerDTO requestCustomerDTO, PriceTable priceTable) {
         this.personType = requestCustomerDTO.personType();

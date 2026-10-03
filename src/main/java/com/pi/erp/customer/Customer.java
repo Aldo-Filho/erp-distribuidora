@@ -63,7 +63,7 @@ public class Customer {
     private String whatsapp;
 
     @Column(name = "active")
-    private boolean active = true;
+    private boolean active;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -104,9 +104,7 @@ public class Customer {
         this.email = requestCustomerDTO.email();
         this.phone = requestCustomerDTO.phone();
         this.whatsapp = requestCustomerDTO.whatsapp();
-        this.active = requestCustomerDTO.active() != null
-                ? requestCustomerDTO.active()
-                : true;
+        this.active = true;
         this.priceTable = priceTable;
     }
 

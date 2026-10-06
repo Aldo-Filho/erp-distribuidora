@@ -1,122 +1,44 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import { Sidebar } from "./components/Sidebar";
+import { ProductsPage } from "./pages/Products/ProductsPage";
+import { WarehousesPage } from "./pages/Warehouses/WarehousesPage";
 
+/**
+ * Componente-raiz: concentra somente o layout que todos os módulos compartilham.
+ * O fragmento da URL permite navegar e voltar entre os módulos disponíveis.
+ */
 function App() {
-  const [count, setCount] = useState(0)
+  // O estado é mantido aqui, e não no Sidebar, para ajustar a margem do <main>
+  // exatamente na mesma hora em que a largura da barra muda.
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [page, setPage] = useState(() => window.location.hash === "#armazens" ? "armazens" : "produtos");
+
+  useEffect(() => {
+    function updatePage() {
+      setPage(window.location.hash === "#armazens" ? "armazens" : "produtos");
+    }
+    window.addEventListener("hashchange", updatePage);
+    return () => window.removeEventListener("hashchange", updatePage);
+  }, []);
+
+  // Em qualquer tela abaixo de lg a barra ocupa 64 px. Em lg, ela passa de
+  // 64 para 192 px de acordo com o botão de recolher.
+  const contentMargin = isSidebarCollapsed ? "ml-16" : "ml-16 lg:ml-48";
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1 className="bg-red-500" >Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar
+        activePage={page}
+        collapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed((current) => !current)}
+      />
+      <main
+        className={`min-h-screen p-4 transition-[margin] duration-300 lg:p-8 ${contentMargin}`}
+      >
+        {page === "armazens" ? <WarehousesPage /> : <ProductsPage />}
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;

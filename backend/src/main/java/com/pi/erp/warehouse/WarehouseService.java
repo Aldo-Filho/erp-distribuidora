@@ -31,7 +31,7 @@ public class WarehouseService {
         Warehouse warehouse = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
-        warehouse.setName(data.description());
+        warehouse.setDescription(data.description());
         return repository.save(warehouse);
     }
 

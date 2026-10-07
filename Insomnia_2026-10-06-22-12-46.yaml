@@ -1,0 +1,1118 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: ERP - JamsHub API
+meta:
+  id: wrk_40b91de1c8c6455792d1b26ece5e64ce
+  created: 1790129555061
+  modified: 1790129555061
+  description: ""
+collection:
+  - name: Produtos
+    meta:
+      id: fld_311795a145ef4310b6ba07b77b9d97e7
+      created: 1788304060808
+      modified: 1788304060808
+      sortKey: 200
+      description: Endpoints do módulo de Produtos (com.pi.erp.product). brandId é
+        obrigatório no cadastro; categoryId é opcional.
+    children:
+      - url: "{{ _.base_url }}/product/100"
+        name: Remover produto
+        meta:
+          id: req_727ef4eee3dd49a8b8e42e593361c909
+          created: 1788304060808
+          modified: 1788897822215
+          isPrivate: false
+          description: DELETE /product/{id}. Substitua o {id} na URL por um ID existente.
+          sortKey: 600
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/product/1"
+        name: Atualizar produto (patch)
+        meta:
+          id: req_75c45edf065446349a32f800317bfc41
+          created: 1788304060808
+          modified: 1788304060808
+          isPrivate: false
+          description: PATCH /product/{id}. Todos os campos são opcionais
+            (PatchProductDTO) — envie apenas o que deseja alterar. Substitua o
+            {id} na URL por um ID existente.
+          sortKey: 500
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Console PlayStation 5 - Slim",
+              "price": 3799.9
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/product/search"
+        name: Buscar produtos (filtros)
+        meta:
+          id: req_78effb61bdd14d71a14a4f34ac290a94
+          created: 1788304060808
+          modified: 1788832235175
+          isPrivate: false
+          description: "GET /product/search. Todos os filtros são opcionais
+            (ProductFilter): name, sku, brandId, categoryId, active. Habilite os
+            parâmetros desejados."
+          sortKey: 300
+        method: GET
+        parameters:
+          - name: name
+            value: A54
+            disabled: true
+          - name: sku
+            value: SKU-0001
+            disabled: true
+          - name: brandId
+            value: "4"
+            disabled: true
+          - name: categoryId
+            value: "1"
+            disabled: true
+          - name: active
+            value: "true"
+            disabled: true
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/product"
+        name: Cadastrar produto
+        meta:
+          id: req_98f04da27bf84ea29d8487ecbafd0bfe
+          created: 1788304060808
+          modified: 1788832237599
+          isPrivate: false
+          description: "POST /product. Campos obrigatórios (RequestProductDTO): name, sku,
+            brandId, cost, price. categoryId é opcional. Requer que a Brand (e a
+            Category, se enviada) já existam."
+          sortKey: 400
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Console PlayStation 5",
+              "sku": "SKU-0001",
+              "brandId": 1,
+              "categoryId": 1,
+              "cost": 2500.0,
+              "price": 3999.9,
+              "weightKg": 3.9,
+              "color": "Branco",
+              "dimensionX": 39.0,
+              "dimensionY": 10.4,
+              "dimensionZ": 26.0,
+              "size": "Padrão"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - name: Marcas
+        meta:
+          id: fld_150b75f5eb4b41148cd29feb5c1b2118
+          created: 1788304060808
+          modified: 1788304060808
+          sortKey: 700
+          description: Endpoints do submódulo de Marcas (com.pi.erp.product.brand).
+        children:
+          - url: "{{ _.base_url }}/brand/1"
+            name: Buscar marca por ID
+            meta:
+              id: req_62703c60c92f42a0887e0c193c471a4e
+              created: 1788304060808
+              modified: 1788304060808
+              isPrivate: false
+              description: GET /brand/{id}. Retorna 204 sem corpo se não encontrar
+                (repository.findById().map/orElseGet).
+              sortKey: 900
+            method: GET
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/brand"
+            name: Cadastrar marca
+            meta:
+              id: req_7d08fd3d830e4ec89805172f432e2440
+              created: 1788304060808
+              modified: 1788304060808
+              isPrivate: false
+              description: "POST /brand. Campo obrigatório (RequestBrandDTO): name. Retorna
+                erro se já existir marca com esse nome."
+              sortKey: 1000
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                  "name": "Sony"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/brand/1"
+            name: Remover marca
+            meta:
+              id: req_8de77de3ae414ebe8127e6abc8a3d031
+              created: 1788304060808
+              modified: 1788304060808
+              isPrivate: false
+              description: DELETE /brand/{id}. Substitua o {id} na URL por um ID existente.
+              sortKey: 1100
+            method: DELETE
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/brand"
+            name: Listar marcas
+            meta:
+              id: req_a3abbb4759624e1da8b9d89e9d9aa782
+              created: 1788304060808
+              modified: 1788304060808
+              isPrivate: false
+              description: GET /brand. Parâmetro 'name' é opcional (busca parcial,
+                case-insensitive). Sem o parâmetro, retorna todas as marcas.
+              sortKey: 800
+            method: GET
+            parameters:
+              - name: name
+                value: Sony
+                disabled: true
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+      - name: Categorias
+        meta:
+          id: fld_d7780d9b4e6f4655bd89ca9cd54ad879
+          created: 1788304060808
+          modified: 1788304060808
+          sortKey: 1200
+          description: Endpoints do submódulo de Categorias (com.pi.erp.product.category).
+        children:
+          - url: "{{ _.base_url }}/category"
+            name: Listar categorias
+            meta:
+              id: req_894572a77f0d4846a87dc45727cce306
+              created: 1788304060808
+              modified: 1788304060808
+              isPrivate: false
+              description: GET /category. Parâmetro 'name' é opcional (busca parcial,
+                case-insensitive). Sem o parâmetro, retorna todas as categorias.
+              sortKey: 1300
+            method: GET
+            parameters:
+              - name: name
+                value: Eletrônicos
+                disabled: true
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/category/1"
+            name: Remover categoria
+            meta:
+              id: req_8cab7a106dff4304a8c29ac4808028c3
+              created: 1788304060808
+              modified: 1788304060808
+              isPrivate: false
+              description: DELETE /category/{id}. Substitua o {id} na URL por um ID existente.
+              sortKey: 1600
+            method: DELETE
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/category"
+            name: Cadastrar categoria
+            meta:
+              id: req_9571dd6f965e408d93bb12ee3e4af066
+              created: 1788304060808
+              modified: 1788304060808
+              isPrivate: false
+              description: "POST /category. Campo obrigatório (RequestCategoryDTO): name.
+                Retorna erro se já existir categoria com esse nome."
+              sortKey: 1500
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                  "name": "Eletrônicos"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/category/1"
+            name: Buscar categoria por ID
+            meta:
+              id: req_feb7dc4f039140e39ad277b0460e9084
+              created: 1788304060808
+              modified: 1788304060808
+              isPrivate: false
+              description: GET /category/{id}. Retorna 204 sem corpo se não encontrar.
+              sortKey: 1400
+            method: GET
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+  - name: Armazéns
+    meta:
+      id: fld_6d6b9b07f7f3482f9e2d4caa356c5d1c
+      created: 1788304060808
+      modified: 1788304060808
+      sortKey: 1700
+      description: Endpoints do módulo de Armazéns (com.pi.erp.warehouse).
+    children:
+      - url: "{{ _.base_url }}/warehouse/1"
+        name: Atualizar armazém (patch)
+        meta:
+          id: req_5f238d044d724385b84933d55c15763d
+          created: 1788304060808
+          modified: 1788304060808
+          isPrivate: false
+          description: "PATCH /warehouse/{id}. PatchWarehouseDTO exige 'description'
+            (@NotBlank). Atenção: no WarehouseService.update atual, o valor
+            enviado em 'description' é gravado no campo 'name' do armazém
+            (warehouse.setName(data.description())) — comportamento
+            provavelmente não intencional, vale revisar no código."
+          sortKey: 2000
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "description": "Novo texto"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/warehouse/search"
+        name: Buscar armazéns
+        meta:
+          id: req_5feb38acacf243868a612bf32b4646a1
+          created: 1788304060808
+          modified: 1790128329455
+          isPrivate: false
+          description: GET /warehouse/search. Parâmetro 'name' é opcional (busca parcial,
+            case-insensitive). Sem o parâmetro, retorna todos os armazéns.
+          sortKey: 1800
+        method: GET
+        parameters:
+          - name: name
+            value: Central
+            disabled: true
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/warehouse"
+        name: Cadastrar armazém
+        meta:
+          id: req_919c2b796f374325b80a90a006215283
+          created: 1788304060808
+          modified: 1788304060808
+          isPrivate: false
+          description: "POST /warehouse. Campo obrigatório (RequestWarehouseDTO): name.
+            'description' é opcional. Retorna erro se já existir armazém com
+            esse nome."
+          sortKey: 1900
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Armazém Central",
+              "description": "Depósito principal - matriz"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/warehouse/2"
+        name: Remover armazém
+        meta:
+          id: req_dbb5a7f33d3e4766a7c5a9644279a413
+          created: 1788304060808
+          modified: 1788473255440
+          isPrivate: false
+          description: DELETE /warehouse/{id}. Substitua o {id} na URL por um ID existente.
+          sortKey: 2100
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - name: Endereços de Armazém
+        meta:
+          id: fld_8043cd28814f40e1873bdb9f4392cd45
+          created: 1788304060808
+          modified: 1788400824573
+          sortKey: 2200
+          description: "ATENÇÃO: o AddressController (com.pi.erp.warehouse.address) tem
+            apenas a anotação @PostMapping em /warehouseAddress sem nenhum
+            método associado — isso não compila. O AddressService também está
+            vazio (sem lógica). Nenhuma request foi criada aqui até o endpoint
+            ser implementado. O RequestAddressDTO já existe com os campos:
+            state, city, street, neighborhood, number, complement (opcional),
+            zipCode — todos @NotBlank exceto complement."
+        children:
+          - url: "{{ _.base_url }}/warehouseAddress/search"
+            name: Buscar Endereço de Armazém
+            meta:
+              id: req_88634665ac4a4404aaf873aeb8d6da3c
+              created: 1788399158879
+              modified: 1788400110244
+              isPrivate: false
+              description: ""
+              sortKey: -1788399158879
+            method: GET
+            parameters:
+              - name: state
+                value: ""
+                description: ""
+                disabled: true
+              - name: city
+                value: ""
+                description: ""
+                disabled: true
+              - name: street
+                value: ""
+                description: ""
+                disabled: true
+              - name: neighborhood
+                value: ""
+                description: ""
+                disabled: true
+              - name: number
+                value: ""
+                description: ""
+                disabled: true
+              - name: complement
+                value: ""
+                description: ""
+                disabled: true
+              - name: zipcode
+                value: ""
+                description: ""
+                disabled: true
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/warehouseAddress"
+            name: Cadastrar Endereço
+            meta:
+              id: req_d45f8b802a5844dcb3c38335bbcd5943
+              created: 1788400088642
+              modified: 1788474025536
+              isPrivate: false
+              description: ""
+              sortKey: -1788400088642
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                	"warehouseId": 4,
+                	"state": "Pernambuco",
+                	"city": "Caruaru",
+                	"street": "Av. Joaquim José de Freitas",
+                	"neighborhood": "Indianópolis",
+                	"number": 220,
+                	"complement": "Bloco 03 Apto 304",
+                	"zipCode": "55025-230"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/warehouseAddress/1"
+            name: Atualizar Endereço
+            meta:
+              id: req_3e427eae370146918415de45d4efe079
+              created: 1788400365911
+              modified: 1788400814320
+              isPrivate: false
+              description: ""
+              sortKey: -1788400365911
+            method: PATCH
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                	"warehouseId": null,
+                	"state": "",
+                	"city": "",
+                	"street": "",
+                	"neighborhood": "Troca de Bairro",
+                	"number": 220,
+                	"complement": "",
+                	"zipCode": ""
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/warehouseAddress/7"
+            name: Remover Endereço
+            meta:
+              id: req_604984dd25c6441d9bd767b609272587
+              created: 1788400463144
+              modified: 1788476544945
+              isPrivate: false
+              description: ""
+              sortKey: -1788400463144
+            method: DELETE
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+  - name: Estoque
+    meta:
+      id: fld_997cb9b7830440848f5e8be1800e5c9b
+      created: 1788832215680
+      modified: 1788832215680
+      sortKey: -1788832215680
+      description: ""
+    children:
+      - url: "{{ _.base_url }}/stockItem/search"
+        name: Buscar item de estoque
+        meta:
+          id: req_f10b62a7df92444a83f225f8fec5d3f7
+          created: 1788832223911
+          modified: 1791045161700
+          isPrivate: false
+          description: ""
+          sortKey: -1788832223911
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/stockItem"
+        name: Cadastrar item de estoque
+        meta:
+          id: req_aa5c133a7b374c26b78096d04d628190
+          created: 1788832284713
+          modified: 1791045140632
+          isPrivate: false
+          description: ""
+          sortKey: -1788832284713
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "warehouseId": 1,
+              "productId": 2,
+              "quantity": 100,
+              "reservedQuantity": 10,
+              "minQuantity": 20,
+              "maxQuantity": 200
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/stockItem/0"
+        name: Remover item de estoque
+        meta:
+          id: req_f33354035b5147ffb7f8060456236011
+          created: 1788832610323
+          modified: 1791044593556
+          isPrivate: false
+          description: ""
+          sortKey: -1788832610323
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/stockItem/1"
+        name: Atualizar item de estoque
+        meta:
+          id: req_43ea8f749bb4459faf3e9827d1e42c2e
+          created: 1788832630601
+          modified: 1791045128584
+          isPrivate: false
+          description: ""
+          sortKey: -1788832447518
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "quantity": 80
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Clientes
+    meta:
+      id: fld_1fdc3eaacb184a0192cd28b1891943ca
+      created: 1790128307998
+      modified: 1790129000000
+      sortKey: -1790128307998
+      description: Endpoints de clientes e seus endereços.
+    children:
+      - url: "{{ _.base_url }}/customer/search"
+        name: Buscar clientes
+        meta:
+          id: req_a8faafe3da1d4050aa4a2afbe79e44a1
+          created: 1790128310882
+          modified: 1790129000000
+          isPrivate: false
+          description: GET /customer/search. Todos os filtros são opcionais. Habilite os
+            parâmetros desejados.
+          sortKey: 100
+        method: GET
+        parameters:
+          - name: personType
+            value: PJ
+            disabled: true
+          - name: taxId
+            value: "12345678000195"
+            disabled: true
+          - name: legalName
+            value: Distribuidora
+            disabled: true
+          - name: tradeName
+            value: JAMS
+            disabled: true
+          - name: email
+            value: contato@jams.com.br
+            disabled: true
+          - name: priceTableId
+            value: "1"
+            disabled: true
+          - name: active
+            value: "true"
+            disabled: true
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/customer/1"
+        name: Atualizar cliente
+        meta:
+          id: req_3ab9c43b6d334fe5bc08f0b1c618064b
+          created: 1790129000000
+          modified: 1790129000000
+          isPrivate: false
+          description: PATCH /customer/{id}. Envie apenas os campos que deseja alterar.
+          sortKey: 400
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "tradeName": "JAMS Hub Distribuidora",
+              "email": "comercial@jamshub.com.br",
+              "active": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/customer/1"
+        name: Remover cliente
+        meta:
+          id: req_955c9a1cd14345fdbbac72dd1fefedbc
+          created: 1790129000000
+          modified: 1790129000000
+          isPrivate: false
+          description: DELETE /customer/{id}. Substitua o ID por um cliente existente.
+          sortKey: 500
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/customer/1"
+        name: Buscar cliente por ID
+        meta:
+          id: req_a800166f86eb464298dab36684aed273
+          created: 1790129000000
+          modified: 1790129000000
+          isPrivate: false
+          description: GET /customer/{id}. Substitua o ID por um cliente existente.
+          sortKey: 200
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/customer"
+        name: Cadastrar cliente
+        meta:
+          id: req_ed6607e9bda441848234da4c04dd5e3e
+          created: 1790129000000
+          modified: 1790129000000
+          isPrivate: false
+          description: POST /customer. Crie antes uma tabela de preço com ID 1 ou remova
+            priceTableId do JSON.
+          sortKey: 300
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "personType": "PJ",
+              "taxId": "12345678000195",
+              "legalName": "Distribuidora JAMS Hub LTDA",
+              "tradeName": "JAMS Hub",
+              "birthDate": "2020-01-15",
+              "municipalReg": "123456789",
+              "stateReg": "987654321",
+              "email": "contato@jamshub.com.br",
+              "phone": "81999990000",
+              "whatsapp": "81999990000",
+              "active": true,
+              "priceTableId": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - name: Endereços de Clientes
+        meta:
+          id: fld_426e3672ae4d49d3b6f48d9ee5a9e440
+          created: 1790129000000
+          modified: 1790129000000
+          sortKey: 600
+          description: "Um cliente pode ter um endereço de cada tipo: MAIN, BILLING e
+            SHIPPING."
+        children:
+          - url: "{{ _.base_url }}/customerAddress/1"
+            name: Remover endereço de cliente
+            meta:
+              id: req_33e8e9835eca45779150cd2e909acb94
+              created: 1790129000000
+              modified: 1790129000000
+              isPrivate: false
+              description: DELETE /customerAddress/{id}. Substitua o ID por um endereço
+                existente.
+              sortKey: 400
+            method: DELETE
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/customerAddress/1"
+            name: Atualizar endereço de cliente
+            meta:
+              id: req_45c4c0bf4f63473e85a100c3120fa509
+              created: 1790129000000
+              modified: 1790129000000
+              isPrivate: false
+              description: PATCH /customerAddress/{id}. Envie apenas os campos que deseja
+                alterar.
+              sortKey: 300
+            method: PATCH
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                  "neighborhood": "Universitário",
+                  "complement": "Casa"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/customerAddress"
+            name: Cadastrar endereço de cliente
+            meta:
+              id: req_a1bfe306163947c69a7dc596b18d04d2
+              created: 1790129000000
+              modified: 1790129000000
+              isPrivate: false
+              description: POST /customerAddress. Crie antes um cliente com ID 1.
+              sortKey: 200
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                  "customerId": 1,
+                  "addressType": "MAIN",
+                  "state": "Pernambuco",
+                  "city": "Caruaru",
+                  "street": "Avenida Joaquim José de Freitas",
+                  "neighborhood": "Indianópolis",
+                  "number": "220",
+                  "complement": "Bloco 03, Apto 304",
+                  "zipCode": "55025-230"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/customerAddress/search"
+            name: Buscar endereços de clientes
+            meta:
+              id: req_ea6b2f8a905d4ebdb9eed1a35c777f22
+              created: 1790129000000
+              modified: 1790130818808
+              isPrivate: false
+              description: GET /customerAddress/search. Todos os filtros são opcionais.
+              sortKey: 100
+            method: GET
+            parameters:
+              - name: customerId
+                value: "1"
+                disabled: false
+              - name: addressType
+                value: MAIN
+                disabled: true
+              - name: city
+                value: Caruaru
+                disabled: true
+              - name: zipCode
+                value: 55025-230
+                disabled: true
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+  - name: Tabelas de Preço
+    meta:
+      id: fld_b8db19e03838478191bbf9d969b839d5
+      created: 1790129000000
+      modified: 1790129000000
+      sortKey: -1790129000000
+      description: Endpoints do módulo de tabelas de preço.
+    children:
+      - url: "{{ _.base_url }}/price-table/1"
+        name: Atualizar tabela de preço
+        meta:
+          id: req_1817f596cec14a48afa0ff4bb6b761c9
+          created: 1790129000000
+          modified: 1790129000000
+          isPrivate: false
+          description: PATCH /price-table/{id}. Envie apenas os campos que deseja alterar.
+          sortKey: 400
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Varejo 2026 - Atualizada",
+              "active": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/price-table/search"
+        name: Buscar tabelas de preço
+        meta:
+          id: req_729e7f83a95642bc89cd8f4c85f1f590
+          created: 1790129000000
+          modified: 1790129815651
+          isPrivate: false
+          description: GET /price-table/search. Todos os filtros são opcionais.
+          sortKey: 100
+        method: GET
+        parameters:
+          - name: name
+            value: Varejo
+            disabled: true
+          - name: startDate
+            value: 2026-01-01
+            disabled: true
+          - name: endDate
+            value: 2026-12-31
+            disabled: true
+          - name: active
+            value: "true"
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/price-table/1"
+        name: Remover tabela de preço
+        meta:
+          id: req_7a0f37b9b82b4a1ea6f18957a98631c2
+          created: 1790129000000
+          modified: 1790129000000
+          isPrivate: false
+          description: DELETE /price-table/{id}. A tabela não pode estar vinculada a
+            clientes.
+          sortKey: 500
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/price-table"
+        name: Cadastrar tabela de preço
+        meta:
+          id: req_939a87e7b7364c439b452225a15d63ef
+          created: 1790129000000
+          modified: 1790129000000
+          isPrivate: false
+          description: POST /price-table. A data inicial não pode ser posterior à final.
+          sortKey: 300
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Varejo 2026",
+              "startDate": "2026-01-01",
+              "endDate": "2026-12-31",
+              "active": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/price-table/1"
+        name: Buscar tabela de preço por ID
+        meta:
+          id: req_a317bd89f7604d66b6a007146a827329
+          created: 1790129000000
+          modified: 1790129000000
+          isPrivate: false
+          description: GET /price-table/{id}. Substitua o ID por uma tabela existente.
+          sortKey: 200
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_be68713610f046e8bdde78be28ba8391
+    created: 1788305305373
+    modified: 1788305305373
+environments:
+  name: Base Environment
+  meta:
+    id: env_3f887e3dbeca419e95454ead8e4402b3
+    created: 1788304060808
+    modified: 1788304060808
+    isPrivate: false
+  data:
+    base_url: http://localhost:8080

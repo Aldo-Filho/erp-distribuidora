@@ -5,6 +5,8 @@ import com.pi.erp.product.brand.Brand;
 import com.pi.erp.product.brand.BrandRepository;
 import com.pi.erp.product.category.Category;
 import com.pi.erp.product.category.CategoryRepository;
+import com.pi.erp.stock.RequestStockItemDTO;
+import com.pi.erp.stock.StockItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,9 @@ public class ProductService {
     private BrandRepository brandRepository;
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private StockItemService stockItemService;
 
     public List<Product> search(ProductFilter filter) {
         Specification<Product> spec = Specification.allOf();
@@ -67,6 +72,7 @@ public class ProductService {
         return repository.findAll(spec);
     }
 
+    @Transactional
     public Product register(RequestProductDTO data) {
 
         if (repository.existsBySku(data.sku())) {
@@ -83,7 +89,22 @@ public class ProductService {
         }
 
         Product product = new Product(data, brand, category);
-        return repository.save(product);
+        Product savedProduct = repository.save(product);
+
+        if (data.stock() != null) {
+            RequestProductDTO.InitialStockDTO stock = data.stock();
+            RequestStockItemDTO stockData = new RequestStockItemDTO(
+                    stock.warehouseId(),
+                    savedProduct.getId(),
+                    stock.quantity(),
+                    stock.reservedQuantity(),
+                    stock.minQuantity(),
+                    stock.maxQuantity()
+            );
+            stockItemService.register(stockData);
+        }
+
+        return savedProduct;
     }
 
     public Product update(Long id, PatchProductDTO data) {

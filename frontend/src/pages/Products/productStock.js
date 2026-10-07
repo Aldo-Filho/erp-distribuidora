@@ -36,35 +36,10 @@ export function buildStockPayload(form) {
   return payload;
 }
 
-// O produto e o estoque têm endpoints separados. Ao repetir uma tentativa,
-// reutilizamos o produto já criado para evitar um novo cadastro com o mesmo SKU.
-export async function createProductWithStock({
-  request,
-  payload,
-  stock,
-  productId,
-  onCreated,
-}) {
-  let id = productId;
-  if (!id) {
-    const product = await request("/product", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-    id = product.id;
-    onCreated(id);
-  }
-  if (stock) {
-    try {
-      await request("/stockItem", {
-        method: "POST",
-        body: JSON.stringify({ ...stock, productId: id }),
-      });
-    } catch (error) {
-      throw new Error(
-        `O produto foi criado, mas o estoque não foi salvo. Ajuste os campos e tente novamente. ${error.message}`,
-        { cause: error },
-      );
-    }
-  }
+// O backend cadastra o produto e seu estoque opcional na mesma transação.
+export async function createProductWithStock({ request, payload, stock }) {
+  return request("/product", {
+    method: "POST",
+    body: JSON.stringify({ ...payload, stock }),
+  });
 }

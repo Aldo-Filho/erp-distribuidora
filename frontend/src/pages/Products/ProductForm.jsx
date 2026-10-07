@@ -39,7 +39,6 @@ export function ProductForm({
   warehouseError,
   onRetryWarehouses,
   error,
-  productCreated,
   form,
   onChange,
   onCancel,
@@ -66,14 +65,8 @@ export function ProductForm({
           {error}
         </p>
       )}
-      {productCreated && (
-        <p className="col-span-full rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
-          Produto cadastrado. Você pode tentar salvar o estoque novamente ou
-          fechar para manter o produto sem estoque inicial.
-        </p>
-      )}
       <fieldset
-        disabled={saving || productCreated}
+        disabled={saving}
         className="col-span-full grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4"
       >
         <Field
@@ -186,7 +179,7 @@ export function ProductForm({
             Estoque inicial
           </legend>
           <p className="col-span-full text-xs text-slate-500">
-            Selecione um armazém para cadastrar o estoque deste produto.
+            Opcional: selecione um armazém para cadastrar o estoque junto com o produto.
           </p>
           {warehouseError && (
             <p className="col-span-full text-sm text-red-700" role="alert">
@@ -284,11 +277,7 @@ export function ProductForm({
           className="min-h-11 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
           disabled={saving}
         >
-          {saving
-            ? "Salvando..."
-            : productCreated
-              ? "Concluir cadastro"
-              : "Salvar produto"}
+          {saving ? "Salvando..." : "Salvar produto"}
         </button>
       </div>
     </form>

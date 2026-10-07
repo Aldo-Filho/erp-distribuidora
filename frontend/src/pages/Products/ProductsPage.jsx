@@ -52,7 +52,6 @@ export function ProductsPage() {
   const [warehouses, setWarehouses] = useState([]);
   const [warehouseError, setWarehouseError] = useState("");
   const [formError, setFormError] = useState("");
-  const [createdProductId, setCreatedProductId] = useState(null);
   // Todos os filtros ficam agrupados para que um único método possa atualizá-los.
   const [filters, setFilters] = useState({
     search: "",
@@ -142,7 +141,6 @@ export function ProductsPage() {
   }
 
   function openProductModal(product = null) {
-    setCreatedProductId(null);
     setFormError("");
     if (!product) loadWarehouses();
     // "new" identifica cadastro. Um objeto identifica edição do respectivo produto.
@@ -200,8 +198,6 @@ export function ProductsPage() {
           request: api,
           payload,
           stock,
-          productId: createdProductId,
-          onCreated: setCreatedProductId,
         });
       } else {
         await api(`/product/${selectedProduct.id}`, {
@@ -221,7 +217,6 @@ export function ProductsPage() {
   function closeProductModal() {
     if (saving) return;
     setSelectedProduct(null);
-    if (createdProductId) loadData();
   }
 
   function removeClassification(type, id) {
@@ -503,7 +498,6 @@ export function ProductsPage() {
             warehouseError={warehouseError}
             onRetryWarehouses={loadWarehouses}
             error={formError}
-            productCreated={Boolean(createdProductId)}
             form={productForm}
             onChange={(event) =>
               setProductForm((current) => ({

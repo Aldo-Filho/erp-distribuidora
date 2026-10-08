@@ -7,20 +7,21 @@ import com.pi.erp.product.category.Category;
 import com.pi.erp.product.category.CategoryRepository;
 import com.pi.erp.stock.RequestStockItemDTO;
 import com.pi.erp.stock.StockItemService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class ProductService {
+
     @Autowired
     private ProductRepository repository;
 
     @Autowired
     private BrandRepository brandRepository;
+
     @Autowired
     private CategoryRepository categoryRepository;
 
@@ -30,62 +31,45 @@ public class ProductService {
     public List<Product> search(ProductFilter filter) {
         Specification<Product> spec = Specification.allOf();
 
-        if (filter.name() != null && !filter.name().isBlank()){
-            spec = spec.and(
-                    (root, query, cb) ->
-                            cb.like(
-                                    cb.lower(root.get("name")),
-                                    "%" + filter.name().toLowerCase() + "%"
-                            )
+        if (filter.name() != null && !filter.name().isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                cb.like(cb.lower(root.get("name")), "%" + filter.name().toLowerCase() + "%")
             );
         }
         if (filter.sku() != null && !filter.sku().isBlank()) {
-            spec = spec.and(
-                    (root, query, cb) ->
-                            cb.equal(root.get("sku"), filter.sku())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("sku"), filter.sku()));
         }
         if (filter.categoryId() != null) {
-            spec = spec.and(
-                    (root, query, cb) ->
-                            cb.equal(
-                                    root.get("category").get("id"),
-                                    filter.categoryId()
-                            )
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("category").get("id"), filter.categoryId())
             );
         }
         if (filter.brandId() != null) {
-            spec = spec.and(
-                    (root, query, cb) ->
-                            cb.equal(
-                                    root.get("brand").get("id"),
-                                    filter.brandId()
-                            )
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("brand").get("id"), filter.brandId())
             );
         }
         if (filter.active() != null) {
-            spec = spec.and(
-                    (root, query, cb) ->
-                            cb.equal(root.get("active"), filter.active())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), filter.active()));
         }
         return repository.findAll(spec);
     }
 
     @Transactional
     public Product register(RequestProductDTO data) {
-
         if (repository.existsBySku(data.sku())) {
             throw new IllegalArgumentException("Product already exists.");
         }
 
-        Brand brand = brandRepository.findById(data.brandId())
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
+        Brand brand = brandRepository
+            .findById(data.brandId())
+            .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
 
         Category category = null;
         if (data.categoryId() != null) {
-            category = categoryRepository.findById(data.categoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
+            category = categoryRepository
+                .findById(data.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
         }
 
         Product product = new Product(data, brand, category);
@@ -94,12 +78,12 @@ public class ProductService {
         if (data.stock() != null) {
             RequestProductDTO.InitialStockDTO stock = data.stock();
             RequestStockItemDTO stockData = new RequestStockItemDTO(
-                    stock.warehouseId(),
-                    savedProduct.getId(),
-                    stock.quantity(),
-                    stock.reservedQuantity(),
-                    stock.minQuantity(),
-                    stock.maxQuantity()
+                stock.warehouseId(),
+                savedProduct.getId(),
+                stock.quantity(),
+                stock.reservedQuantity(),
+                stock.minQuantity(),
+                stock.maxQuantity()
             );
             stockItemService.register(stockData);
         }
@@ -108,22 +92,25 @@ public class ProductService {
     }
 
     public Product update(Long id, PatchProductDTO data) {
-        Product product = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         if (data.name() != null && !data.name().isBlank()) {
             product.setName(data.name());
         }
 
         if (data.brandId() != null) {
-            Brand brand = brandRepository.findById(data.brandId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Brand not found"));
+            Brand brand = brandRepository
+                .findById(data.brandId())
+                .orElseThrow(() -> new ResourceNotFoundException("Brand not found"));
             product.setBrand(brand);
         }
 
         if (data.categoryId() != null) {
-            Category category = categoryRepository.findById(data.categoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+            Category category = categoryRepository
+                .findById(data.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
             product.setCategory(category);
         }
 
@@ -162,8 +149,9 @@ public class ProductService {
 
     @Transactional
     public void delete(Long id) {
-        Product product = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
+        Product product = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
         repository.delete(product);
     }

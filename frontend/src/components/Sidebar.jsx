@@ -1,12 +1,4 @@
-import {
-  Boxes,
-  Box,
-  Warehouse,
-  LayoutGrid,
-  ShoppingCart,
-  Users,
-  Truck,
-} from "lucide-react";
+import { Boxes, Box, Warehouse, LayoutGrid, ShoppingCart, Users, Truck } from "lucide-react";
 
 // Um item aqui já cria automaticamente uma opção no menu.
 // Para novos módulos, inclua o ícone e o rótulo nesta lista.
@@ -86,9 +78,7 @@ export function Sidebar({ collapsed, onToggle, activePage = "produtos" }) {
         onClick={onToggle}
         aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
       >
-        <span className="grid w-16 shrink-0 place-items-center">
-          {collapsed ? "›" : "‹"}
-        </span>
+        <span className="grid w-16 shrink-0 place-items-center">{collapsed ? "›" : "‹"}</span>
       </button>
     </aside>
   );

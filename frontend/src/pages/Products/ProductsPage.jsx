@@ -75,18 +75,15 @@ export function ProductsPage() {
     setError("");
     setStockError("");
     try {
-      const [productData, categoryData, brandData, stockData] =
-        await Promise.all([
-          api("/product/search"),
-          api("/category"),
-          api("/brand"),
-          api("/stockItem/search").catch((requestError) => {
-            setStockError(
-              `Não foi possível carregar o estoque. ${requestError.message}`,
-            );
-            return [];
-          }),
-        ]);
+      const [productData, categoryData, brandData, stockData] = await Promise.all([
+        api("/product/search"),
+        api("/category"),
+        api("/brand"),
+        api("/stockItem/search").catch((requestError) => {
+          setStockError(`Não foi possível carregar o estoque. ${requestError.message}`);
+          return [];
+        }),
+      ]);
       setProducts(productData);
       setCategories(categoryData);
       setBrands(brandData);
@@ -120,10 +117,7 @@ export function ProductsPage() {
   }, [loadWarehouses]);
 
   // Filtragem local: mantém a resposta da interface imediata.
-  const filteredProducts = useMemo(
-    () => filterProducts(products, filters),
-    [products, filters],
-  );
+  const filteredProducts = useMemo(() => filterProducts(products, filters), [products, filters]);
 
   const stockByProduct = useMemo(() => {
     const grouped = new Map();
@@ -180,13 +174,9 @@ export function ProductsPage() {
     setFormError("");
     // Não enviamos o estado diretamente: primeiro convertemos os campos numéricos.
     const payload = { ...productForm };
-    [
-      "warehouseId",
-      "quantity",
-      "reservedQuantity",
-      "minQuantity",
-      "maxQuantity",
-    ].forEach((field) => delete payload[field]);
+    ["warehouseId", "quantity", "reservedQuantity", "minQuantity", "maxQuantity"].forEach(
+      (field) => delete payload[field],
+    );
     numberFields.forEach((field) => {
       payload[field] = payload[field] === "" ? null : Number(payload[field]);
     });
@@ -224,14 +214,10 @@ export function ProductsPage() {
     const field = type === "brand" ? "brandId" : "categoryId";
     updateItems((current) => current.filter((item) => item.id !== id));
     setFilters((current) =>
-      String(current[field]) === String(id)
-        ? { ...current, [field]: "" }
-        : current,
+      String(current[field]) === String(id) ? { ...current, [field]: "" } : current,
     );
     setProductForm((current) =>
-      String(current[field]) === String(id)
-        ? { ...current, [field]: "" }
-        : current,
+      String(current[field]) === String(id) ? { ...current, [field]: "" } : current,
     );
   }
 
@@ -257,14 +243,10 @@ export function ProductsPage() {
     <>
       <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Produtos
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Produtos</h1>
           <p className="mt-1 text-sm text-slate-500">
             {products.length}{" "}
-            {products.length === 1
-              ? "produto cadastrado"
-              : "produtos cadastrados"}
+            {products.length === 1 ? "produto cadastrado" : "produtos cadastrados"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -412,10 +394,7 @@ export function ProductsPage() {
                 >
                   {product.name}
                 </strong>
-                <span
-                  className="line-clamp-2 min-w-0 break-words pr-3"
-                  title={product.brand?.name}
-                >
+                <span className="line-clamp-2 min-w-0 break-words pr-3" title={product.brand?.name}>
                   {product.brand?.name || "—"}
                 </span>
                 <span
@@ -439,18 +418,10 @@ export function ProductsPage() {
                 <span className="relative justify-center">
                   <button
                     className="grid h-8 w-8 place-items-center rounded-md text-slate-500 hover:bg-slate-100"
-                    onClick={() =>
-                      setOpenedMenuId(
-                        openedMenuId === product.id ? null : product.id,
-                      )
-                    }
+                    onClick={() => setOpenedMenuId(openedMenuId === product.id ? null : product.id)}
                     aria-label={`Ações de ${product.name}`}
                   >
-                    <MoreHorizontal
-                      size={18}
-                      strokeWidth={1.8}
-                      aria-hidden="true"
-                    />
+                    <MoreHorizontal size={18} strokeWidth={1.8} aria-hidden="true" />
                   </button>
                   {openedMenuId === product.id && (
                     <span className="absolute right-0 top-9 z-10 w-32 rounded-lg border border-slate-200 bg-white p-1 shadow-xl">
@@ -458,22 +429,14 @@ export function ProductsPage() {
                         className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs text-slate-700 hover:bg-slate-50"
                         onClick={() => openProductModal(product)}
                       >
-                        <Pencil
-                          size={15}
-                          strokeWidth={1.8}
-                          aria-hidden="true"
-                        />
+                        <Pencil size={15} strokeWidth={1.8} aria-hidden="true" />
                         Editar
                       </button>
                       <button
                         className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-xs text-red-600 hover:bg-red-50"
                         onClick={() => deleteProduct(product)}
                       >
-                        <Trash2
-                          size={15}
-                          strokeWidth={1.8}
-                          aria-hidden="true"
-                        />
+                        <Trash2 size={15} strokeWidth={1.8} aria-hidden="true" />
                         Excluir
                       </button>
                     </span>
@@ -518,8 +481,7 @@ export function ProductsPage() {
           items={classificationModal === "brand" ? brands : categories}
           loading={loading}
           onCreated={(item) => {
-            const updateItems =
-              classificationModal === "brand" ? setBrands : setCategories;
+            const updateItems = classificationModal === "brand" ? setBrands : setCategories;
             updateItems((current) => [...current, item]);
           }}
           onDeleted={(id) => removeClassification(classificationModal, id)}

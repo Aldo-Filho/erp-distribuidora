@@ -4,10 +4,7 @@ import { Modal } from "../../components/Modal";
 import { api } from "../../services/api";
 import { WarehouseForm } from "./WarehouseForm";
 import { WarehouseAddressModal } from "./WarehouseAddressModal";
-import {
-  emptyWarehouseAddress,
-  warehouseAddressFields,
-} from "./warehouseAddressConfig.js";
+import { emptyWarehouseAddress, warehouseAddressFields } from "./warehouseAddressConfig.js";
 
 export function WarehousesPage() {
   const [warehouses, setWarehouses] = useState([]);
@@ -69,19 +66,13 @@ export function WarehousesPage() {
     const name = form.name.trim();
     const description = form.description.trim();
     const addressValues = Object.fromEntries(
-      warehouseAddressFields.map(({ name }) => [
-        name,
-        addressForm[name].trim(),
-      ]),
+      warehouseAddressFields.map(({ name }) => [name, addressForm[name].trim()]),
     );
     if (!name || (selected !== "new" && !description)) {
       setFormError("Preencha os campos obrigatórios.");
       return;
     }
-    if (
-      selected === "new" &&
-      Object.values(addressValues).some((value) => !value)
-    ) {
+    if (selected === "new" && Object.values(addressValues).some((value) => !value)) {
       setFormError("Preencha todos os campos do endereço.");
       return;
     }
@@ -126,8 +117,7 @@ export function WarehousesPage() {
   }
 
   async function remove(warehouse) {
-    if (deletingId !== null || !window.confirm(`Excluir “${warehouse.name}”?`))
-      return;
+    if (deletingId !== null || !window.confirm(`Excluir “${warehouse.name}”?`)) return;
     setDeletingId(warehouse.id);
     setError("");
     try {
@@ -144,14 +134,10 @@ export function WarehousesPage() {
     <>
       <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Armazéns
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Armazéns</h1>
           <p className="mt-1 text-sm text-slate-500">
             {warehouses.length}{" "}
-            {warehouses.length === 1
-              ? "armazém cadastrado"
-              : "armazéns cadastrados"}
+            {warehouses.length === 1 ? "armazém cadastrado" : "armazéns cadastrados"}
           </p>
         </div>
         <button
@@ -178,10 +164,7 @@ export function WarehousesPage() {
           role="alert"
         >
           {error}
-          <button
-            onClick={loadData}
-            className="shrink-0 font-semibold underline"
-          >
+          <button onClick={loadData} className="shrink-0 font-semibold underline">
             Tentar novamente
           </button>
         </div>
@@ -199,17 +182,12 @@ export function WarehousesPage() {
             {loading || filtered.length === 0 ? (
               <tr>
                 <td colSpan={3} className="p-10 text-center text-slate-500">
-                  {loading
-                    ? "Carregando armazéns..."
-                    : "Nenhum armazém encontrado."}
+                  {loading ? "Carregando armazéns..." : "Nenhum armazém encontrado."}
                 </td>
               </tr>
             ) : (
               filtered.map((warehouse) => (
-                <tr
-                  key={warehouse.id}
-                  className="border-b border-slate-200 last:border-0"
-                >
+                <tr key={warehouse.id} className="border-b border-slate-200 last:border-0">
                   <td className="px-4 py-4 font-semibold">{warehouse.name}</td>
                   <td className="px-4 py-4">{warehouse.description || "—"}</td>
                   <td className="px-4 py-4">

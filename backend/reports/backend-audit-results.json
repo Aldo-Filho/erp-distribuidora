@@ -1,0 +1,5281 @@
+{
+  "total": 189,
+  "passed": 169,
+  "failed": 20,
+  "fatalError": null,
+  "isolatedDatabase": "backend_audit (127.0.0.1:55432)",
+  "results": [
+    {
+      "module": "Marcas",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/brand",
+      "body": {
+        "name": "AUDIT_1791429682913_marca"
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 9,
+        "name": "AUDIT_1791429682913_marca"
+      }
+    },
+    {
+      "module": "Marcas",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/brand?name=audit_1791429682913",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "id": 9,
+          "name": "AUDIT_1791429682913_marca"
+        }
+      ]
+    },
+    {
+      "module": "Marcas",
+      "label": "Consulta por ID",
+      "method": "GET",
+      "route": "/brand/9",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 9,
+        "name": "AUDIT_1791429682913_marca"
+      }
+    },
+    {
+      "module": "Marcas",
+      "label": "Duplicidade sem diferenciar maiúsculas",
+      "method": "POST",
+      "route": "/brand",
+      "body": {
+        "name": "audit_1791429682913_marca"
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "This brand already exists.",
+        "timestamp": "2026-10-08T00:21:23.2389167"
+      }
+    },
+    {
+      "module": "Marcas",
+      "label": "Nome obrigatório",
+      "method": "POST",
+      "route": "/brand",
+      "body": {
+        "name": ""
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "id": 10,
+        "name": ""
+      }
+    },
+    {
+      "module": "Categorias",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/category",
+      "body": {
+        "name": "AUDIT_1791429682913_categoria"
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 8,
+        "name": "AUDIT_1791429682913_categoria"
+      }
+    },
+    {
+      "module": "Categorias",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/category?name=audit_1791429682913",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "id": 8,
+          "name": "AUDIT_1791429682913_categoria"
+        }
+      ]
+    },
+    {
+      "module": "Categorias",
+      "label": "Consulta por ID",
+      "method": "GET",
+      "route": "/category/8",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 8,
+        "name": "AUDIT_1791429682913_categoria"
+      }
+    },
+    {
+      "module": "Categorias",
+      "label": "Duplicidade",
+      "method": "POST",
+      "route": "/category",
+      "body": {
+        "name": "AUDIT_1791429682913_categoria"
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "This category already exists.",
+        "timestamp": "2026-10-08T00:21:23.2789113"
+      }
+    },
+    {
+      "module": "Categorias",
+      "label": "Nome obrigatório",
+      "method": "POST",
+      "route": "/category",
+      "body": {
+        "name": ""
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "id": 9,
+        "name": ""
+      }
+    },
+    {
+      "module": "Armazéns",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/warehouse",
+      "body": {
+        "name": "AUDIT_1791429682913_armazem",
+        "description": "Inicial"
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "description": "Inicial",
+        "id": 4,
+        "name": "AUDIT_1791429682913_armazem"
+      }
+    },
+    {
+      "module": "Armazéns",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/warehouse",
+      "body": {
+        "name": "AUDIT_1791429682913_armazem2"
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "description": null,
+        "id": 5,
+        "name": "AUDIT_1791429682913_armazem2"
+      }
+    },
+    {
+      "module": "Armazéns",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/warehouse/search?name=audit_1791429682913",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "description": "Inicial",
+          "id": 4,
+          "name": "AUDIT_1791429682913_armazem"
+        },
+        {
+          "description": null,
+          "id": 5,
+          "name": "AUDIT_1791429682913_armazem2"
+        }
+      ]
+    },
+    {
+      "module": "Armazéns",
+      "label": "Duplicidade",
+      "method": "POST",
+      "route": "/warehouse",
+      "body": {
+        "name": "AUDIT_1791429682913_armazem"
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "This Warehouse name already exists.",
+        "timestamp": "2026-10-08T00:21:23.317909"
+      }
+    },
+    {
+      "module": "Armazéns",
+      "label": "Atualização parcial",
+      "method": "PATCH",
+      "route": "/warehouse/4",
+      "body": {
+        "description": "Alterada"
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "description": "Alterada",
+        "id": 4,
+        "name": "AUDIT_1791429682913_armazem"
+      }
+    },
+    {
+      "module": "Armazéns",
+      "label": "PATCH vazio preserva descrição",
+      "method": "PATCH",
+      "route": "/warehouse/4",
+      "body": {},
+      "expected": [200],
+      "actual": 200,
+      "ok": false,
+      "contentMatches": false,
+      "response": {
+        "description": null,
+        "id": 4,
+        "name": "AUDIT_1791429682913_armazem"
+      }
+    },
+    {
+      "module": "Armazéns",
+      "label": "Nome obrigatório",
+      "method": "POST",
+      "route": "/warehouse",
+      "body": {
+        "name": ""
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "description": null,
+        "id": 6,
+        "name": ""
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/price-table",
+      "body": {
+        "name": "AUDIT_1791429682913_preco",
+        "startDate": "2026-01-01",
+        "endDate": "2026-12-31",
+        "active": true
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "createdAt": "2026-10-08T00:21:23.3549036",
+        "endDate": "2026-12-31",
+        "id": 1,
+        "name": "AUDIT_1791429682913_preco",
+        "startDate": "2026-01-01",
+        "updatedAt": null
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/price-table/search?name=audit_1791429682913&active=true",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": true,
+          "createdAt": "2026-10-08T00:21:23.354904",
+          "endDate": "2026-12-31",
+          "id": 1,
+          "name": "AUDIT_1791429682913_preco",
+          "startDate": "2026-01-01",
+          "updatedAt": null
+        }
+      ]
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Consulta por ID",
+      "method": "GET",
+      "route": "/price-table/1",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "createdAt": "2026-10-08T00:21:23.354904",
+        "endDate": "2026-12-31",
+        "id": 1,
+        "name": "AUDIT_1791429682913_preco",
+        "startDate": "2026-01-01",
+        "updatedAt": null
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Duplicidade",
+      "method": "POST",
+      "route": "/price-table",
+      "body": {
+        "name": "AUDIT_1791429682913_preco",
+        "startDate": "2026-01-01",
+        "endDate": "2026-12-31",
+        "active": true
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Price table already exists.",
+        "timestamp": "2026-10-08T00:21:23.3838998"
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Período invertido",
+      "method": "POST",
+      "route": "/price-table",
+      "body": {
+        "name": "AUDIT_1791429682913_invalid",
+        "startDate": "2027-01-01",
+        "endDate": "2026-12-31",
+        "active": true
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Start date cannot be after end date.",
+        "timestamp": "2026-10-08T00:21:23.3868995"
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "PATCH parcial preserva nome",
+      "method": "PATCH",
+      "route": "/price-table/1",
+      "body": {
+        "active": false
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": false,
+        "createdAt": "2026-10-08T00:21:23.354904",
+        "endDate": "2026-12-31",
+        "id": 1,
+        "name": "AUDIT_1791429682913_preco",
+        "startDate": "2026-01-01",
+        "updatedAt": "2026-10-08T00:21:23.3958962"
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "PATCH período inválido",
+      "method": "PATCH",
+      "route": "/price-table/1",
+      "body": {
+        "startDate": "2027-01-01"
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Start date cannot be after end date.",
+        "timestamp": "2026-10-08T00:21:23.4038975"
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Nome obrigatório",
+      "method": "POST",
+      "route": "/price-table",
+      "body": {
+        "name": ""
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "createdAt": "2026-10-08T00:21:23.4088976",
+        "endDate": null,
+        "id": 2,
+        "name": "",
+        "startDate": null,
+        "updatedAt": null
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "active=false respeitado no cadastro",
+      "method": "POST",
+      "route": "/price-table",
+      "body": {
+        "name": "AUDIT_1791429682913_inativa",
+        "startDate": "2026-01-01",
+        "endDate": "2026-12-31",
+        "active": false
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": false,
+      "response": {
+        "active": true,
+        "createdAt": "2026-10-08T00:21:23.4168934",
+        "endDate": "2026-12-31",
+        "id": 3,
+        "name": "AUDIT_1791429682913_inativa",
+        "startDate": "2026-01-01",
+        "updatedAt": null
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/product",
+      "body": {
+        "name": "AUDIT_1791429682913_produto",
+        "sku": "AUDIT_1791429682913_SKU",
+        "brandId": 9,
+        "categoryId": 8,
+        "cost": 10,
+        "price": 20
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "brand": {
+          "id": 9,
+          "name": "AUDIT_1791429682913_marca"
+        },
+        "category": {
+          "id": 8,
+          "name": "AUDIT_1791429682913_categoria"
+        },
+        "color": null,
+        "cost": 10,
+        "createdAt": "2026-10-08T00:21:23.4388921",
+        "dimensionX": null,
+        "dimensionY": null,
+        "dimensionZ": null,
+        "id": 14,
+        "name": "AUDIT_1791429682913_produto",
+        "price": 20,
+        "size": null,
+        "sku": "AUDIT_1791429682913_SKU",
+        "updatedAt": null,
+        "weightKg": null
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/product/search?name=audit_1791429682913&brandId=9&categoryId=8&active=true",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": 10,
+          "createdAt": "2026-10-08T00:21:23.438892",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 14,
+          "name": "AUDIT_1791429682913_produto",
+          "price": 20,
+          "size": null,
+          "sku": "AUDIT_1791429682913_SKU",
+          "updatedAt": null,
+          "weightKg": null
+        }
+      ]
+    },
+    {
+      "module": "Produtos",
+      "label": "Duplicidade SKU",
+      "method": "POST",
+      "route": "/product",
+      "body": {
+        "name": "AUDIT_1791429682913_produto",
+        "sku": "AUDIT_1791429682913_SKU",
+        "brandId": 9,
+        "categoryId": 8,
+        "cost": 10,
+        "price": 20
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Product already exists.",
+        "timestamp": "2026-10-08T00:21:23.4598929"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Marca inexistente",
+      "method": "POST",
+      "route": "/product",
+      "body": {
+        "name": "AUDIT_1791429682913_produto",
+        "sku": "AUDIT_1791429682913_badbrand",
+        "brandId": 900000000,
+        "categoryId": 8,
+        "cost": 10,
+        "price": 20
+      },
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Brand not found.",
+        "timestamp": "2026-10-08T00:21:23.46589"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Categoria inexistente",
+      "method": "POST",
+      "route": "/product",
+      "body": {
+        "name": "AUDIT_1791429682913_produto",
+        "sku": "AUDIT_1791429682913_badcategory",
+        "brandId": 9,
+        "categoryId": 900000000,
+        "cost": 10,
+        "price": 20
+      },
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Category not found.",
+        "timestamp": "2026-10-08T00:21:23.4718898"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "PATCH preserva dados não enviados",
+      "method": "PATCH",
+      "route": "/product/14",
+      "body": {
+        "price": 25
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "brand": {
+          "id": 9,
+          "name": "AUDIT_1791429682913_marca"
+        },
+        "category": {
+          "id": 8,
+          "name": "AUDIT_1791429682913_categoria"
+        },
+        "color": null,
+        "cost": 10,
+        "createdAt": "2026-10-08T00:21:23.438892",
+        "dimensionX": null,
+        "dimensionY": null,
+        "dimensionZ": null,
+        "id": 14,
+        "name": "AUDIT_1791429682913_produto",
+        "price": 25,
+        "size": null,
+        "sku": "AUDIT_1791429682913_SKU",
+        "updatedAt": "2026-10-08T00:21:23.4838862",
+        "weightKg": null
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Preço negativo rejeitado no PATCH",
+      "method": "PATCH",
+      "route": "/product/14",
+      "body": {
+        "price": -1
+      },
+      "expected": [400],
+      "actual": 200,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "brand": {
+          "id": 9,
+          "name": "AUDIT_1791429682913_marca"
+        },
+        "category": {
+          "id": 8,
+          "name": "AUDIT_1791429682913_categoria"
+        },
+        "color": null,
+        "cost": 10,
+        "createdAt": "2026-10-08T00:21:23.438892",
+        "dimensionX": null,
+        "dimensionY": null,
+        "dimensionZ": null,
+        "id": 14,
+        "name": "AUDIT_1791429682913_produto",
+        "price": -1,
+        "size": null,
+        "sku": "AUDIT_1791429682913_SKU",
+        "updatedAt": "2026-10-08T00:21:23.4918861",
+        "weightKg": null
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Custo negativo rejeitado no cadastro",
+      "method": "POST",
+      "route": "/product",
+      "body": {
+        "name": "AUDIT_1791429682913_produto",
+        "sku": "AUDIT_1791429682913_negative",
+        "brandId": 9,
+        "categoryId": 8,
+        "cost": -1,
+        "price": 20
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "brand": {
+          "id": 9,
+          "name": "AUDIT_1791429682913_marca"
+        },
+        "category": {
+          "id": 8,
+          "name": "AUDIT_1791429682913_categoria"
+        },
+        "color": null,
+        "cost": -1,
+        "createdAt": "2026-10-08T00:21:23.4988865",
+        "dimensionX": null,
+        "dimensionY": null,
+        "dimensionZ": null,
+        "id": 15,
+        "name": "AUDIT_1791429682913_produto",
+        "price": 20,
+        "size": null,
+        "sku": "AUDIT_1791429682913_negative",
+        "updatedAt": null,
+        "weightKg": null
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Nome obrigatório",
+      "method": "POST",
+      "route": "/product",
+      "body": {
+        "name": "",
+        "sku": "AUDIT_1791429682913_blank",
+        "brandId": 9,
+        "categoryId": 8,
+        "cost": 10,
+        "price": 20
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "brand": {
+          "id": 9,
+          "name": "AUDIT_1791429682913_marca"
+        },
+        "category": {
+          "id": 8,
+          "name": "AUDIT_1791429682913_categoria"
+        },
+        "color": null,
+        "cost": 10,
+        "createdAt": "2026-10-08T00:21:23.5058865",
+        "dimensionX": null,
+        "dimensionY": null,
+        "dimensionZ": null,
+        "id": 16,
+        "name": "",
+        "price": 20,
+        "size": null,
+        "sku": "AUDIT_1791429682913_blank",
+        "updatedAt": null,
+        "weightKg": null
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": 20,
+        "reservedQuantity": 2,
+        "minQuantity": 1,
+        "maxQuantity": 100
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 18,
+        "maxQuantity": 100,
+        "minQuantity": 1,
+        "product": {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": 10,
+          "createdAt": "2026-10-08T00:21:23.438892",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 14,
+          "name": "AUDIT_1791429682913_produto",
+          "price": -1,
+          "size": null,
+          "sku": "AUDIT_1791429682913_SKU",
+          "updatedAt": "2026-10-08T00:21:23.491886",
+          "weightKg": null
+        },
+        "quantity": 20,
+        "reservedQuantity": 2,
+        "warehouse": {
+          "description": null,
+          "id": 4,
+          "name": "AUDIT_1791429682913_armazem"
+        }
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/stockItem/search?warehouseId=4&productId=14",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "id": 18,
+          "maxQuantity": 100,
+          "minQuantity": 1,
+          "product": {
+            "active": true,
+            "brand": {
+              "id": 9,
+              "name": "AUDIT_1791429682913_marca"
+            },
+            "category": {
+              "id": 8,
+              "name": "AUDIT_1791429682913_categoria"
+            },
+            "color": null,
+            "cost": 10,
+            "createdAt": "2026-10-08T00:21:23.438892",
+            "dimensionX": null,
+            "dimensionY": null,
+            "dimensionZ": null,
+            "id": 14,
+            "name": "AUDIT_1791429682913_produto",
+            "price": -1,
+            "size": null,
+            "sku": "AUDIT_1791429682913_SKU",
+            "updatedAt": "2026-10-08T00:21:23.491886",
+            "weightKg": null
+          },
+          "quantity": 20,
+          "reservedQuantity": 2,
+          "warehouse": {
+            "description": null,
+            "id": 4,
+            "name": "AUDIT_1791429682913_armazem"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Estoque",
+      "label": "Duplicidade produto/armazém",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": 20,
+        "reservedQuantity": 2,
+        "minQuantity": 1,
+        "maxQuantity": 100
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "This product already exists in this warehouse.",
+        "timestamp": "2026-10-08T00:21:23.549878"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Quantidade negativa",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": -1,
+        "reservedQuantity": 2,
+        "minQuantity": 1,
+        "maxQuantity": 100
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:23.5538769"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Reserva excede quantidade",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {
+        "reservedQuantity": 21
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Reserved quantity cannot be greater than quantity.",
+        "timestamp": "2026-10-08T00:21:23.5658753"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Mínimo excede máximo",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {
+        "minQuantity": 101
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Minimum quantity cannot be greater than maximum quantity.",
+        "timestamp": "2026-10-08T00:21:23.5728771"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "PATCH válido",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {
+        "quantity": 30
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 18,
+        "maxQuantity": 100,
+        "minQuantity": 1,
+        "product": {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": 10,
+          "createdAt": "2026-10-08T00:21:23.438892",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 14,
+          "name": "AUDIT_1791429682913_produto",
+          "price": -1,
+          "size": null,
+          "sku": "AUDIT_1791429682913_SKU",
+          "updatedAt": "2026-10-08T00:21:23.491886",
+          "weightKg": null
+        },
+        "quantity": 30,
+        "reservedQuantity": 2,
+        "warehouse": {
+          "description": null,
+          "id": 4,
+          "name": "AUDIT_1791429682913_armazem"
+        }
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Campos obrigatórios ausentes",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {},
+      "expected": [400],
+      "actual": 500,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:23.598Z",
+        "status": 500,
+        "error": "Internal Server Error",
+        "path": "/stockItem"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Armazém inexistente",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 900000000,
+        "productId": 14,
+        "quantity": 20,
+        "reservedQuantity": 2,
+        "minQuantity": 1,
+        "maxQuantity": 100
+      },
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Warehouse not found.",
+        "timestamp": "2026-10-08T00:21:23.6068726"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Produto inexistente",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 900000000,
+        "quantity": 20,
+        "reservedQuantity": 2,
+        "minQuantity": 1,
+        "maxQuantity": 100
+      },
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Product not found.",
+        "timestamp": "2026-10-08T00:21:23.6138709"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Cadastro com estoque inicial",
+      "method": "POST",
+      "route": "/product",
+      "body": {
+        "name": "AUDIT_1791429682913_produto",
+        "sku": "AUDIT_1791429682913_stock",
+        "brandId": 9,
+        "categoryId": 8,
+        "cost": 10,
+        "price": 20,
+        "stock": {
+          "warehouseId": 5,
+          "quantity": 5,
+          "reservedQuantity": 0,
+          "minQuantity": 0,
+          "maxQuantity": 10
+        }
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "brand": {
+          "id": 9,
+          "name": "AUDIT_1791429682913_marca"
+        },
+        "category": {
+          "id": 8,
+          "name": "AUDIT_1791429682913_categoria"
+        },
+        "color": null,
+        "cost": 10,
+        "createdAt": "2026-10-08T00:21:23.6198701",
+        "dimensionX": null,
+        "dimensionY": null,
+        "dimensionZ": null,
+        "id": 17,
+        "name": "AUDIT_1791429682913_produto",
+        "price": 20,
+        "size": null,
+        "sku": "AUDIT_1791429682913_stock",
+        "updatedAt": null,
+        "weightKg": null
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Estoque inicial persistido",
+      "method": "GET",
+      "route": "/stockItem/search?productId=17",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "id": 19,
+          "maxQuantity": 10,
+          "minQuantity": 0,
+          "product": {
+            "active": true,
+            "brand": {
+              "id": 9,
+              "name": "AUDIT_1791429682913_marca"
+            },
+            "category": {
+              "id": 8,
+              "name": "AUDIT_1791429682913_categoria"
+            },
+            "color": null,
+            "cost": 10,
+            "createdAt": "2026-10-08T00:21:23.61987",
+            "dimensionX": null,
+            "dimensionY": null,
+            "dimensionZ": null,
+            "id": 17,
+            "name": "AUDIT_1791429682913_produto",
+            "price": 20,
+            "size": null,
+            "sku": "AUDIT_1791429682913_stock",
+            "updatedAt": null,
+            "weightKg": null
+          },
+          "quantity": 5,
+          "reservedQuantity": 0,
+          "warehouse": {
+            "description": null,
+            "id": 5,
+            "name": "AUDIT_1791429682913_armazem2"
+          }
+        }
+      ]
+    },
+    {
+      "module": "Produtos",
+      "label": "Estoque inválido desfaz cadastro",
+      "method": "POST",
+      "route": "/product",
+      "body": {
+        "name": "AUDIT_1791429682913_produto",
+        "sku": "AUDIT_1791429682913_rollback",
+        "brandId": 9,
+        "categoryId": 8,
+        "cost": 10,
+        "price": 20,
+        "stock": {
+          "warehouseId": 4,
+          "quantity": -1,
+          "reservedQuantity": 0,
+          "minQuantity": 0,
+          "maxQuantity": 10
+        }
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:23.6388681"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Rollback: produto ausente",
+      "method": "GET",
+      "route": "/product/search?sku=AUDIT_1791429682913_rollback",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": []
+    },
+    {
+      "module": "Clientes",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/customer",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000001",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "personType": "PJ",
+        "municipalReg": "123",
+        "stateReg": "456",
+        "birthDate": "2020-01-01",
+        "priceTableId": 1
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "birthDate": "2020-01-01",
+        "createdAt": "2026-10-08T00:21:23.6598633",
+        "email": "audit@example.invalid",
+        "id": 1,
+        "legalName": "AUDIT_1791429682913",
+        "municipalReg": "123",
+        "personType": "PJ",
+        "phone": "8133334444",
+        "priceTable": {
+          "active": false,
+          "createdAt": "2026-10-08T00:21:23.354904",
+          "endDate": "2026-12-31",
+          "id": 1,
+          "name": "AUDIT_1791429682913_preco",
+          "startDate": "2026-01-01",
+          "updatedAt": "2026-10-08T00:21:23.395896"
+        },
+        "stateReg": "456",
+        "taxId": "80000000000001",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/customer/search?taxId=80000000000001&legalName=audit_1791429682913&priceTableId=1&active=true",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Consulta por ID",
+      "method": "GET",
+      "route": "/customer/1",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "birthDate": "2020-01-01",
+        "createdAt": "2026-10-08T00:21:23.659863",
+        "email": "audit@example.invalid",
+        "id": 1,
+        "legalName": "AUDIT_1791429682913",
+        "municipalReg": "123",
+        "personType": "PJ",
+        "phone": "8133334444",
+        "priceTable": {
+          "active": false,
+          "createdAt": "2026-10-08T00:21:23.354904",
+          "endDate": "2026-12-31",
+          "id": 1,
+          "name": "AUDIT_1791429682913_preco",
+          "startDate": "2026-01-01",
+          "updatedAt": "2026-10-08T00:21:23.395896"
+        },
+        "stateReg": "456",
+        "taxId": "80000000000001",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "Duplicidade CNPJ",
+      "method": "POST",
+      "route": "/customer",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000001",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "personType": "PJ",
+        "municipalReg": "123",
+        "stateReg": "456",
+        "birthDate": "2020-01-01",
+        "priceTableId": 1
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Customer already exists.",
+        "timestamp": "2026-10-08T00:21:23.6848627"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "Tabela inexistente",
+      "method": "POST",
+      "route": "/customer",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000002",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "personType": "PJ",
+        "municipalReg": "123",
+        "stateReg": "456",
+        "birthDate": "2020-01-01",
+        "priceTableId": 900000000
+      },
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Price table not found.",
+        "timestamp": "2026-10-08T00:21:23.6888623"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "PATCH preserva razão social",
+      "method": "PATCH",
+      "route": "/customer/1",
+      "body": {
+        "tradeName": "AUDIT_1791429682913_editado",
+        "active": false
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": false,
+        "birthDate": "2020-01-01",
+        "createdAt": "2026-10-08T00:21:23.659863",
+        "email": "audit@example.invalid",
+        "id": 1,
+        "legalName": "AUDIT_1791429682913",
+        "municipalReg": "123",
+        "personType": "PJ",
+        "phone": "8133334444",
+        "priceTable": {
+          "active": false,
+          "createdAt": "2026-10-08T00:21:23.354904",
+          "endDate": "2026-12-31",
+          "id": 1,
+          "name": "AUDIT_1791429682913_preco",
+          "startDate": "2026-01-01",
+          "updatedAt": "2026-10-08T00:21:23.395896"
+        },
+        "stateReg": "456",
+        "taxId": "80000000000001",
+        "tradeName": "AUDIT_1791429682913_editado",
+        "updatedAt": "2026-10-08T00:21:23.7018583",
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "Nome obrigatório",
+      "method": "POST",
+      "route": "/customer",
+      "body": {
+        "legalName": "",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000003",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "personType": "PJ",
+        "municipalReg": "123",
+        "stateReg": "456",
+        "birthDate": "2020-01-01"
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "birthDate": "2020-01-01",
+        "createdAt": "2026-10-08T00:21:23.7088573",
+        "email": "audit@example.invalid",
+        "id": 2,
+        "legalName": "",
+        "municipalReg": "123",
+        "personType": "PJ",
+        "phone": "8133334444",
+        "priceTable": null,
+        "stateReg": "456",
+        "taxId": "80000000000003",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "active=false respeitado no cadastro",
+      "method": "POST",
+      "route": "/customer",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000004",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "personType": "PJ",
+        "municipalReg": "123",
+        "stateReg": "456",
+        "birthDate": "2020-01-01",
+        "active": false
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": false,
+      "response": {
+        "active": true,
+        "birthDate": "2020-01-01",
+        "createdAt": "2026-10-08T00:21:23.714856",
+        "email": "audit@example.invalid",
+        "id": 3,
+        "legalName": "AUDIT_1791429682913",
+        "municipalReg": "123",
+        "personType": "PJ",
+        "phone": "8133334444",
+        "priceTable": null,
+        "stateReg": "456",
+        "taxId": "80000000000004",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/customerAddress",
+      "body": {
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "10",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "addressType": "MAIN",
+        "customerId": 1
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "MAIN",
+        "city": "Caruaru",
+        "complement": "Sala",
+        "customer": {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        "id": 1,
+        "neighborhood": "Centro",
+        "number": "10",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/customerAddress/search?customerId=1&addressType=MAIN&city=caruaru",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "addressType": "MAIN",
+          "city": "Caruaru",
+          "complement": "Sala",
+          "customer": {
+            "active": false,
+            "birthDate": "2020-01-01",
+            "createdAt": "2026-10-08T00:21:23.659863",
+            "email": "audit@example.invalid",
+            "id": 1,
+            "legalName": "AUDIT_1791429682913",
+            "municipalReg": "123",
+            "personType": "PJ",
+            "phone": "8133334444",
+            "priceTable": {
+              "active": false,
+              "createdAt": "2026-10-08T00:21:23.354904",
+              "endDate": "2026-12-31",
+              "id": 1,
+              "name": "AUDIT_1791429682913_preco",
+              "startDate": "2026-01-01",
+              "updatedAt": "2026-10-08T00:21:23.395896"
+            },
+            "stateReg": "456",
+            "taxId": "80000000000001",
+            "tradeName": "AUDIT_1791429682913_editado",
+            "updatedAt": "2026-10-08T00:21:23.701858",
+            "whatsapp": "81999994444"
+          },
+          "id": 1,
+          "neighborhood": "Centro",
+          "number": "10",
+          "state": "PE",
+          "street": "AUDIT_1791429682913",
+          "zipCode": "55000-000"
+        }
+      ]
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "PATCH parcial",
+      "method": "PATCH",
+      "route": "/customerAddress/1",
+      "body": {
+        "neighborhood": "Novo bairro"
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "MAIN",
+        "city": "Caruaru",
+        "complement": "Sala",
+        "customer": {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        "id": 1,
+        "neighborhood": "Novo bairro",
+        "number": "10",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Cliente inexistente",
+      "method": "POST",
+      "route": "/customerAddress",
+      "body": {
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "10",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "addressType": "MAIN",
+        "customerId": 900000000
+      },
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Customer not found.",
+        "timestamp": "2026-10-08T00:21:23.7508545"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Rua obrigatória",
+      "method": "POST",
+      "route": "/customerAddress",
+      "body": {
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "",
+        "neighborhood": "Centro",
+        "number": "10",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "addressType": "BILLING",
+        "customerId": 1
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "addressType": "BILLING",
+        "city": "Caruaru",
+        "complement": "Sala",
+        "customer": {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        "id": 2,
+        "neighborhood": "Centro",
+        "number": "10",
+        "state": "PE",
+        "street": "",
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Tipo duplicado por cliente",
+      "method": "POST",
+      "route": "/customerAddress",
+      "body": {
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "10",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "addressType": "MAIN",
+        "customerId": 1
+      },
+      "expected": [400, 409],
+      "actual": 500,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:23.774Z",
+        "status": 500,
+        "error": "Internal Server Error",
+        "path": "/customerAddress"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Cadastro com endereço",
+      "method": "POST",
+      "route": "/supplier",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000005",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "address": {
+          "country": "Brasil",
+          "state": "PE",
+          "city": "Caruaru",
+          "street": "AUDIT_1791429682913",
+          "neighborhood": "Centro",
+          "number": "20",
+          "complement": "Sala",
+          "zipCode": "55000-000",
+          "addressType": "MAIN"
+        }
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "avgDeliveryDays": null,
+        "createdAt": "2026-10-08T00:21:23.7848493",
+        "email": "audit@example.invalid",
+        "id": 1,
+        "legalName": "AUDIT_1791429682913",
+        "phone": "8133334444",
+        "taxId": "80000000000005",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/supplier/search?taxId=80000000000005&legalName=audit_1791429682913&active=true",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Consulta por ID",
+      "method": "GET",
+      "route": "/supplier/1",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "avgDeliveryDays": null,
+        "createdAt": "2026-10-08T00:21:23.784849",
+        "email": "audit@example.invalid",
+        "id": 1,
+        "legalName": "AUDIT_1791429682913",
+        "phone": "8133334444",
+        "taxId": "80000000000005",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Endereço cadastrado junto",
+      "method": "GET",
+      "route": "/supplierAddress/search?supplierId=1",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "addressType": "MAIN",
+          "city": "Caruaru",
+          "complement": "Sala",
+          "country": "Brasil",
+          "id": 1,
+          "neighborhood": "Centro",
+          "number": "20",
+          "state": "PE",
+          "street": "AUDIT_1791429682913",
+          "supplier": {
+            "active": true,
+            "avgDeliveryDays": null,
+            "createdAt": "2026-10-08T00:21:23.784849",
+            "email": "audit@example.invalid",
+            "id": 1,
+            "legalName": "AUDIT_1791429682913",
+            "phone": "8133334444",
+            "taxId": "80000000000005",
+            "tradeName": "AUDIT_1791429682913",
+            "updatedAt": null,
+            "whatsapp": "81999994444"
+          },
+          "zipCode": "55000-000"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/supplier/search?supplierAddressId=1",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Duplicidade CNPJ",
+      "method": "POST",
+      "route": "/supplier",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000005",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "address": {
+          "country": "Brasil",
+          "state": "PE",
+          "city": "Caruaru",
+          "street": "AUDIT_1791429682913",
+          "neighborhood": "Centro",
+          "number": "20",
+          "complement": "Sala",
+          "zipCode": "55000-000",
+          "addressType": "MAIN"
+        }
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Supplier already exists!",
+        "timestamp": "2026-10-08T00:21:23.8268426"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "PATCH parcial",
+      "method": "PATCH",
+      "route": "/supplier/1",
+      "body": {
+        "avgDeliveryDays": 3,
+        "active": false
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": false,
+        "avgDeliveryDays": 3,
+        "createdAt": "2026-10-08T00:21:23.784849",
+        "email": "audit@example.invalid",
+        "id": 1,
+        "legalName": "AUDIT_1791429682913",
+        "phone": "8133334444",
+        "taxId": "80000000000005",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": "2026-10-08T00:21:23.834845",
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Prazo negativo rejeitado",
+      "method": "PATCH",
+      "route": "/supplier/1",
+      "body": {
+        "avgDeliveryDays": -1
+      },
+      "expected": [400],
+      "actual": 200,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "active": false,
+        "avgDeliveryDays": -1,
+        "createdAt": "2026-10-08T00:21:23.784849",
+        "email": "audit@example.invalid",
+        "id": 1,
+        "legalName": "AUDIT_1791429682913",
+        "phone": "8133334444",
+        "taxId": "80000000000005",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": "2026-10-08T00:21:23.8398406",
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Nome obrigatório",
+      "method": "POST",
+      "route": "/supplier",
+      "body": {
+        "legalName": "",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000006",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444"
+      },
+      "expected": [400],
+      "actual": 201,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "avgDeliveryDays": null,
+        "createdAt": "2026-10-08T00:21:23.8458433",
+        "email": "audit@example.invalid",
+        "id": 2,
+        "legalName": "",
+        "phone": "8133334444",
+        "taxId": "80000000000006",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Endereço duplicado desfaz cadastro",
+      "method": "POST",
+      "route": "/supplier",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000007",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "address": {
+          "country": "Brasil",
+          "state": "PE",
+          "city": "Caruaru",
+          "street": "AUDIT_1791429682913",
+          "neighborhood": "Centro",
+          "number": "20",
+          "complement": "Sala",
+          "zipCode": "55000-000",
+          "addressType": "MAIN"
+        }
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Address already exists",
+        "timestamp": "2026-10-08T00:21:23.8538407"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Rollback: fornecedor ausente",
+      "method": "GET",
+      "route": "/supplier/search?taxId=80000000000007",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": []
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Cadastro sem endereço",
+      "method": "POST",
+      "route": "/supplier",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000008",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444"
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "avgDeliveryDays": null,
+        "createdAt": "2026-10-08T00:21:23.8628387",
+        "email": "audit@example.invalid",
+        "id": 4,
+        "legalName": "AUDIT_1791429682913",
+        "phone": "8133334444",
+        "taxId": "80000000000008",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "PATCH CNPJ duplicado",
+      "method": "PATCH",
+      "route": "/supplier/4",
+      "body": {
+        "taxId": "80000000000005"
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Supplier already exists!",
+        "timestamp": "2026-10-08T00:21:23.871836"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/supplierAddress",
+      "body": {
+        "country": "Brasil",
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "21",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "addressType": "MAIN",
+        "supplierId": 4
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "MAIN",
+        "city": "Caruaru",
+        "complement": "Sala",
+        "country": "Brasil",
+        "id": 2,
+        "neighborhood": "Centro",
+        "number": "21",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "supplier": {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.862839",
+          "email": "audit@example.invalid",
+          "id": 4,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000008",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "Consulta por ID",
+      "method": "GET",
+      "route": "/supplierAddress/1",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "MAIN",
+        "city": "Caruaru",
+        "complement": "Sala",
+        "country": "Brasil",
+        "id": 1,
+        "neighborhood": "Centro",
+        "number": "20",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "supplier": {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/supplierAddress/search?supplierId=1&country=brasil&addressType=MAIN",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "addressType": "MAIN",
+          "city": "Caruaru",
+          "complement": "Sala",
+          "country": "Brasil",
+          "id": 1,
+          "neighborhood": "Centro",
+          "number": "20",
+          "state": "PE",
+          "street": "AUDIT_1791429682913",
+          "supplier": {
+            "active": false,
+            "avgDeliveryDays": -1,
+            "createdAt": "2026-10-08T00:21:23.784849",
+            "email": "audit@example.invalid",
+            "id": 1,
+            "legalName": "AUDIT_1791429682913",
+            "phone": "8133334444",
+            "taxId": "80000000000005",
+            "tradeName": "AUDIT_1791429682913",
+            "updatedAt": "2026-10-08T00:21:23.839841",
+            "whatsapp": "81999994444"
+          },
+          "zipCode": "55000-000"
+        }
+      ]
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "PATCH parcial",
+      "method": "PATCH",
+      "route": "/supplierAddress/1",
+      "body": {
+        "city": "Recife"
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "MAIN",
+        "city": "Recife",
+        "complement": "Sala",
+        "country": "Brasil",
+        "id": 1,
+        "neighborhood": "Centro",
+        "number": "20",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "supplier": {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "PATCH não considera próprio endereço duplicado",
+      "method": "PATCH",
+      "route": "/supplierAddress/1",
+      "body": {
+        "number": "20"
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "MAIN",
+        "city": "Recife",
+        "complement": "Sala",
+        "country": "Brasil",
+        "id": 1,
+        "neighborhood": "Centro",
+        "number": "20",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "supplier": {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "PATCH detecta endereço duplicado",
+      "method": "PATCH",
+      "route": "/supplierAddress/2",
+      "body": {
+        "number": "20"
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Address already exists",
+        "timestamp": "2026-10-08T00:21:23.9168312"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "Fornecedor inexistente",
+      "method": "POST",
+      "route": "/supplierAddress",
+      "body": {
+        "country": "Brasil",
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "22",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "addressType": "MAIN",
+        "supplierId": 900000000
+      },
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Supplier not found",
+        "timestamp": "2026-10-08T00:21:23.9218316"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "Segundo endereço permitido pelo mapeamento OneToMany atual",
+      "method": "POST",
+      "route": "/supplierAddress",
+      "body": {
+        "country": "Brasil",
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "23",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "addressType": "MAIN",
+        "supplierId": 4
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "MAIN",
+        "city": "Caruaru",
+        "complement": "Sala",
+        "country": "Brasil",
+        "id": 3,
+        "neighborhood": "Centro",
+        "number": "23",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "supplier": {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.862839",
+          "email": "audit@example.invalid",
+          "id": 4,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000008",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "Cadastro válido",
+      "method": "POST",
+      "route": "/warehouseAddress",
+      "body": {
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "30",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "warehouseId": 4
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "city": "Caruaru",
+        "complement": "Sala",
+        "id": 4,
+        "neighborhood": "Centro",
+        "number": "30",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "warehouse": {
+          "description": null,
+          "id": 4,
+          "name": "AUDIT_1791429682913_armazem"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "Busca e filtros",
+      "method": "GET",
+      "route": "/warehouseAddress/search?warehouseId=4&city=caruaru",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "city": "Caruaru",
+          "complement": "Sala",
+          "id": 4,
+          "neighborhood": "Centro",
+          "number": "30",
+          "state": "PE",
+          "street": "AUDIT_1791429682913",
+          "warehouse": {
+            "description": null,
+            "id": 4,
+            "name": "AUDIT_1791429682913_armazem"
+          },
+          "zipCode": "55000-000"
+        }
+      ]
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "Consulta por ID",
+      "method": "GET",
+      "route": "/warehouseAddress/4",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "city": "Caruaru",
+        "complement": "Sala",
+        "id": 4,
+        "neighborhood": "Centro",
+        "number": "30",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "warehouse": {
+          "description": null,
+          "id": 4,
+          "name": "AUDIT_1791429682913_armazem"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "Duplicidade endereço",
+      "method": "POST",
+      "route": "/warehouseAddress",
+      "body": {
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "30",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "warehouseId": 4
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Address already exists",
+        "timestamp": "2026-10-08T00:21:23.9568281"
+      }
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "PATCH parcial",
+      "method": "PATCH",
+      "route": "/warehouseAddress/4",
+      "body": {
+        "city": "Recife"
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "city": "Recife",
+        "complement": "Sala",
+        "id": 4,
+        "neighborhood": "Centro",
+        "number": "30",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "warehouse": {
+          "description": null,
+          "id": 4,
+          "name": "AUDIT_1791429682913_armazem"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "Armazém inexistente",
+      "method": "POST",
+      "route": "/warehouseAddress",
+      "body": {
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "31",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "warehouseId": 900000000
+      },
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Warehouse not found",
+        "timestamp": "2026-10-08T00:21:23.9738264"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Filtro individual: sku",
+      "method": "GET",
+      "route": "/product/search?sku=AUDIT_1791429682913_SKU",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": 10,
+          "createdAt": "2026-10-08T00:21:23.438892",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 14,
+          "name": "AUDIT_1791429682913_produto",
+          "price": -1,
+          "size": null,
+          "sku": "AUDIT_1791429682913_SKU",
+          "updatedAt": "2026-10-08T00:21:23.491886",
+          "weightKg": null
+        }
+      ]
+    },
+    {
+      "module": "Produtos",
+      "label": "Filtro individual: name",
+      "method": "GET",
+      "route": "/product/search?name=",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": true,
+          "brand": {
+            "id": 1,
+            "name": "Samsung"
+          },
+          "category": {
+            "id": 1,
+            "name": "Eletrônicos"
+          },
+          "color": "Preto",
+          "cost": 900,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 15.8,
+          "dimensionY": 7.7,
+          "dimensionZ": 0.8,
+          "id": 1,
+          "name": "Smartphone Galaxy A54",
+          "price": 1499.9,
+          "size": null,
+          "sku": "SKU-ELET-001",
+          "updatedAt": null,
+          "weightKg": 0.202
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 1,
+            "name": "Samsung"
+          },
+          "category": {
+            "id": 1,
+            "name": "Eletrônicos"
+          },
+          "color": "Branco",
+          "cost": 60,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 6,
+          "dimensionY": 6,
+          "dimensionZ": 3,
+          "id": 2,
+          "name": "Fone de Ouvido Bluetooth",
+          "price": 129.9,
+          "size": null,
+          "sku": "SKU-ELET-002",
+          "updatedAt": null,
+          "weightKg": 0.05
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 2,
+            "name": "Nike"
+          },
+          "category": {
+            "id": 2,
+            "name": "Vestuário"
+          },
+          "color": "Azul",
+          "cost": 25,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 3,
+          "name": "Camiseta Dry-Fit",
+          "price": 79.9,
+          "size": "M",
+          "sku": "SKU-VEST-001",
+          "updatedAt": null,
+          "weightKg": 0.15
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 2,
+            "name": "Nike"
+          },
+          "category": {
+            "id": 2,
+            "name": "Vestuário"
+          },
+          "color": "Cinza",
+          "cost": 110,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 30,
+          "dimensionY": 12,
+          "dimensionZ": 11,
+          "id": 4,
+          "name": "Tênis Corrida Revolution",
+          "price": 299.9,
+          "size": "42",
+          "sku": "SKU-VEST-002",
+          "updatedAt": null,
+          "weightKg": 0.6
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 4,
+            "name": "Faber-Castell"
+          },
+          "category": {
+            "id": 3,
+            "name": "Papelaria"
+          },
+          "color": "Azul",
+          "cost": 0.8,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 14,
+          "dimensionY": 1,
+          "dimensionZ": 1,
+          "id": 5,
+          "name": "Caneta Esferográfica Azul",
+          "price": 2.5,
+          "size": null,
+          "sku": "SKU-PAP-001",
+          "updatedAt": null,
+          "weightKg": 0.01
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 4,
+            "name": "Faber-Castell"
+          },
+          "category": {
+            "id": 3,
+            "name": "Papelaria"
+          },
+          "color": "Rosa",
+          "cost": 8,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 20,
+          "dimensionY": 8,
+          "dimensionZ": 5,
+          "id": 6,
+          "name": "Estojo Escolar",
+          "price": 24.9,
+          "size": null,
+          "sku": "SKU-PAP-002",
+          "updatedAt": null,
+          "weightKg": 0.12
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 3,
+            "name": "Tramontina"
+          },
+          "category": {
+            "id": 5,
+            "name": "Casa e Cozinha"
+          },
+          "color": "Prata",
+          "cost": 85,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 22,
+          "dimensionY": 22,
+          "dimensionZ": 18,
+          "id": 7,
+          "name": "Panela de Pressão 4.5L",
+          "price": 189.9,
+          "size": null,
+          "sku": "SKU-CASA-001",
+          "updatedAt": null,
+          "weightKg": 1.8
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 5,
+            "name": "Bosch"
+          },
+          "category": {
+            "id": 4,
+            "name": "Ferramentas"
+          },
+          "color": "Verde",
+          "cost": 220,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 25,
+          "dimensionY": 22,
+          "dimensionZ": 8,
+          "id": 8,
+          "name": "Furadeira de Impacto",
+          "price": 449.9,
+          "size": null,
+          "sku": "SKU-FERR-001",
+          "updatedAt": null,
+          "weightKg": 1.5
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 6,
+            "name": "Intel"
+          },
+          "category": {
+            "id": 7,
+            "name": "Informática"
+          },
+          "color": "Prata",
+          "cost": 650,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 12,
+          "dimensionY": 8,
+          "dimensionZ": 7,
+          "id": 9,
+          "name": "Processador Intel Core i5",
+          "price": 999.9,
+          "size": null,
+          "sku": "SKU-INF-001",
+          "updatedAt": null,
+          "weightKg": 0.45
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 7,
+            "name": "Multilaser"
+          },
+          "category": {
+            "id": 7,
+            "name": "Informática"
+          },
+          "color": "Preto",
+          "cost": 35,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 45,
+          "dimensionY": 15,
+          "dimensionZ": 3,
+          "id": 10,
+          "name": "Teclado USB",
+          "price": 79.9,
+          "size": null,
+          "sku": "SKU-INF-002",
+          "updatedAt": null,
+          "weightKg": 0.55
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 5,
+            "name": "Bosch"
+          },
+          "category": {
+            "id": 4,
+            "name": "Ferramentas"
+          },
+          "color": "Azul",
+          "cost": 45,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 25,
+          "dimensionY": 15,
+          "dimensionZ": 5,
+          "id": 11,
+          "name": "Kit Chave de Fenda",
+          "price": 99.9,
+          "size": null,
+          "sku": "SKU-FERR-002",
+          "updatedAt": null,
+          "weightKg": 0.7
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 8,
+            "name": "Wurth"
+          },
+          "category": {
+            "id": 6,
+            "name": "Automotivo"
+          },
+          "color": "Cinza",
+          "cost": 120,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": 18,
+          "dimensionY": 12,
+          "dimensionZ": 8,
+          "id": 12,
+          "name": "Jogo de Pastilhas de Freio",
+          "price": 249.9,
+          "size": null,
+          "sku": "SKU-AUTO-001",
+          "updatedAt": null,
+          "weightKg": 1.2
+        },
+        {
+          "active": false,
+          "brand": {
+            "id": 1,
+            "name": "Samsung"
+          },
+          "category": null,
+          "color": null,
+          "cost": 50,
+          "createdAt": "2026-10-08T00:21:19.599195",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 13,
+          "name": "Produto Descontinuado",
+          "price": 99.9,
+          "size": null,
+          "sku": "SKU-DESC-001",
+          "updatedAt": null,
+          "weightKg": null
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": 10,
+          "createdAt": "2026-10-08T00:21:23.438892",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 14,
+          "name": "AUDIT_1791429682913_produto",
+          "price": -1,
+          "size": null,
+          "sku": "AUDIT_1791429682913_SKU",
+          "updatedAt": "2026-10-08T00:21:23.491886",
+          "weightKg": null
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": -1,
+          "createdAt": "2026-10-08T00:21:23.498887",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 15,
+          "name": "AUDIT_1791429682913_produto",
+          "price": 20,
+          "size": null,
+          "sku": "AUDIT_1791429682913_negative",
+          "updatedAt": null,
+          "weightKg": null
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": 10,
+          "createdAt": "2026-10-08T00:21:23.505887",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 16,
+          "name": "",
+          "price": 20,
+          "size": null,
+          "sku": "AUDIT_1791429682913_blank",
+          "updatedAt": null,
+          "weightKg": null
+        },
+        {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": 10,
+          "createdAt": "2026-10-08T00:21:23.61987",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 17,
+          "name": "AUDIT_1791429682913_produto",
+          "price": 20,
+          "size": null,
+          "sku": "AUDIT_1791429682913_stock",
+          "updatedAt": null,
+          "weightKg": null
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro individual: personType",
+      "method": "GET",
+      "route": "/customer/search?personType=PJ",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.708857",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000003",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.714856",
+          "email": "audit@example.invalid",
+          "id": 3,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000004",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro individual: stateReg",
+      "method": "GET",
+      "route": "/customer/search?stateReg=456",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.708857",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000003",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.714856",
+          "email": "audit@example.invalid",
+          "id": 3,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000004",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro individual: municipalReg",
+      "method": "GET",
+      "route": "/customer/search?municipalReg=123",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.708857",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000003",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.714856",
+          "email": "audit@example.invalid",
+          "id": 3,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000004",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro individual: tradeName",
+      "method": "GET",
+      "route": "/customer/search?tradeName=AUDIT_1791429682913_editado",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro individual: email",
+      "method": "GET",
+      "route": "/customer/search?email=AUDIT%40EXAMPLE",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.708857",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000003",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.714856",
+          "email": "audit@example.invalid",
+          "id": 3,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000004",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro individual: phone",
+      "method": "GET",
+      "route": "/customer/search?phone=8133334444",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.708857",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000003",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.714856",
+          "email": "audit@example.invalid",
+          "id": 3,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000004",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro individual: whatsapp",
+      "method": "GET",
+      "route": "/customer/search?whatsapp=81999994444",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.708857",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000003",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.714856",
+          "email": "audit@example.invalid",
+          "id": 3,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": null,
+          "stateReg": "456",
+          "taxId": "80000000000004",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro individual: active",
+      "method": "GET",
+      "route": "/customer/search?active=false",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Filtro individual: startDate",
+      "method": "GET",
+      "route": "/price-table/search?startDate=2026-01-01",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "createdAt": "2026-10-08T00:21:23.354904",
+          "endDate": "2026-12-31",
+          "id": 1,
+          "name": "AUDIT_1791429682913_preco",
+          "startDate": "2026-01-01",
+          "updatedAt": "2026-10-08T00:21:23.395896"
+        },
+        {
+          "active": true,
+          "createdAt": "2026-10-08T00:21:23.416893",
+          "endDate": "2026-12-31",
+          "id": 3,
+          "name": "AUDIT_1791429682913_inativa",
+          "startDate": "2026-01-01",
+          "updatedAt": null
+        }
+      ]
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Filtro individual: endDate",
+      "method": "GET",
+      "route": "/price-table/search?endDate=2026-12-31",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "createdAt": "2026-10-08T00:21:23.354904",
+          "endDate": "2026-12-31",
+          "id": 1,
+          "name": "AUDIT_1791429682913_preco",
+          "startDate": "2026-01-01",
+          "updatedAt": "2026-10-08T00:21:23.395896"
+        },
+        {
+          "active": true,
+          "createdAt": "2026-10-08T00:21:23.416893",
+          "endDate": "2026-12-31",
+          "id": 3,
+          "name": "AUDIT_1791429682913_inativa",
+          "startDate": "2026-01-01",
+          "updatedAt": null
+        }
+      ]
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Filtro individual: active",
+      "method": "GET",
+      "route": "/price-table/search?active=false",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "createdAt": "2026-10-08T00:21:23.354904",
+          "endDate": "2026-12-31",
+          "id": 1,
+          "name": "AUDIT_1791429682913_preco",
+          "startDate": "2026-01-01",
+          "updatedAt": "2026-10-08T00:21:23.395896"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Filtro individual: tradeName",
+      "method": "GET",
+      "route": "/supplier/search?tradeName=audit_1791429682913",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.845843",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "phone": "8133334444",
+          "taxId": "80000000000006",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.862839",
+          "email": "audit@example.invalid",
+          "id": 4,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000008",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Filtro individual: email",
+      "method": "GET",
+      "route": "/supplier/search?email=AUDIT%40EXAMPLE",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.845843",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "phone": "8133334444",
+          "taxId": "80000000000006",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.862839",
+          "email": "audit@example.invalid",
+          "id": 4,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000008",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Filtro individual: phone",
+      "method": "GET",
+      "route": "/supplier/search?phone=8133334444",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.845843",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "phone": "8133334444",
+          "taxId": "80000000000006",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.862839",
+          "email": "audit@example.invalid",
+          "id": 4,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000008",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Filtro individual: whatsapp",
+      "method": "GET",
+      "route": "/supplier/search?whatsapp=81999994444",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.845843",
+          "email": "audit@example.invalid",
+          "id": 2,
+          "legalName": "",
+          "phone": "8133334444",
+          "taxId": "80000000000006",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        },
+        {
+          "active": true,
+          "avgDeliveryDays": null,
+          "createdAt": "2026-10-08T00:21:23.862839",
+          "email": "audit@example.invalid",
+          "id": 4,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000008",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": null,
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Filtro individual: active",
+      "method": "GET",
+      "route": "/supplier/search?active=false",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Filtro individual: supplierAddressId",
+      "method": "GET",
+      "route": "/supplier/search?supplierAddressId=1",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        }
+      ]
+    },
+    {
+      "module": "Estoque",
+      "label": "Cadastro rejeita quantity negativo",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": -1,
+        "reservedQuantity": 2,
+        "minQuantity": 1,
+        "maxQuantity": 100
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:24.0948116"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "PATCH rejeita quantity negativo",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {
+        "quantity": -1
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:24.1008109"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Cadastro rejeita reservedQuantity negativo",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": 20,
+        "reservedQuantity": -1,
+        "minQuantity": 1,
+        "maxQuantity": 100
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Reserved quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:24.1028081"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "PATCH rejeita reservedQuantity negativo",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {
+        "reservedQuantity": -1
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Reserved quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:24.1088093"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Cadastro rejeita minQuantity negativo",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": 20,
+        "reservedQuantity": 2,
+        "minQuantity": -1,
+        "maxQuantity": 100
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Minimum quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:24.1108068"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "PATCH rejeita minQuantity negativo",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {
+        "minQuantity": -1
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Minimum quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:24.1168061"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Cadastro rejeita maxQuantity negativo",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": 20,
+        "reservedQuantity": 2,
+        "minQuantity": 1,
+        "maxQuantity": -1
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Maximum quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:24.1198054"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "PATCH rejeita maxQuantity negativo",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {
+        "maxQuantity": -1
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Maximum quantity cannot be negative.",
+        "timestamp": "2026-10-08T00:21:24.1248083"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Cadastro rejeita mínimo maior que máximo",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": 20,
+        "reservedQuantity": 2,
+        "minQuantity": 101,
+        "maxQuantity": 100
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Minimum quantity cannot be greater than maximum quantity.",
+        "timestamp": "2026-10-08T00:21:24.127808"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Cadastro rejeita reserva maior que quantidade",
+      "method": "POST",
+      "route": "/stockItem",
+      "body": {
+        "warehouseId": 4,
+        "productId": 14,
+        "quantity": 20,
+        "reservedQuantity": 21,
+        "minQuantity": 1,
+        "maxQuantity": 100
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Reserved quantity cannot be greater than quantity.",
+        "timestamp": "2026-10-08T00:21:24.1298039"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Reduzir quantidade abaixo da reserva",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {
+        "quantity": 1
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Reserved quantity cannot be greater than quantity.",
+        "timestamp": "2026-10-08T00:21:24.1358047"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "PATCH vazio preserva dados",
+      "method": "PATCH",
+      "route": "/stockItem/18",
+      "body": {},
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 18,
+        "maxQuantity": 100,
+        "minQuantity": 1,
+        "product": {
+          "active": true,
+          "brand": {
+            "id": 9,
+            "name": "AUDIT_1791429682913_marca"
+          },
+          "category": {
+            "id": 8,
+            "name": "AUDIT_1791429682913_categoria"
+          },
+          "color": null,
+          "cost": 10,
+          "createdAt": "2026-10-08T00:21:23.438892",
+          "dimensionX": null,
+          "dimensionY": null,
+          "dimensionZ": null,
+          "id": 14,
+          "name": "AUDIT_1791429682913_produto",
+          "price": -1,
+          "size": null,
+          "sku": "AUDIT_1791429682913_SKU",
+          "updatedAt": "2026-10-08T00:21:23.491886",
+          "weightKg": null
+        },
+        "quantity": 30,
+        "reservedQuantity": 2,
+        "warehouse": {
+          "description": null,
+          "id": 4,
+          "name": "AUDIT_1791429682913_armazem"
+        }
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "PATCH duplicado não altera CNPJ",
+      "method": "GET",
+      "route": "/supplier/4",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "avgDeliveryDays": null,
+        "createdAt": "2026-10-08T00:21:23.862839",
+        "email": "audit@example.invalid",
+        "id": 4,
+        "legalName": "AUDIT_1791429682913",
+        "phone": "8133334444",
+        "taxId": "80000000000008",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Cadastro para exclusão individual",
+      "method": "POST",
+      "route": "/customerAddress",
+      "body": {
+        "state": "PE",
+        "city": "Caruaru",
+        "street": "AUDIT_1791429682913",
+        "neighborhood": "Centro",
+        "number": "10",
+        "complement": "Sala",
+        "zipCode": "55000-000",
+        "addressType": "SHIPPING",
+        "customerId": 1
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "SHIPPING",
+        "city": "Caruaru",
+        "complement": "Sala",
+        "customer": {
+          "active": false,
+          "birthDate": "2020-01-01",
+          "createdAt": "2026-10-08T00:21:23.659863",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "municipalReg": "123",
+          "personType": "PJ",
+          "phone": "8133334444",
+          "priceTable": {
+            "active": false,
+            "createdAt": "2026-10-08T00:21:23.354904",
+            "endDate": "2026-12-31",
+            "id": 1,
+            "name": "AUDIT_1791429682913_preco",
+            "startDate": "2026-01-01",
+            "updatedAt": "2026-10-08T00:21:23.395896"
+          },
+          "stateReg": "456",
+          "taxId": "80000000000001",
+          "tradeName": "AUDIT_1791429682913_editado",
+          "updatedAt": "2026-10-08T00:21:23.701858",
+          "whatsapp": "81999994444"
+        },
+        "id": 4,
+        "neighborhood": "Centro",
+        "number": "10",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Excluir endereço individual",
+      "method": "DELETE",
+      "route": "/customerAddress/4",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Endereço excluído individualmente ausente",
+      "method": "GET",
+      "route": "/customerAddress/search?customerId=1&addressType=SHIPPING",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": []
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "Limpar complemento com string vazia",
+      "method": "PATCH",
+      "route": "/supplierAddress/1",
+      "body": {
+        "complement": ""
+      },
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "addressType": "MAIN",
+        "city": "Recife",
+        "complement": "",
+        "country": "Brasil",
+        "id": 1,
+        "neighborhood": "Centro",
+        "number": "20",
+        "state": "PE",
+        "street": "AUDIT_1791429682913",
+        "supplier": {
+          "active": false,
+          "avgDeliveryDays": -1,
+          "createdAt": "2026-10-08T00:21:23.784849",
+          "email": "audit@example.invalid",
+          "id": 1,
+          "legalName": "AUDIT_1791429682913",
+          "phone": "8133334444",
+          "taxId": "80000000000005",
+          "tradeName": "AUDIT_1791429682913",
+          "updatedAt": "2026-10-08T00:21:23.839841",
+          "whatsapp": "81999994444"
+        },
+        "zipCode": "55000-000"
+      }
+    },
+    {
+      "module": "Marcas",
+      "label": "Cadastro sem vínculos para exclusão",
+      "method": "POST",
+      "route": "/brand",
+      "body": {
+        "name": "AUDIT_1791429682913_excluir"
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 11,
+        "name": "AUDIT_1791429682913_excluir"
+      }
+    },
+    {
+      "module": "Marcas",
+      "label": "Excluir marca sem vínculos",
+      "method": "DELETE",
+      "route": "/brand/11",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Marcas",
+      "label": "Marca excluída ausente",
+      "method": "GET",
+      "route": "/brand/11",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Categorias",
+      "label": "Cadastro sem vínculos para exclusão",
+      "method": "POST",
+      "route": "/category",
+      "body": {
+        "name": "AUDIT_1791429682913_excluir"
+      },
+      "expected": [201],
+      "actual": 201,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "id": 10,
+        "name": "AUDIT_1791429682913_excluir"
+      }
+    },
+    {
+      "module": "Categorias",
+      "label": "Excluir categoria sem vínculos",
+      "method": "DELETE",
+      "route": "/category/10",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Categorias",
+      "label": "Categoria excluída ausente",
+      "method": "GET",
+      "route": "/category/10",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Marcas",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/brand/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Brand not found.",
+        "timestamp": "2026-10-08T00:21:24.209795"
+      }
+    },
+    {
+      "module": "Categorias",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/category/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Category not found.",
+        "timestamp": "2026-10-08T00:21:24.2127934"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/product/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Product not found.",
+        "timestamp": "2026-10-08T00:21:24.2167959"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/product/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Product not found",
+        "timestamp": "2026-10-08T00:21:24.2207944"
+      }
+    },
+    {
+      "module": "Armazéns",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/warehouse/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Warehouse not found.",
+        "timestamp": "2026-10-08T00:21:24.2247946"
+      }
+    },
+    {
+      "module": "Armazéns",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/warehouse/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Warehouse not found.",
+        "timestamp": "2026-10-08T00:21:24.2277931"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/stockItem/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Stock item not found.",
+        "timestamp": "2026-10-08T00:21:24.2307911"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/stockItem/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Stock item not found.",
+        "timestamp": "2026-10-08T00:21:24.2347914"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/customer/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Customer not found.",
+        "timestamp": "2026-10-08T00:21:24.2387931"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/customer/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Customer not found.",
+        "timestamp": "2026-10-08T00:21:24.242791"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/customerAddress/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Customer address not found.",
+        "timestamp": "2026-10-08T00:21:24.2467901"
+      }
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/customerAddress/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Customer address not found.",
+        "timestamp": "2026-10-08T00:21:24.2507891"
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/price-table/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Price table not found.",
+        "timestamp": "2026-10-08T00:21:24.2547916"
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/price-table/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Price table not found.",
+        "timestamp": "2026-10-08T00:21:24.2587872"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/supplier/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Supplier not found",
+        "timestamp": "2026-10-08T00:21:24.261787"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/supplier/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Supplier not found",
+        "timestamp": "2026-10-08T00:21:24.2657885"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/supplierAddress/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Supplier address not found",
+        "timestamp": "2026-10-08T00:21:24.2697872"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/supplierAddress/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Supplier address not found",
+        "timestamp": "2026-10-08T00:21:24.2727856"
+      }
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "DELETE inexistente",
+      "method": "DELETE",
+      "route": "/warehouseAddress/900000000",
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Warehouse address not found.",
+        "timestamp": "2026-10-08T00:21:24.2767864"
+      }
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "PATCH inexistente",
+      "method": "PATCH",
+      "route": "/warehouseAddress/900000000",
+      "body": {},
+      "expected": [404],
+      "actual": 404,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 404,
+        "error": "Not Found",
+        "message": "Warehouse Address not found",
+        "timestamp": "2026-10-08T00:21:24.2807859"
+      }
+    },
+    {
+      "module": "Marcas",
+      "label": "GET ID inexistente (contrato atual)",
+      "method": "GET",
+      "route": "/brand/900000000",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Marcas",
+      "label": "ID inválido",
+      "method": "GET",
+      "route": "/brand/abc",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "For input string: \"abc\"",
+        "timestamp": "2026-10-08T00:21:24.286784"
+      }
+    },
+    {
+      "module": "Categorias",
+      "label": "GET ID inexistente (contrato atual)",
+      "method": "GET",
+      "route": "/category/900000000",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Categorias",
+      "label": "ID inválido",
+      "method": "GET",
+      "route": "/category/abc",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "For input string: \"abc\"",
+        "timestamp": "2026-10-08T00:21:24.290786"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "GET ID inexistente (contrato atual)",
+      "method": "GET",
+      "route": "/customer/900000000",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Clientes",
+      "label": "ID inválido",
+      "method": "GET",
+      "route": "/customer/abc",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "For input string: \"abc\"",
+        "timestamp": "2026-10-08T00:21:24.2957866"
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "GET ID inexistente (contrato atual)",
+      "method": "GET",
+      "route": "/price-table/900000000",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "ID inválido",
+      "method": "GET",
+      "route": "/price-table/abc",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "For input string: \"abc\"",
+        "timestamp": "2026-10-08T00:21:24.3007837"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "GET ID inexistente (contrato atual)",
+      "method": "GET",
+      "route": "/supplier/900000000",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Fornecedores",
+      "label": "ID inválido",
+      "method": "GET",
+      "route": "/supplier/abc",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "For input string: \"abc\"",
+        "timestamp": "2026-10-08T00:21:24.3067824"
+      }
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "GET ID inexistente (contrato atual)",
+      "method": "GET",
+      "route": "/supplierAddress/900000000",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "ID inválido",
+      "method": "GET",
+      "route": "/supplierAddress/abc",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "For input string: \"abc\"",
+        "timestamp": "2026-10-08T00:21:24.311782"
+      }
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "GET ID inexistente (contrato atual)",
+      "method": "GET",
+      "route": "/warehouseAddress/900000000",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "ID inválido",
+      "method": "GET",
+      "route": "/warehouseAddress/abc",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "status": 400,
+        "error": "Bad Request",
+        "message": "For input string: \"abc\"",
+        "timestamp": "2026-10-08T00:21:24.3177805"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Enum inválido",
+      "method": "POST",
+      "route": "/supplier",
+      "body": {
+        "legalName": "AUDIT_1791429682913",
+        "tradeName": "AUDIT_1791429682913",
+        "taxId": "80000000000009",
+        "email": "audit@example.invalid",
+        "phone": "8133334444",
+        "whatsapp": "81999994444",
+        "address": {
+          "country": "Brasil",
+          "state": "PE",
+          "city": "Caruaru",
+          "street": "AUDIT_1791429682913",
+          "neighborhood": "Centro",
+          "number": "40",
+          "complement": "Sala",
+          "zipCode": "55000-000",
+          "addressType": "INVALID"
+        }
+      },
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:24.322Z",
+        "status": 400,
+        "error": "Bad Request",
+        "path": "/supplier"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Filtro numérico inválido",
+      "method": "GET",
+      "route": "/supplier/search?avgDeliveryDays=abc",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:24.327Z",
+        "status": 400,
+        "error": "Bad Request",
+        "path": "/supplier/search"
+      }
+    },
+    {
+      "module": "Clientes",
+      "label": "Filtro enum inválido",
+      "method": "GET",
+      "route": "/customer/search?personType=INVALID",
+      "expected": [400],
+      "actual": 400,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:24.332Z",
+        "status": 400,
+        "error": "Bad Request",
+        "path": "/customer/search"
+      }
+    },
+    {
+      "module": "Produtos",
+      "label": "Excluir produto com estoque retorna erro de negócio",
+      "method": "DELETE",
+      "route": "/product/14",
+      "expected": [400, 409],
+      "actual": 500,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:24.339Z",
+        "status": 500,
+        "error": "Internal Server Error",
+        "path": "/product/14"
+      }
+    },
+    {
+      "module": "Marcas",
+      "label": "Excluir marca vinculada retorna erro de negócio",
+      "method": "DELETE",
+      "route": "/brand/9",
+      "expected": [400, 409],
+      "actual": 500,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:24.346Z",
+        "status": 500,
+        "error": "Internal Server Error",
+        "path": "/brand/9"
+      }
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Excluir tabela vinculada retorna erro de negócio",
+      "method": "DELETE",
+      "route": "/price-table/1",
+      "expected": [400, 409],
+      "actual": 500,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:24.353Z",
+        "status": 500,
+        "error": "Internal Server Error",
+        "path": "/price-table/1"
+      }
+    },
+    {
+      "module": "Estoque",
+      "label": "Excluir item",
+      "method": "DELETE",
+      "route": "/stockItem/18",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Estoque",
+      "label": "Item excluído ausente",
+      "method": "GET",
+      "route": "/stockItem/search?warehouseId=4&productId=14",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": []
+    },
+    {
+      "module": "Endereços de armazéns",
+      "label": "Excluir endereço preserva armazém",
+      "method": "DELETE",
+      "route": "/warehouseAddress/4",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Armazéns",
+      "label": "Armazém preservado após remover endereço",
+      "method": "GET",
+      "route": "/warehouse/search?name=AUDIT_1791429682913_armazem",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "description": null,
+          "id": 5,
+          "name": "AUDIT_1791429682913_armazem2"
+        },
+        {
+          "description": null,
+          "id": 4,
+          "name": "AUDIT_1791429682913_armazem"
+        }
+      ]
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "Excluir endereço preserva fornecedor",
+      "method": "DELETE",
+      "route": "/supplierAddress/2",
+      "expected": [204],
+      "actual": 500,
+      "ok": false,
+      "contentMatches": true,
+      "response": {
+        "timestamp": "2026-10-08T03:21:24.378Z",
+        "status": 500,
+        "error": "Internal Server Error",
+        "path": "/supplierAddress/2"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Fornecedor preservado após remover endereço",
+      "method": "GET",
+      "route": "/supplier/4",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": {
+        "active": true,
+        "avgDeliveryDays": null,
+        "createdAt": "2026-10-08T00:21:23.862839",
+        "email": "audit@example.invalid",
+        "id": 4,
+        "legalName": "AUDIT_1791429682913",
+        "phone": "8133334444",
+        "taxId": "80000000000008",
+        "tradeName": "AUDIT_1791429682913",
+        "updatedAt": null,
+        "whatsapp": "81999994444"
+      }
+    },
+    {
+      "module": "Fornecedores",
+      "label": "Excluir fornecedor remove endereço",
+      "method": "DELETE",
+      "route": "/supplier/1",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Endereços de fornecedores",
+      "label": "Endereço excluído por cascade",
+      "method": "GET",
+      "route": "/supplierAddress/1",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Clientes",
+      "label": "Excluir cliente remove endereços",
+      "method": "DELETE",
+      "route": "/customer/1",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Endereços de clientes",
+      "label": "Endereços excluídos por cascade",
+      "method": "GET",
+      "route": "/customerAddress/search?customerId=1",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": []
+    },
+    {
+      "module": "Tabelas de preço",
+      "label": "Excluir tabela sem vínculos",
+      "method": "DELETE",
+      "route": "/price-table/1",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Produtos",
+      "label": "Excluir produto sem estoque",
+      "method": "DELETE",
+      "route": "/product/14",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Produtos",
+      "label": "Produto excluído ausente",
+      "method": "GET",
+      "route": "/product/search?sku=AUDIT_1791429682913_SKU",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": []
+    },
+    {
+      "module": "Estoque",
+      "label": "Excluir estoque inicial",
+      "method": "DELETE",
+      "route": "/stockItem/19",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Produtos",
+      "label": "Excluir produto com estoque removido",
+      "method": "DELETE",
+      "route": "/product/17",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Armazéns",
+      "label": "Excluir armazém",
+      "method": "DELETE",
+      "route": "/warehouse/4",
+      "expected": [204],
+      "actual": 204,
+      "ok": true,
+      "contentMatches": true,
+      "response": null
+    },
+    {
+      "module": "Armazéns",
+      "label": "Armazém excluído ausente",
+      "method": "GET",
+      "route": "/warehouse/search?name=AUDIT_1791429682913_armazem",
+      "expected": [200],
+      "actual": 200,
+      "ok": true,
+      "contentMatches": true,
+      "response": [
+        {
+          "description": null,
+          "id": 5,
+          "name": "AUDIT_1791429682913_armazem2"
+        }
+      ]
+    }
+  ]
+}

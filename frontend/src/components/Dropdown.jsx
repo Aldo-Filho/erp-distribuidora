@@ -17,8 +17,7 @@ export function Dropdown({ value, onChange, options, ariaLabel }) {
   const rootRef = useRef(null);
   // Localiza o texto a exibir no botão a partir do valor que a página mantém.
   const selectedOption =
-    options.find((option) => String(option.value) === String(value)) ||
-    options[0];
+    options.find((option) => String(option.value) === String(value)) || options[0];
 
   // Fecha a lista quando o usuário clica fora dela. Isto evita menus esquecidos abertos.
   useEffect(() => {
@@ -27,8 +26,7 @@ export function Dropdown({ value, onChange, options, ariaLabel }) {
     }
 
     document.addEventListener("mousedown", closeWhenClickingOutside);
-    return () =>
-      document.removeEventListener("mousedown", closeWhenClickingOutside);
+    return () => document.removeEventListener("mousedown", closeWhenClickingOutside);
   }, []);
 
   function selectOption(option) {
@@ -49,9 +47,7 @@ export function Dropdown({ value, onChange, options, ariaLabel }) {
         aria-expanded={isOpen}
       >
         <span className="truncate">{selectedOption.label}</span>
-        <span
-          className={`text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
-        >
+        <span className={`text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}>
           <ChevronDown size={16} strokeWidth={1.8} aria-hidden="true" />
         </span>
       </button>

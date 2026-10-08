@@ -1,14 +1,14 @@
 package com.pi.erp.product.brand;
 
 import com.pi.erp.exception.ResourceNotFoundException;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class BrandService {
+
     @Autowired
     private BrandRepository repository;
 
@@ -32,10 +32,10 @@ public class BrandService {
 
     @Transactional
     public void delete(Long id) {
-        Brand brand = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
+        Brand brand = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
 
         repository.delete(brand);
     }
-
 }

@@ -1,16 +1,16 @@
 package com.pi.erp.price;
 
 import com.pi.erp.exception.ResourceNotFoundException;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.List;
-
 @Service
 public class PriceTableService {
+
     @Autowired
     private PriceTableRepository repository;
 
@@ -19,20 +19,19 @@ public class PriceTableService {
 
         if (filter.name() != null && !filter.name().isBlank()) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(cb.lower(root.get("name")),
-                            "%" + filter.name().toLowerCase() + "%"));
+                cb.like(cb.lower(root.get("name")), "%" + filter.name().toLowerCase() + "%")
+            );
         }
         if (filter.startDate() != null) {
             spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("startDate"), filter.startDate()));
+                cb.equal(root.get("startDate"), filter.startDate())
+            );
         }
         if (filter.endDate() != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("endDate"), filter.endDate()));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("endDate"), filter.endDate()));
         }
         if (filter.active() != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("active"), filter.active()));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), filter.active()));
         }
 
         return repository.findAll(spec);
@@ -49,8 +48,9 @@ public class PriceTableService {
     }
 
     public PriceTable update(Long id, PatchPriceTableDTO data) {
-        PriceTable priceTable = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Price table not found."));
+        PriceTable priceTable = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Price table not found."));
 
         if (data.name() != null && !data.name().isBlank()) {
             if (repository.existsByNameIgnoreCaseAndIdNot(data.name(), id)) {
@@ -59,12 +59,9 @@ public class PriceTableService {
             priceTable.setName(data.name());
         }
 
-        LocalDate startDate = data.startDate() != null
-                ? data.startDate()
-                : priceTable.getStartDate();
-        LocalDate endDate = data.endDate() != null
-                ? data.endDate()
-                : priceTable.getEndDate();
+        LocalDate startDate =
+            data.startDate() != null ? data.startDate() : priceTable.getStartDate();
+        LocalDate endDate = data.endDate() != null ? data.endDate() : priceTable.getEndDate();
         validatePeriod(startDate, endDate);
 
         if (data.startDate() != null) {
@@ -82,8 +79,9 @@ public class PriceTableService {
 
     @Transactional
     public void delete(Long id) {
-        PriceTable priceTable = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Price table not found."));
+        PriceTable priceTable = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Price table not found."));
 
         repository.delete(priceTable);
     }

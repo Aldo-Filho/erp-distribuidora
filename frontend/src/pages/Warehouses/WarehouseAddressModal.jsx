@@ -30,11 +30,7 @@ export function WarehouseAddressModal({ warehouse, onClose }) {
         if (!active) return;
         const currentAddress = addresses[0] || null;
         setAddress(currentAddress);
-        setForm(
-          Object.fromEntries(
-            fields.map(({ name }) => [name, currentAddress?.[name] || ""]),
-          ),
-        );
+        setForm(Object.fromEntries(fields.map(({ name }) => [name, currentAddress?.[name] || ""])));
         setLoadError("");
       } catch (requestError) {
         if (active) setLoadError(requestError.message);
@@ -51,9 +47,7 @@ export function WarehouseAddressModal({ warehouse, onClose }) {
   async function save(event) {
     event.preventDefault();
     if (busy || loading || loadError || !editing) return;
-    const values = Object.fromEntries(
-      fields.map(({ name }) => [name, form[name].trim()]),
-    );
+    const values = Object.fromEntries(fields.map(({ name }) => [name, form[name].trim()]));
     setNotice("");
     if (Object.values(values).some((value) => !value)) {
       setError("Preencha todos os campos do endereço.");
@@ -62,17 +56,12 @@ export function WarehouseAddressModal({ warehouse, onClose }) {
     setPending("save");
     setError("");
     try {
-      const saved = await api(
-        address ? `/warehouseAddress/${address.id}` : "/warehouseAddress",
-        {
-          method: address ? "PATCH" : "POST",
-          body: JSON.stringify({ warehouseId: warehouse.id, ...values }),
-        },
-      );
+      const saved = await api(address ? `/warehouseAddress/${address.id}` : "/warehouseAddress", {
+        method: address ? "PATCH" : "POST",
+        body: JSON.stringify({ warehouseId: warehouse.id, ...values }),
+      });
       setAddress(saved);
-      setForm(
-        Object.fromEntries(fields.map(({ name }) => [name, saved[name] || ""])),
-      );
+      setForm(Object.fromEntries(fields.map(({ name }) => [name, saved[name] || ""])));
       setNotice("Endereço salvo com sucesso.");
       setEditing(false);
     } catch (requestError) {
@@ -83,12 +72,7 @@ export function WarehouseAddressModal({ warehouse, onClose }) {
   }
 
   async function remove() {
-    if (
-      busy ||
-      !address ||
-      !window.confirm(`Excluir o endereço de “${warehouse.name}”?`)
-    )
-      return;
+    if (busy || !address || !window.confirm(`Excluir o endereço de “${warehouse.name}”?`)) return;
     setPending("delete");
     setError("");
     setNotice("");
@@ -113,9 +97,7 @@ export function WarehouseAddressModal({ warehouse, onClose }) {
       }}
     >
       {loading ? (
-        <p className="py-8 text-center text-sm text-slate-500">
-          Carregando endereço...
-        </p>
+        <p className="py-8 text-center text-sm text-slate-500">Carregando endereço...</p>
       ) : loadError ? (
         <div
           className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
@@ -135,23 +117,15 @@ export function WarehouseAddressModal({ warehouse, onClose }) {
       ) : !editing ? (
         <>
           {notice && (
-            <p
-              className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700"
-              role="status"
-            >
+            <p className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700" role="status">
               {notice}
             </p>
           )}
           {address ? (
             <dl className="grid gap-4 sm:grid-cols-2">
               {fields.map(({ name, label }) => (
-                <div
-                  key={name}
-                  className={name === "complement" ? "sm:col-span-2" : ""}
-                >
-                  <dt className="text-xs font-semibold text-slate-500">
-                    {label}
-                  </dt>
+                <div key={name} className={name === "complement" ? "sm:col-span-2" : ""}>
+                  <dt className="text-xs font-semibold text-slate-500">{label}</dt>
                   <dd className="mt-1 break-words text-sm text-slate-800">
                     {address[name] || "—"}
                   </dd>
@@ -193,18 +167,12 @@ export function WarehouseAddressModal({ warehouse, onClose }) {
               : "Este armazém ainda não possui endereço. Preencha os campos para cadastrá-lo."}
           </p>
           {error && (
-            <p
-              className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
-              role="alert"
-            >
+            <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
               {error}
             </p>
           )}
           {notice && (
-            <p
-              className="rounded-lg bg-green-50 p-3 text-sm text-green-700"
-              role="status"
-            >
+            <p className="rounded-lg bg-green-50 p-3 text-sm text-green-700" role="status">
               {notice}
             </p>
           )}
@@ -236,9 +204,7 @@ export function WarehouseAddressModal({ warehouse, onClose }) {
               className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
               onClick={() => {
                 setForm(
-                  Object.fromEntries(
-                    fields.map(({ name }) => [name, address?.[name] || ""]),
-                  ),
+                  Object.fromEntries(fields.map(({ name }) => [name, address?.[name] || ""])),
                 );
                 setEditing(false);
                 setError("");

@@ -5,20 +5,21 @@ import com.pi.erp.product.Product;
 import com.pi.erp.product.ProductRepository;
 import com.pi.erp.warehouse.Warehouse;
 import com.pi.erp.warehouse.WarehouseRepository;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class StockItemService {
+
     @Autowired
     private StockItemRepository repository;
 
     @Autowired
     private WarehouseRepository warehouseRepository;
+
     @Autowired
     private ProductRepository productRepository;
 
@@ -26,28 +27,19 @@ public class StockItemService {
         Specification<StockItem> spec = Specification.allOf();
 
         if (warehouseId != null) {
-            spec = spec.and(
-                    (root, query, cb) ->
-                            cb.equal(
-                                    root.get("warehouse").get("id"),
-                                    warehouseId
-                            )
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("warehouse").get("id"), warehouseId)
             );
         }
         if (productId != null) {
-            spec = spec.and(
-                    (root, query, cb) ->
-                            cb.equal(
-                                    root.get("product").get("id"),
-                                    productId
-                            )
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("product").get("id"), productId)
             );
         }
         return repository.findAll(spec);
     }
 
     public StockItem register(RequestStockItemDTO data) {
-
         if (data.quantity() < 0) {
             throw new IllegalArgumentException("Quantity cannot be negative.");
         }
@@ -61,52 +53,57 @@ public class StockItemService {
             throw new IllegalArgumentException("Maximum quantity cannot be negative.");
         }
         if (data.maxQuantity() != null && data.minQuantity() > data.maxQuantity()) {
-            throw new IllegalArgumentException("Minimum quantity cannot be greater than maximum quantity.");
+            throw new IllegalArgumentException(
+                "Minimum quantity cannot be greater than maximum quantity."
+            );
         }
         if (data.reservedQuantity() > data.quantity()) {
-            throw new IllegalArgumentException("Reserved quantity cannot be greater than quantity.");
+            throw new IllegalArgumentException(
+                "Reserved quantity cannot be greater than quantity."
+            );
         }
         if (repository.existsByWarehouseIdAndProductId(data.warehouseId(), data.productId())) {
             throw new IllegalArgumentException("This product already exists in this warehouse.");
         }
 
-        Warehouse warehouse = warehouseRepository.findById(data.warehouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
+        Warehouse warehouse = warehouseRepository
+            .findById(data.warehouseId())
+            .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
-        Product product = productRepository.findById(data.productId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
+        Product product = productRepository
+            .findById(data.productId())
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
         StockItem stockItem = new StockItem(data, warehouse, product);
         return repository.save(stockItem);
     }
 
     public StockItem update(Long id, PatchStockItemDTO data) {
-        StockItem stockItem = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
+        StockItem stockItem = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
 
-        Long warehouseId = data.warehouseId() != null ? data.warehouseId() : stockItem.getWarehouse().getId();
+        Long warehouseId =
+            data.warehouseId() != null ? data.warehouseId() : stockItem.getWarehouse().getId();
 
-        Long productId = data.productId() != null ? data.productId() : stockItem.getProduct().getId();
+        Long productId =
+            data.productId() != null ? data.productId() : stockItem.getProduct().getId();
 
-        if (repository.existsByWarehouseIdAndProductIdAndIdNot(
-                warehouseId,
-                productId,
-                id
-        )) {
-            throw new IllegalArgumentException(
-                    "This product already exists in this warehouse."
-            );
+        if (repository.existsByWarehouseIdAndProductIdAndIdNot(warehouseId, productId, id)) {
+            throw new IllegalArgumentException("This product already exists in this warehouse.");
         }
 
         if (data.warehouseId() != null) {
-            Warehouse warehouse = warehouseRepository.findById(data.warehouseId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
+            Warehouse warehouse = warehouseRepository
+                .findById(data.warehouseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
             stockItem.setWarehouse(warehouse);
         }
         if (data.productId() != null) {
-            Product product = productRepository.findById(data.productId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
+            Product product = productRepository
+                .findById(data.productId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
             stockItem.setProduct(product);
         }
@@ -118,37 +115,33 @@ public class StockItemService {
         }
         if (data.reservedQuantity() != null) {
             if (data.reservedQuantity() < 0) {
-                throw new IllegalArgumentException(
-                        "Reserved quantity cannot be negative."
-                );
+                throw new IllegalArgumentException("Reserved quantity cannot be negative.");
             }
             stockItem.setReservedQuantity(data.reservedQuantity());
         }
         if (data.minQuantity() != null) {
             if (data.minQuantity() < 0) {
-                throw new IllegalArgumentException(
-                        "Minimum quantity cannot be negative."
-                );
+                throw new IllegalArgumentException("Minimum quantity cannot be negative.");
             }
             stockItem.setMinQuantity(data.minQuantity());
         }
         if (data.maxQuantity() != null) {
             if (data.maxQuantity() < 0) {
-                throw new IllegalArgumentException(
-                        "Maximum quantity cannot be negative."
-                );
+                throw new IllegalArgumentException("Maximum quantity cannot be negative.");
             }
             stockItem.setMaxQuantity(data.maxQuantity());
         }
-        if (stockItem.getMaxQuantity() != null
-                && stockItem.getMinQuantity() > stockItem.getMaxQuantity()) {
+        if (
+            stockItem.getMaxQuantity() != null &&
+            stockItem.getMinQuantity() > stockItem.getMaxQuantity()
+        ) {
             throw new IllegalArgumentException(
-                    "Minimum quantity cannot be greater than maximum quantity."
+                "Minimum quantity cannot be greater than maximum quantity."
             );
         }
         if (stockItem.getReservedQuantity() > stockItem.getQuantity()) {
             throw new IllegalArgumentException(
-                    "Reserved quantity cannot be greater than quantity."
+                "Reserved quantity cannot be greater than quantity."
             );
         }
         return repository.save(stockItem);
@@ -156,10 +149,10 @@ public class StockItemService {
 
     @Transactional
     public void delete(Long id) {
-        StockItem stockItem = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
+        StockItem stockItem = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
 
         repository.delete(stockItem);
     }
 }
-

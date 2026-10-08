@@ -15,10 +15,7 @@ export function WarehouseForm({
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
       {error && (
-        <p
-          className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
-          role="alert"
-        >
+        <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
           {error}
         </p>
       )}
@@ -54,14 +51,8 @@ export function WarehouseForm({
           className="grid gap-4 border-t border-slate-200 pt-4"
           aria-label="Endereço do novo armazém"
         >
-          <h3 className="text-sm font-semibold text-slate-800">
-            Endereço do armazém
-          </h3>
-          <WarehouseAddressFields
-            form={addressForm}
-            onChange={onAddressChange}
-            disabled={saving}
-          />
+          <h3 className="text-sm font-semibold text-slate-800">Endereço do armazém</h3>
+          <WarehouseAddressFields form={addressForm} onChange={onAddressChange} disabled={saving} />
         </section>
       )}
       <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
@@ -77,11 +68,7 @@ export function WarehouseForm({
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
           disabled={saving}
         >
-          {saving
-            ? "Salvando..."
-            : createdWarehouse
-              ? "Salvar endereço"
-              : "Salvar armazém"}
+          {saving ? "Salvando..." : createdWarehouse ? "Salvar endereço" : "Salvar armazém"}
         </button>
       </div>
     </form>

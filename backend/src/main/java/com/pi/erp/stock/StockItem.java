@@ -7,19 +7,19 @@ import lombok.*;
 
 @Entity
 @Table(
-        name = "stock_items",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_stock_item",
-                columnNames = {"warehouse_id", "product_id"}
-        )
+    name = "stock_items",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_stock_item",
+        columnNames = { "warehouse_id", "product_id" }
+    )
 )
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class StockItem {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -46,13 +46,20 @@ public class StockItem {
     @Column(name = "max_quantity")
     private Integer maxQuantity;
 
-    public StockItem(RequestStockItemDTO requestStockItemDTO, Warehouse warehouse, Product product) {
+    public StockItem(
+        RequestStockItemDTO requestStockItemDTO,
+        Warehouse warehouse,
+        Product product
+    ) {
         this.warehouse = warehouse;
         this.product = product;
         this.quantity = requestStockItemDTO.quantity() != null ? requestStockItemDTO.quantity() : 0;
-        this.reservedQuantity = requestStockItemDTO.reservedQuantity() != null ? requestStockItemDTO.reservedQuantity() : 0;
-        this.minQuantity = requestStockItemDTO.minQuantity() != null ? requestStockItemDTO.minQuantity() : 0;
+        this.reservedQuantity =
+            requestStockItemDTO.reservedQuantity() != null
+                ? requestStockItemDTO.reservedQuantity()
+                : 0;
+        this.minQuantity =
+            requestStockItemDTO.minQuantity() != null ? requestStockItemDTO.minQuantity() : 0;
         this.maxQuantity = requestStockItemDTO.maxQuantity();
     }
-
 }

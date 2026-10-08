@@ -26,39 +26,23 @@ export function parsePriceCents(value) {
 
 export function filterProducts(products, filters) {
   const search = normalizeText(filters.search);
-  const searchedPrice =
-    filters.searchBy === "price" && search ? normalizePriceInput(search) : null;
+  const searchedPrice = filters.searchBy === "price" && search ? normalizePriceInput(search) : null;
 
   return products
     .filter((product) => {
-      if (
-        filters.categoryId &&
-        String(product.category?.id) !== filters.categoryId
-      )
-        return false;
-      if (filters.brandId && String(product.brand?.id) !== filters.brandId)
-        return false;
-      if (filters.active !== "" && String(product.active) !== filters.active)
-        return false;
+      if (filters.categoryId && String(product.category?.id) !== filters.categoryId) return false;
+      if (filters.brandId && String(product.brand?.id) !== filters.brandId) return false;
+      if (filters.active !== "" && String(product.active) !== filters.active) return false;
       if (!search) return true;
       if (filters.searchBy === "price") {
-        if (
-          searchedPrice === null ||
-          parsePriceCents(search) === null ||
-          product.price == null
-        )
+        if (searchedPrice === null || parsePriceCents(search) === null || product.price == null)
           return false;
         const price = Number(product.price);
-        return (
-          Number.isFinite(price) && price.toFixed(2).includes(searchedPrice)
-        );
+        return Number.isFinite(price) && price.toFixed(2).includes(searchedPrice);
       }
       return normalizeText(product[filters.searchBy]).includes(search);
     })
     .sort((first, second) =>
-      normalizeText(first.name).localeCompare(
-        normalizeText(second.name),
-        "pt-BR",
-      ),
+      normalizeText(first.name).localeCompare(normalizeText(second.name), "pt-BR"),
     );
 }

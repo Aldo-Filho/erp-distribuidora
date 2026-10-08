@@ -6,13 +6,13 @@ import lombok.*;
 
 @Entity
 @Table(name = "customer_addresses")
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class CustomerAddress {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -59,5 +59,4 @@ public class CustomerAddress {
         this.complement = data.complement();
         this.zipCode = data.zipCode();
     }
-
 }

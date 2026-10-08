@@ -3,20 +3,19 @@ package com.pi.erp.product;
 import com.pi.erp.product.brand.Brand;
 import com.pi.erp.product.category.Category;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "products")
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -34,7 +33,7 @@ public class Product {
     private Category category;
 
     @ManyToOne
-    @JoinColumn(name = "brand_id",  nullable = false)
+    @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
 
     @Column(name = "cost", nullable = false)
@@ -85,7 +84,7 @@ public class Product {
     public Product(RequestProductDTO requestProductDTO, Brand brand, Category category) {
         this.name = requestProductDTO.name();
         // Ajustar SKU para geração automática
-        this.sku =  requestProductDTO.sku();
+        this.sku = requestProductDTO.sku();
         this.brand = brand;
         this.category = category;
         this.cost = requestProductDTO.cost();

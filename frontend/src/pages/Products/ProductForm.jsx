@@ -58,10 +58,7 @@ export function ProductForm({
       onSubmit={onSubmit}
     >
       {error && (
-        <p
-          className="col-span-full rounded-lg bg-red-50 p-3 text-sm text-red-700"
-          role="alert"
-        >
+        <p className="col-span-full rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
           {error}
         </p>
       )}
@@ -69,13 +66,7 @@ export function ProductForm({
         disabled={saving}
         className="col-span-full grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4"
       >
-        <Field
-          label="Nome"
-          name="name"
-          value={form.name}
-          onChange={onChange}
-          required
-        />
+        <Field label="Nome" name="name" value={form.name} onChange={onChange} required />
         {/* O backend não altera SKU no PATCH; ele só é editável ao cadastrar. */}
         <Field
           label="SKU"
@@ -130,12 +121,7 @@ export function ProductForm({
           value={form.weightKg}
           onChange={onChange}
         />
-        <Field
-          label="Cor"
-          name="color"
-          value={form.color}
-          onChange={onChange}
-        />
+        <Field label="Cor" name="color" value={form.color} onChange={onChange} />
         <Field
           label="Comprimento"
           name="dimensionX"
@@ -163,40 +149,28 @@ export function ProductForm({
           value={form.dimensionZ}
           onChange={onChange}
         />
-        <Field
-          label="Tamanho"
-          name="size"
-          value={form.size}
-          onChange={onChange}
-        />
+        <Field label="Tamanho" name="size" value={form.size} onChange={onChange} />
       </fieldset>
       {isNew && (
         <fieldset
           disabled={saving}
           className="col-span-full grid min-w-0 grid-cols-1 gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2 sm:gap-4"
         >
-          <legend className="px-1 text-sm font-semibold text-slate-900">
-            Estoque inicial
-          </legend>
+          <legend className="px-1 text-sm font-semibold text-slate-900">Estoque inicial</legend>
           <p className="col-span-full text-xs text-slate-500">
             Opcional: selecione um armazém para cadastrar o estoque junto com o produto.
           </p>
           {warehouseError && (
             <p className="col-span-full text-sm text-red-700" role="alert">
               {warehouseError}{" "}
-              <button
-                type="button"
-                className="font-semibold underline"
-                onClick={onRetryWarehouses}
-              >
+              <button type="button" className="font-semibold underline" onClick={onRetryWarehouses}>
                 Tentar novamente
               </button>
             </p>
           )}
           {!warehouseError && warehouses.length === 0 && (
             <p className="col-span-full text-xs text-slate-500">
-              Cadastre um armazém no menu Armazéns para informar o estoque
-              inicial.
+              Cadastre um armazém no menu Armazéns para informar o estoque inicial.
             </p>
           )}
           <Select
@@ -255,10 +229,7 @@ export function ProductForm({
               />
               <p className="col-span-full text-xs text-slate-500">
                 Quantidade disponível:{" "}
-                {Math.max(
-                  0,
-                  Number(form.quantity) - Number(form.reservedQuantity),
-                )}
+                {Math.max(0, Number(form.quantity) - Number(form.reservedQuantity))}
               </p>
             </>
           )}

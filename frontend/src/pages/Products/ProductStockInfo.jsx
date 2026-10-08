@@ -65,35 +65,18 @@ export function ProductStockInfo({ items, unavailable }) {
     const openAbove = spaceBelow < 260 && spaceAbove > spaceBelow;
     setPosition({
       width,
-      left: Math.max(
-        margin,
-        Math.min(rect.left, window.innerWidth - width - margin),
-      ),
-      ...(openAbove
-        ? { bottom: window.innerHeight - rect.top + gap }
-        : { top: rect.bottom + gap }),
-      maxHeight: Math.min(
-        400,
-        Math.max(0, openAbove ? spaceAbove : spaceBelow),
-      ),
+      left: Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin)),
+      ...(openAbove ? { bottom: window.innerHeight - rect.top + gap } : { top: rect.bottom + gap }),
+      maxHeight: Math.min(400, Math.max(0, openAbove ? spaceAbove : spaceBelow)),
     });
   }
 
-  if (unavailable)
-    return <span className="text-xs text-slate-500">Estoque indisponível</span>;
+  if (unavailable) return <span className="text-xs text-slate-500">Estoque indisponível</span>;
   if (items.length === 0)
-    return (
-      <span className="text-xs text-slate-500">Sem estoque cadastrado</span>
-    );
+    return <span className="text-xs text-slate-500">Sem estoque cadastrado</span>;
 
-  const quantity = items.reduce(
-    (total, item) => total + (item.quantity ?? 0),
-    0,
-  );
-  const reserved = items.reduce(
-    (total, item) => total + (item.reservedQuantity ?? 0),
-    0,
-  );
+  const quantity = items.reduce((total, item) => total + (item.quantity ?? 0), 0);
+  const reserved = items.reduce((total, item) => total + (item.reservedQuantity ?? 0), 0);
 
   return (
     <div className="flex min-w-0 items-center gap-2 py-2 pr-2">
@@ -143,9 +126,7 @@ export function ProductStockInfo({ items, unavailable }) {
             className="fixed z-30 overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-800 shadow-xl outline-none"
           >
             <header className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-slate-900">
-                Estoque por armazém
-              </h3>
+              <h3 className="text-sm font-semibold text-slate-900">Estoque por armazém</h3>
               <button
                 type="button"
                 className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-slate-500 hover:bg-slate-100"
@@ -167,29 +148,21 @@ export function ProductStockInfo({ items, unavailable }) {
                   <dl className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1 text-slate-600">
                     <div>
                       <dt className="inline">Estoque: </dt>
-                      <dd className="inline">
-                        {formatQuantity(item.quantity ?? 0)}
-                      </dd>
+                      <dd className="inline">{formatQuantity(item.quantity ?? 0)}</dd>
                     </div>
                     <div>
                       <dt className="inline">Reservado: </dt>
-                      <dd className="inline">
-                        {formatQuantity(item.reservedQuantity ?? 0)}
-                      </dd>
+                      <dd className="inline">{formatQuantity(item.reservedQuantity ?? 0)}</dd>
                     </div>
                     <div className="col-span-2">
                       <dt className="inline">Disponível: </dt>
                       <dd className="inline">
-                        {formatQuantity(
-                          (item.quantity ?? 0) - (item.reservedQuantity ?? 0),
-                        )}
+                        {formatQuantity((item.quantity ?? 0) - (item.reservedQuantity ?? 0))}
                       </dd>
                     </div>
                     <div>
                       <dt className="inline">Mínimo: </dt>
-                      <dd className="inline">
-                        {formatQuantity(item.minQuantity ?? 0)}
-                      </dd>
+                      <dd className="inline">{formatQuantity(item.minQuantity ?? 0)}</dd>
                     </div>
                     <div>
                       <dt className="inline">Máximo: </dt>

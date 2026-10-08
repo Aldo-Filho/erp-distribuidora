@@ -3,13 +3,46 @@ import test from "node:test";
 import { filterProducts, parsePriceCents } from "../src/pages/Products/productFilters.js";
 
 const products = [
-  { id: 1, name: "Cabo USB", sku: "ABC-01", price: 49.9, brand: { id: 1 }, category: { id: 2 }, active: true },
-  { id: 2, name: "Adaptador ABC", sku: "USB-02", price: "149.90", brand: { id: 3 }, category: { id: 2 }, active: false },
-  { id: 3, name: "Monitor", sku: "MON-03", price: 1234.56, brand: { id: 1 }, category: null, active: true },
-  { id: 4, name: "Brinde", sku: "ZERO-04", price: 0, brand: { id: 1 }, category: { id: 2 }, active: true },
+  {
+    id: 1,
+    name: "Cabo USB",
+    sku: "ABC-01",
+    price: 49.9,
+    brand: { id: 1 },
+    category: { id: 2 },
+    active: true,
+  },
+  {
+    id: 2,
+    name: "Adaptador ABC",
+    sku: "USB-02",
+    price: "149.90",
+    brand: { id: 3 },
+    category: { id: 2 },
+    active: false,
+  },
+  {
+    id: 3,
+    name: "Monitor",
+    sku: "MON-03",
+    price: 1234.56,
+    brand: { id: 1 },
+    category: null,
+    active: true,
+  },
+  {
+    id: 4,
+    name: "Brinde",
+    sku: "ZERO-04",
+    price: 0,
+    brand: { id: 1 },
+    category: { id: 2 },
+    active: true,
+  },
 ];
 const defaults = { search: "", searchBy: "name", categoryId: "", brandId: "", active: "" };
-const results = (overrides) => filterProducts(products, { ...defaults, ...overrides }).map((product) => product.id);
+const results = (overrides) =>
+  filterProducts(products, { ...defaults, ...overrides }).map((product) => product.id);
 
 test("nome e SKU pesquisam apenas o campo selecionado", () => {
   assert.deepEqual(results({ search: "  usb  " }), [1]);
@@ -41,7 +74,10 @@ test("valores inválidos não viram preços válidos", () => {
 test("campo vazio exibe todos; categoria, marca e status combinam com a busca", () => {
   assert.deepEqual(results({ searchBy: "price" }), [2, 4, 1, 3]);
   assert.deepEqual(results({ search: "abc", searchBy: "sku", brandId: "3" }), []);
-  assert.deepEqual(results({ search: "49,90", searchBy: "price", categoryId: "2", brandId: "1", active: "true" }), [1]);
+  assert.deepEqual(
+    results({ search: "49,90", searchBy: "price", categoryId: "2", brandId: "1", active: "true" }),
+    [1],
+  );
   assert.deepEqual(results({ search: "abc", active: "false" }), [2]);
   assert.deepEqual(results({ categoryId: "2" }), [2, 4, 1]);
 });
@@ -49,7 +85,13 @@ test("campo vazio exibe todos; categoria, marca e status combinam com a busca", 
 test("filtragem mantém a coleção original e tolera campos ausentes", () => {
   const originalIds = products.map((product) => product.id);
   results({});
-  assert.deepEqual(products.map((product) => product.id), originalIds);
+  assert.deepEqual(
+    products.map((product) => product.id),
+    originalIds,
+  );
   assert.deepEqual(filterProducts([{ id: 5 }], { ...defaults, search: "x", searchBy: "sku" }), []);
-  assert.deepEqual(filterProducts([{ id: 5 }], { ...defaults, search: "0", searchBy: "price" }), []);
+  assert.deepEqual(
+    filterProducts([{ id: 5 }], { ...defaults, search: "0", searchBy: "price" }),
+    [],
+  );
 });

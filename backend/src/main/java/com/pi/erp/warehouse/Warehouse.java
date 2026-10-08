@@ -7,13 +7,13 @@ import lombok.*;
 
 @Entity
 @Table(name = "warehouses")
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Warehouse {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -27,14 +27,10 @@ public class Warehouse {
     private String description;
 
     @JsonIgnore
-    @OneToOne(
-            mappedBy = "warehouse",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToOne(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
     private WarehouseAddress warehouseAddress;
 
-    public Warehouse (RequestWarehouseDTO requestWarehouseDTO) {
+    public Warehouse(RequestWarehouseDTO requestWarehouseDTO) {
         this.name = requestWarehouseDTO.name();
         this.description = requestWarehouseDTO.description();
     }

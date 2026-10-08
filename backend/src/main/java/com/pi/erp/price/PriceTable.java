@@ -1,23 +1,22 @@
 package com.pi.erp.price;
 
-import com.pi.erp.customer.Customer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pi.erp.customer.Customer;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.*;
 
 @Entity
 @Table(name = "price_tables")
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class PriceTable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include

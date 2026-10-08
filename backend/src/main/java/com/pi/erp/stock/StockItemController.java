@@ -1,25 +1,26 @@
 package com.pi.erp.stock;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/stockItem")
 public class StockItemController {
+
     @Autowired
     private StockItemRepository repository;
+
     @Autowired
     private StockItemService service;
 
     @GetMapping("/search")
     public ResponseEntity<List<StockItem>> search(
-            @RequestParam(required = false) Long warehouseId,
-            @RequestParam(required = false) Long productId
+        @RequestParam(required = false) Long warehouseId,
+        @RequestParam(required = false) Long productId
     ) {
         return ResponseEntity.ok(service.search(warehouseId, productId));
     }
@@ -32,8 +33,8 @@ public class StockItemController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<StockItem> update(
-            @PathVariable Long id,
-            @RequestBody PatchStockItemDTO data
+        @PathVariable Long id,
+        @RequestBody PatchStockItemDTO data
     ) {
         StockItem stockItem = service.update(id, data);
         return ResponseEntity.ok(stockItem);
@@ -45,4 +46,3 @@ public class StockItemController {
         return ResponseEntity.noContent().build();
     }
 }
-

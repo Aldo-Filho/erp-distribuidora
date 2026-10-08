@@ -1101,6 +1101,362 @@ collection:
             send: true
             store: true
           rebuildPath: true
+  - name: "Fornecedores"
+    meta:
+      id: "fld_5f42d17b1e1349618e3531495db33dcc"
+      created: 1791427699214
+      modified: 1791427699214
+      sortKey: -1791427699214
+      description: "Cadastre um fornecedor, copie o ID retornado para supplier_id no ambiente e consulte ou atualize. Localize o endereço com supplierId e configure supplier_address_id. Execute exclusões por último."
+    children:
+      - url: "{{ _.base_url }}/supplier/search"
+        name: "Buscar fornecedores (filtros)"
+        meta:
+          id: "req_5bbd248250d44ff6b41d6b5e195fc8f1"
+          created: 1791427699214
+          modified: 1791427699214
+          isPrivate: false
+          description: "Todos os filtros são opcionais. Habilite os parâmetros desejados; sem filtros, lista todos os fornecedores."
+          sortKey: 100
+        method: "GET"
+        parameters:
+          - name: "supplierAddressId"
+            value: "1"
+            disabled: true
+          - name: "legalName"
+            value: "Fornecedor"
+            disabled: true
+          - name: "tradeName"
+            value: "Exemplo"
+            disabled: true
+          - name: "taxId"
+            value: "12345678000195"
+            disabled: true
+          - name: "email"
+            value: "fornecedor.example"
+            disabled: true
+          - name: "phone"
+            value: "8133334444"
+            disabled: true
+          - name: "whatsapp"
+            value: "81999994444"
+            disabled: true
+          - name: "avgDeliveryDays"
+            value: "5"
+            disabled: true
+          - name: "active"
+            value: "true"
+            disabled: true
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: "global"
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/supplier/{{ _.supplier_id }}"
+        name: "Buscar fornecedor por ID"
+        meta:
+          id: "req_33644a4e4e564d628f2d0a2b09926171"
+          created: 1791427699214
+          modified: 1791427699214
+          isPrivate: false
+          description: "Defina supplier_id no ambiente com o ID retornado pelo cadastro. Retorna 204 quando não encontrado."
+          sortKey: 200
+        method: "GET"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: "global"
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/supplier"
+        name: "Cadastrar fornecedor com endereço"
+        meta:
+          id: "req_daabfaae212d44e68363a0a4ad434dd7"
+          created: 1791427699214
+          modified: 1791427699214
+          isPrivate: false
+          description: "Cria fornecedor e endereço juntos. Não envie supplierId no endereço. CNPJ e endereço devem ser únicos. Copie o ID retornado para supplier_id no ambiente."
+          sortKey: 300
+        method: "POST"
+        body:
+          mimeType: "application/json"
+          text: |-
+            {
+              "legalName": "Fornecedor Exemplo LTDA",
+              "tradeName": "Fornecedor Exemplo",
+              "taxId": "12345678000195",
+              "email": "contato@fornecedor.example",
+              "phone": "8133334444",
+              "whatsapp": "81999994444",
+              "address": {
+                "country": "Brasil",
+                "state": "Pernambuco",
+                "city": "Caruaru",
+                "street": "Avenida Agamenon Magalhães",
+                "neighborhood": "Maurício de Nassau",
+                "number": "1200",
+                "complement": "Sala 01",
+                "zipCode": "55012-290",
+                "addressType": "MAIN"
+              }
+            }
+        headers:
+          - name: "Content-Type"
+            value: "application/json"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: "global"
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/supplier"
+        name: "Cadastrar fornecedor sem endereço"
+        meta:
+          id: "req_8536efbf2e564c4495ab372e3a1927ce"
+          created: 1791427699214
+          modified: 1791427699214
+          isPrivate: false
+          description: "Use este cadastro antes de cadastrar um endereço separado. Copie o ID retornado para supplier_id no ambiente. Use um CNPJ diferente a cada novo cadastro."
+          sortKey: 350
+        method: "POST"
+        body:
+          mimeType: "application/json"
+          text: |-
+            {
+              "legalName": "Fornecedor Sem Endereço LTDA",
+              "tradeName": "Fornecedor Sem Endereço",
+              "taxId": "98765432000198",
+              "email": "contato@segundo-fornecedor.example",
+              "phone": "8133334444",
+              "whatsapp": "81999994444"
+            }
+        headers:
+          - name: "Content-Type"
+            value: "application/json"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: "global"
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/supplier/{{ _.supplier_id }}"
+        name: "Atualizar fornecedor (patch)"
+        meta:
+          id: "req_698e3761a1964e0fabdf0fd041c1920a"
+          created: 1791427699214
+          modified: 1791427699214
+          isPrivate: false
+          description: "Todos os campos são opcionais. Envie apenas o que deseja alterar. O exemplo atualiza contato, prazo de entrega e situação do fornecedor."
+          sortKey: 400
+        method: "PATCH"
+        body:
+          mimeType: "application/json"
+          text: |-
+            {
+              "tradeName": "Fornecedor Exemplo Atualizado",
+              "email": "comercial@fornecedor.example",
+              "phone": "8133335555",
+              "whatsapp": "81999995555",
+              "avgDeliveryDays": 5,
+              "active": true
+            }
+        headers:
+          - name: "Content-Type"
+            value: "application/json"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: "global"
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/supplier/{{ _.supplier_id }}"
+        name: "Remover fornecedor"
+        meta:
+          id: "req_88ad955a36e54eb7bf3b569c63f18f6f"
+          created: 1791427699214
+          modified: 1791427699214
+          isPrivate: false
+          description: "Remove o fornecedor e seu endereço associado. Defina supplier_id no ambiente. Execute por último; vínculos com outros registros podem impedir a exclusão."
+          sortKey: 500
+        method: "DELETE"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: "global"
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - name: "Endereços de Fornecedores"
+        meta:
+          id: "fld_79aa143af4674c99a5b5134fc4055455"
+          created: 1791427699214
+          modified: 1791427699214
+          sortKey: 600
+          description: "Cadastre o endereço junto com o fornecedor ou separadamente para um fornecedor sem endereço. Os IDs de fornecedor e endereço são independentes."
+        children:
+          - url: "{{ _.base_url }}/supplierAddress/search"
+            name: "Buscar endereços de fornecedores (filtros)"
+            meta:
+              id: "req_fd6bc20188ed46ea9b72f61b50d811d9"
+              created: 1791427699214
+              modified: 1791427699214
+              isPrivate: false
+              description: "Todos os filtros são opcionais. Para localizar o endereço criado junto com o fornecedor, habilite supplierId. Copie o ID do endereço para supplier_address_id no ambiente."
+              sortKey: 100
+            method: "GET"
+            parameters:
+              - name: "supplierId"
+                value: "{{ _.supplier_id }}"
+                disabled: true
+              - name: "addressType"
+                value: "MAIN"
+                disabled: true
+              - name: "country"
+                value: "Brasil"
+                disabled: true
+              - name: "state"
+                value: "Pernambuco"
+                disabled: true
+              - name: "city"
+                value: "Caruaru"
+                disabled: true
+              - name: "street"
+                value: "Agamenon"
+                disabled: true
+              - name: "neighborhood"
+                value: "Nassau"
+                disabled: true
+              - name: "number"
+                value: "1200"
+                disabled: true
+              - name: "complement"
+                value: "Sala"
+                disabled: true
+              - name: "zipCode"
+                value: "55012-290"
+                disabled: true
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: "global"
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}"
+            name: "Buscar endereço de fornecedor por ID"
+            meta:
+              id: "req_3621528499804dbca5f02723d978da49"
+              created: 1791427699214
+              modified: 1791427699214
+              isPrivate: false
+              description: "Use o ID do endereço, que pode ser diferente do ID do fornecedor. Retorna 204 quando não encontrado."
+              sortKey: 200
+            method: "GET"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: "global"
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/supplierAddress"
+            name: "Cadastrar endereço de fornecedor"
+            meta:
+              id: "req_eb6d0b7e9bbc4c3486822aa1a5452b38"
+              created: 1791427699214
+              modified: 1791427699214
+              isPrivate: false
+              description: "Cadastre antes um fornecedor sem endereço e defina supplier_id no ambiente. A relação atual permite um endereço por fornecedor. Copie o ID retornado para supplier_address_id."
+              sortKey: 300
+            method: "POST"
+            body:
+              mimeType: "application/json"
+              text: |-
+                {
+                  "supplierId": "{{ _.supplier_id }}",
+                  "country": "Brasil",
+                  "state": "Pernambuco",
+                  "city": "Caruaru",
+                  "street": "Avenida Agamenon Magalhães",
+                  "neighborhood": "Maurício de Nassau",
+                  "number": "1250",
+                  "complement": "Sala 02",
+                  "zipCode": "55012-290",
+                  "addressType": "MAIN"
+                }
+            headers:
+              - name: "Content-Type"
+                value: "application/json"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: "global"
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}"
+            name: "Atualizar endereço de fornecedor (patch)"
+            meta:
+              id: "req_4c8c95148b4a4b19a9cfc582863c664b"
+              created: 1791427699214
+              modified: 1791427699214
+              isPrivate: false
+              description: "Envie apenas os campos que deseja alterar. Uma string vazia em complement limpa o complemento. Não envie supplierId; o vínculo com o fornecedor é preservado."
+              sortKey: 400
+            method: "PATCH"
+            body:
+              mimeType: "application/json"
+              text: |-
+                {
+                  "neighborhood": "Centro",
+                  "number": "1300",
+                  "complement": "Sala 03",
+                  "addressType": "BILLING"
+                }
+            headers:
+              - name: "Content-Type"
+                value: "application/json"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: "global"
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}"
+            name: "Remover endereço de fornecedor"
+            meta:
+              id: "req_c17a077b5f47454ca617adf3ef66a982"
+              created: 1791427699214
+              modified: 1791427699214
+              isPrivate: false
+              description: "Remove apenas o endereço e desfaz o vínculo com o fornecedor. Defina supplier_address_id no ambiente."
+              sortKey: 500
+            method: "DELETE"
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: "global"
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
@@ -1116,3 +1472,5 @@ environments:
     isPrivate: false
   data:
     base_url: http://localhost:8080
+    supplier_id: 1
+    supplier_address_id: 1

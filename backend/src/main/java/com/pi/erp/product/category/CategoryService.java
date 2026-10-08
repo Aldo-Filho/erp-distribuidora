@@ -1,14 +1,14 @@
 package com.pi.erp.product.category;
 
 import com.pi.erp.exception.ResourceNotFoundException;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class CategoryService {
+
     @Autowired
     private CategoryRepository repository;
 
@@ -23,7 +23,6 @@ public class CategoryService {
 
     // Verifica se a categoria a ser cadastrada já existe
     public Category register(RequestCategoryDTO data) {
-
         if (repository.existsByNameIgnoreCase(data.name())) {
             throw new IllegalArgumentException("This category already exists.");
         }
@@ -33,10 +32,10 @@ public class CategoryService {
 
     @Transactional
     public void delete(Long id) {
-        Category category = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
+        Category category = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
 
         repository.delete(category);
     }
-
 }

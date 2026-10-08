@@ -1,0 +1,14 @@
+**/node_modules/
+**/target/
+**/dist/
+**/.idea/
+**/.vscode/
+.git/
+**/package-lock.json
+**/mvnw
+**/mvnw.cmd
+**/.mvn/
+*.pdf
+
+# Preserve checksums of existing Flyway migrations.
+backend/src/main/resources/db/migration/

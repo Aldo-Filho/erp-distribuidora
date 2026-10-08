@@ -3,14 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Modal } from "../../components/Modal";
 import { api } from "../../services/api";
 
-export function ClassificationModal({
-  type,
-  items,
-  loading,
-  onCreated,
-  onDeleted,
-  onClose,
-}) {
+export function ClassificationModal({ type, items, loading, onCreated, onDeleted, onClose }) {
   const [name, setName] = useState("");
   const [pending, setPending] = useState(null);
   const [error, setError] = useState("");
@@ -94,14 +87,9 @@ export function ClassificationModal({
         </p>
       )}
 
-      <section
-        className="border-t border-slate-200 pt-4"
-        aria-label={`${plural} existentes`}
-      >
+      <section className="border-t border-slate-200 pt-4" aria-label={`${plural} existentes`}>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">
-            {plural} existentes
-          </h3>
+          <h3 className="text-sm font-semibold text-slate-800">{plural} existentes</h3>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
             {items.length}
           </span>
@@ -117,13 +105,8 @@ export function ClassificationModal({
         ) : (
           <ul className="max-h-72 divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200">
             {sortedItems.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center justify-between gap-3 px-3 py-2.5"
-              >
-                <span className="min-w-0 break-words text-sm text-slate-700">
-                  {item.name}
-                </span>
+              <li key={item.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <span className="min-w-0 break-words text-sm text-slate-700">{item.name}</span>
                 <button
                   type="button"
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"

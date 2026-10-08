@@ -4,27 +4,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pi.erp.customer.address.CustomerAddress;
 import com.pi.erp.price.PriceTable;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.*;
 
 @Entity
 @Table(
-        name = "customers",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_customer_tax_id",
-                columnNames = {"tax_id"}
-        )
+    name = "customers",
+    uniqueConstraints = @UniqueConstraint(name = "uk_customer_tax_id", columnNames = { "tax_id" })
 )
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Customer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -86,11 +82,7 @@ public class Customer {
     private PriceTable priceTable;
 
     @JsonIgnore
-    @OneToMany(
-            mappedBy = "customer",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CustomerAddress> customerAddresses;
 
     public Customer(RequestCustomerDTO requestCustomerDTO, PriceTable priceTable) {
@@ -107,5 +99,4 @@ public class Customer {
         this.active = true;
         this.priceTable = priceTable;
     }
-
 }

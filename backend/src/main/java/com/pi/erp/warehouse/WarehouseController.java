@@ -1,18 +1,19 @@
 package com.pi.erp.warehouse;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/warehouse")
 public class WarehouseController {
+
     @Autowired
     private WarehouseRepository repository;
+
     @Autowired
     private WarehouseService service;
 
@@ -29,8 +30,8 @@ public class WarehouseController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Warehouse> update(
-            @PathVariable Long id,
-            @RequestBody @Valid PatchWarehouseDTO data
+        @PathVariable Long id,
+        @RequestBody @Valid PatchWarehouseDTO data
     ) {
         Warehouse warehouse = service.update(id, data);
         return ResponseEntity.ok(warehouse);
@@ -41,5 +42,4 @@ public class WarehouseController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
-
 }

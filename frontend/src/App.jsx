@@ -11,7 +11,9 @@ function App() {
   // O estado é mantido aqui, e não no Sidebar, para ajustar a margem do <main>
   // exatamente na mesma hora em que a largura da barra muda.
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [page, setPage] = useState(() => window.location.hash === "#armazens" ? "armazens" : "produtos");
+  const [page, setPage] = useState(() =>
+    window.location.hash === "#armazens" ? "armazens" : "produtos",
+  );
 
   useEffect(() => {
     function updatePage() {
@@ -32,9 +34,7 @@ function App() {
         collapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed((current) => !current)}
       />
-      <main
-        className={`min-h-screen p-4 transition-[margin] duration-300 lg:p-8 ${contentMargin}`}
-      >
+      <main className={`min-h-screen p-4 transition-[margin] duration-300 lg:p-8 ${contentMargin}`}>
         {page === "armazens" ? <WarehousesPage /> : <ProductsPage />}
       </main>
     </div>

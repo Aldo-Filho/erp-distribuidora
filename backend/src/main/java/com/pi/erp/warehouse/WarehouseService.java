@@ -1,14 +1,14 @@
 package com.pi.erp.warehouse;
 
 import com.pi.erp.exception.ResourceNotFoundException;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class WarehouseService {
+
     @Autowired
     private WarehouseRepository repository;
 
@@ -27,9 +27,10 @@ public class WarehouseService {
         return repository.save(warehouse);
     }
 
-    public Warehouse update (Long id, PatchWarehouseDTO data) {
-        Warehouse warehouse = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
+    public Warehouse update(Long id, PatchWarehouseDTO data) {
+        Warehouse warehouse = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
         warehouse.setDescription(data.description());
         return repository.save(warehouse);
@@ -37,8 +38,9 @@ public class WarehouseService {
 
     @Transactional
     public void delete(Long id) {
-        Warehouse warehouse = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
+        Warehouse warehouse = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
         repository.delete(warehouse);
     }

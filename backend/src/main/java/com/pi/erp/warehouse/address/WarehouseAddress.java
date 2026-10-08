@@ -6,13 +6,13 @@ import lombok.*;
 
 @Entity
 @Table(name = "warehouse_addresses")
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class WarehouseAddress {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -44,7 +44,10 @@ public class WarehouseAddress {
     @Column(name = "zip_code")
     private String zipCode;
 
-    public WarehouseAddress(RequestWarehouseAddressDTO requestWarehouseAddressDTO, Warehouse warehouse) {
+    public WarehouseAddress(
+        RequestWarehouseAddressDTO requestWarehouseAddressDTO,
+        Warehouse warehouse
+    ) {
         this.warehouse = warehouse;
         this.city = requestWarehouseAddressDTO.city();
         this.state = requestWarehouseAddressDTO.state();
@@ -54,5 +57,4 @@ public class WarehouseAddress {
         this.complement = requestWarehouseAddressDTO.complement();
         this.zipCode = requestWarehouseAddressDTO.zipCode();
     }
-    
 }

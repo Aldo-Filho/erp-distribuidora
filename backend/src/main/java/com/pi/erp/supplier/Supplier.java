@@ -2,10 +2,12 @@ package com.pi.erp.supplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pi.erp.supplier.address.SupplierAddress;
+import com.pi.erp.supplier.brand.SupplierBrand;
+import com.pi.erp.supplier.category.SupplierCategory;
+import com.pi.erp.supplier.product.ProductSupplier;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import lombok.*;
 
 @Entity
@@ -18,8 +20,8 @@ import lombok.*;
 public class Supplier {
 
     @Id
-    @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     @Column(name = "supplier_id")
     private Long id;
 
@@ -65,15 +67,28 @@ public class Supplier {
 
     @JsonIgnore
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SupplierAddress> supplierAddress;
+    private List<SupplierAddress> supplierAddresses;
 
-    public Supplier(RequestSupplierDTO requestSupplierDTO) {
-        this.legalName = requestSupplierDTO.legalName();
-        this.tradeName = requestSupplierDTO.tradeName();
-        this.taxId = requestSupplierDTO.taxId();
-        this.email = requestSupplierDTO.email();
-        this.phone = requestSupplierDTO.phone();
-        this.whatsapp = requestSupplierDTO.whatsapp();
-        this.active = true;
+    @JsonIgnore
+    @OneToMany(mappedBy = "supplier")
+    private List<ProductSupplier> productSuppliers;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "supplier")
+    private List<SupplierBrand> supplierBrands;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "supplier")
+    private List<SupplierCategory> supplierCategories;
+
+    public Supplier(RequestSupplierDTO data) {
+        this.legalName = data.legalName();
+        this.tradeName = data.tradeName();
+        this.taxId = data.taxId();
+        this.email = data.email();
+        this.phone = data.phone();
+        this.whatsapp = data.whatsapp();
+        this.avgDeliveryDays = data.avgDeliveryDays();
+        this.active = data.active() == null || data.active();
     }
 }

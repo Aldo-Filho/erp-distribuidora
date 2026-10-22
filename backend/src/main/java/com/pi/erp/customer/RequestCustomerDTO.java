@@ -1,5 +1,8 @@
 package com.pi.erp.customer;
 
+import com.pi.erp.customer.address.AddressType;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -8,13 +11,26 @@ public record RequestCustomerDTO(
     @NotNull PersonType personType,
     @NotBlank String taxId,
     @NotBlank String legalName,
-    @NotBlank String tradeName,
+    String tradeName,
     LocalDate birthDate,
-    @NotBlank String municipalReg,
-    @NotBlank String stateReg,
-    @NotBlank String email,
+    String municipalReg,
+    String stateReg,
+    @Email String email,
     @NotBlank String phone,
-    @NotBlank String whatsapp,
+    String whatsapp,
     Boolean active,
-    Long priceTableId
-) {}
+    Long priceTableId,
+
+    @Valid AddressDTO address
+) {
+    public record AddressDTO(
+        @NotNull AddressType addressType,
+        @NotBlank String state,
+        @NotBlank String city,
+        @NotBlank String street,
+        @NotBlank String neighborhood,
+        @NotBlank String number,
+        @NotBlank String complement,
+        @NotBlank String zipCode
+    ) {}
+}

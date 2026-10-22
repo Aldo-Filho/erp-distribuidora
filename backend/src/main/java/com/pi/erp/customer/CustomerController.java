@@ -38,7 +38,9 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<Customer> register(@RequestBody @Valid RequestCustomerDTO data) {
+    public ResponseEntity<Customer> register(
+        @RequestBody @Valid RequestCustomerDTO data
+    ) {
         Customer customer = service.register(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(customer);
     }

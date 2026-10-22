@@ -19,11 +19,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerAddressController {
 
     @Autowired
+    private CustomerAddressRepository repository;
+
+    @Autowired
     private CustomerAddressService service;
 
     @GetMapping("/search")
     public ResponseEntity<List<CustomerAddress>> search(CustomerAddressFilter filter) {
         return ResponseEntity.ok(service.search(filter));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CustomerAddress> findOne(@PathVariable Long id) {
+        return repository
+            .findById(id)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @PostMapping

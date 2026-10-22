@@ -38,7 +38,9 @@ public class PriceTableController {
     }
 
     @PostMapping
-    public ResponseEntity<PriceTable> register(@RequestBody @Valid RequestPriceTableDTO data) {
+    public ResponseEntity<PriceTable> register(
+        @RequestBody @Valid RequestPriceTableDTO data
+    ) {
         PriceTable priceTable = service.register(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(priceTable);
     }

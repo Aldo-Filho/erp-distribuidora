@@ -3,11 +3,11 @@ package com.pi.erp.supplier.address;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.supplier.Supplier;
 import com.pi.erp.supplier.SupplierRepository;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SupplierAddressService {
@@ -83,21 +83,27 @@ public class SupplierAddressService {
 
     @Transactional
     public SupplierAddress register(RequestSupplierAddressDTO data) {
-        if (
-            repository.existsByZipCodeAndNumberAndComplementIgnoreCase(
-                data.zipCode(),
-                data.number(),
-                data.complement()
-            )
-        ) {
-            throw new IllegalArgumentException("Address already exists");
+        Supplier supplier = findSupplier(data.supplierId());
+        String complement = data.complement() != null && data.complement().isBlank()
+            ? null
+            : data.complement();
+
+        if (repository.existsDuplicateAddress(
+            data.supplierId(),
+            data.addressType().name(),
+            data.country(),
+            data.state(),
+            data.city(),
+            data.street(),
+            data.zipCode(),
+            data.number(),
+            complement
+        )) {
+            throw new IllegalArgumentException("Supplier address already exists.");
         }
 
-        Supplier supplier = supplierRepository
-            .findById(data.supplierId())
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found"));
-
         SupplierAddress address = new SupplierAddress(data, supplier);
+        address.setComplement(complement);
         return repository.save(address);
     }
 
@@ -105,46 +111,71 @@ public class SupplierAddressService {
     public SupplierAddress update(Long id, PatchSupplierAddressDTO data) {
         SupplierAddress address = repository
             .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier address not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Supplier address not found."));
 
-        if (data.country() != null && !data.country().isBlank()) {
-            address.setCountry(data.country());
+        if (data.country() != null && data.country().isBlank()) {
+            throw new IllegalArgumentException("Country is required.");
         }
-        if (data.state() != null && !data.state().isBlank()) {
-            address.setState(data.state());
+        if (data.state() != null && data.state().isBlank()) {
+            throw new IllegalArgumentException("State is required.");
         }
-        if (data.city() != null && !data.city().isBlank()) {
-            address.setCity(data.city());
+        if (data.city() != null && data.city().isBlank()) {
+            throw new IllegalArgumentException("City is required.");
         }
-        if (data.street() != null && !data.street().isBlank()) {
-            address.setStreet(data.street());
+        if (data.street() != null && data.street().isBlank()) {
+            throw new IllegalArgumentException("Street is required.");
         }
-        if (data.neighborhood() != null && !data.neighborhood().isBlank()) {
+        if (data.neighborhood() != null && data.neighborhood().isBlank()) {
+            throw new IllegalArgumentException("Neighborhood is required.");
+        }
+        if (data.number() != null && data.number().isBlank()) {
+            throw new IllegalArgumentException("Number is required.");
+        }
+        if (data.zipCode() != null && data.zipCode().isBlank()) {
+            throw new IllegalArgumentException("Zip code is required.");
+        }
+
+        AddressType addressType = data.addressType() != null
+            ? data.addressType()
+            : address.getAddressType();
+        String country = data.country() != null ? data.country() : address.getCountry();
+        String state = data.state() != null ? data.state() : address.getState();
+        String city = data.city() != null ? data.city() : address.getCity();
+        String street = data.street() != null ? data.street() : address.getStreet();
+        String zipCode = data.zipCode() != null ? data.zipCode() : address.getZipCode();
+        String number = data.number() != null ? data.number() : address.getNumber();
+        String complement = address.getComplement();
+
+        if (data.complement() != null) {
+            complement = data.complement().isBlank() ? null : data.complement();
+        }
+
+        if (repository.existsDuplicateAddressAndIdNot(
+            address.getSupplier().getId(),
+            addressType != null ? addressType.name() : null,
+            country,
+            state,
+            city,
+            street,
+            zipCode,
+            number,
+            complement,
+            id
+        )) {
+            throw new IllegalArgumentException("Supplier address already exists.");
+        }
+
+        address.setCountry(country);
+        address.setState(state);
+        address.setCity(city);
+        address.setStreet(street);
+        if (data.neighborhood() != null) {
             address.setNeighborhood(data.neighborhood());
         }
-        if (data.number() != null && !data.number().isBlank()) {
-            address.setNumber(data.number());
-        }
-        if (data.complement() != null) {
-            address.setComplement(data.complement());
-        }
-        if (data.zipCode() != null && !data.zipCode().isBlank()) {
-            address.setZipCode(data.zipCode());
-        }
-        if (data.addressType() != null) {
-            address.setAddressType(data.addressType());
-        }
-
-        if (
-            repository.existsByZipCodeAndNumberAndComplementIgnoreCaseAndIdNot(
-                address.getZipCode(),
-                address.getNumber(),
-                address.getComplement(),
-                id
-            )
-        ) {
-            throw new IllegalArgumentException("Address already exists");
-        }
+        address.setNumber(number);
+        address.setComplement(complement);
+        address.setZipCode(zipCode);
+        address.setAddressType(addressType);
 
         return repository.save(address);
     }
@@ -153,10 +184,20 @@ public class SupplierAddressService {
     public void delete(Long id) {
         SupplierAddress address = repository
             .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier address not found"));
-        Supplier supplier = address.getSupplier();
-        supplier.setSupplierAddress(null);
+            .orElseThrow(() -> new ResourceNotFoundException("Supplier address not found."));
 
+        Supplier supplier = address.getSupplier();
+        supplier.getSupplierAddresses().remove(address);
         repository.delete(address);
+    }
+
+    private Supplier findSupplier(Long supplierId) {
+        if (supplierId == null) {
+            throw new IllegalArgumentException("Supplier ID is required.");
+        }
+
+        return supplierRepository
+            .findById(supplierId)
+            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found."));
     }
 }

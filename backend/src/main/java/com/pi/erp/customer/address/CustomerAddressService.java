@@ -48,10 +48,7 @@ public class CustomerAddressService {
         }
         if (filter.neighborhood() != null && !filter.neighborhood().isBlank()) {
             spec = spec.and((root, query, cb) ->
-                cb.like(
-                    cb.lower(root.get("neighborhood")),
-                    "%" + filter.neighborhood().toLowerCase() + "%"
-                )
+                cb.like(cb.lower(root.get("neighborhood")), "%" + filter.neighborhood().toLowerCase() + "%")
             );
         }
         if (filter.number() != null && !filter.number().isBlank()) {
@@ -61,10 +58,7 @@ public class CustomerAddressService {
         }
         if (filter.complement() != null && !filter.complement().isBlank()) {
             spec = spec.and((root, query, cb) ->
-                cb.like(
-                    cb.lower(root.get("complement")),
-                    "%" + filter.complement().toLowerCase() + "%"
-                )
+                cb.like(cb.lower(root.get("complement")), "%" + filter.complement().toLowerCase() + "%")
             );
         }
         if (filter.zipCode() != null && !filter.zipCode().isBlank()) {
@@ -78,7 +72,16 @@ public class CustomerAddressService {
 
     public CustomerAddress register(RequestCustomerAddressDTO data) {
         Customer customer = findCustomer(data.customerId());
-        return repository.save(new CustomerAddress(data, customer));
+
+        if (repository.existsByCustomerIdAndAddressType(
+            data.customerId(),
+            data.addressType()
+        )) {
+            throw new IllegalArgumentException("Customer already has an address of this type.");
+        }
+
+        CustomerAddress address = new CustomerAddress(data, customer);
+        return repository.save(address);
     }
 
     public CustomerAddress update(Long id, PatchCustomerAddressDTO data) {
@@ -86,31 +89,62 @@ public class CustomerAddressService {
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Customer address not found."));
 
-        if (data.customerId() != null) {
-            address.setCustomer(findCustomer(data.customerId()));
+        AddressType addressType = data.addressType() != null
+            ? data.addressType()
+            : address.getAddressType();
+
+        if (repository.existsByCustomerIdAndAddressTypeAndIdNot(
+            address.getCustomer().getId(),
+            addressType,
+            id
+        )) {
+            throw new IllegalArgumentException(
+                "Customer already has an address of this type."
+            );
         }
-        if (data.addressType() != null) {
-            address.setAddressType(data.addressType());
-        }
-        if (data.state() != null && !data.state().isBlank()) {
+
+        address.setAddressType(addressType);
+
+        if (data.state() != null) {
+            if (data.state().isBlank()) {
+                throw new IllegalArgumentException("State is required.");
+            }
             address.setState(data.state());
         }
-        if (data.city() != null && !data.city().isBlank()) {
+        if (data.city() != null) {
+            if (data.city().isBlank()) {
+                throw new IllegalArgumentException("City is required.");
+            }
             address.setCity(data.city());
         }
-        if (data.street() != null && !data.street().isBlank()) {
+        if (data.street() != null) {
+            if (data.street().isBlank()) {
+                throw new IllegalArgumentException("Street is required.");
+            }
             address.setStreet(data.street());
         }
-        if (data.neighborhood() != null && !data.neighborhood().isBlank()) {
+        if (data.neighborhood() != null) {
+            if (data.neighborhood().isBlank()) {
+                throw new IllegalArgumentException("Neighborhood is required.");
+            }
             address.setNeighborhood(data.neighborhood());
         }
-        if (data.number() != null && !data.number().isBlank()) {
+        if (data.number() != null) {
+            if (data.number().isBlank()) {
+                throw new IllegalArgumentException("Number is required.");
+            }
             address.setNumber(data.number());
         }
-        if (data.complement() != null && !data.complement().isBlank()) {
+        if (data.complement() != null) {
+            if (data.complement().isBlank()) {
+                throw new IllegalArgumentException("Complement is required.");
+            }
             address.setComplement(data.complement());
         }
-        if (data.zipCode() != null && !data.zipCode().isBlank()) {
+        if (data.zipCode() != null) {
+            if (data.zipCode().isBlank()) {
+                throw new IllegalArgumentException("Zip code is required.");
+            }
             address.setZipCode(data.zipCode());
         }
 
@@ -127,6 +161,10 @@ public class CustomerAddressService {
     }
 
     private Customer findCustomer(Long customerId) {
+        if (customerId == null) {
+            throw new IllegalArgumentException("Customer ID is Required.");
+        }
+
         return customerRepository
             .findById(customerId)
             .orElseThrow(() -> new ResourceNotFoundException("Customer not found."));

@@ -8,5 +8,5 @@ public record RequestStockItemDTO(
     @NotNull Integer quantity,
     @NotNull Integer reservedQuantity,
     @NotNull Integer minQuantity,
-    @NotNull Integer maxQuantity
+    Integer maxQuantity
 ) {}

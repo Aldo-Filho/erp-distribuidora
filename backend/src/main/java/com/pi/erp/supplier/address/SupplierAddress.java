@@ -14,8 +14,8 @@ import lombok.*;
 public class SupplierAddress {
 
     @Id
-    @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     @Column(name = "supplier_address_id")
     private Long id;
 
@@ -51,16 +51,16 @@ public class SupplierAddress {
     @Column(name = "address_type")
     private AddressType addressType;
 
-    public SupplierAddress(RequestSupplierAddressDTO requestSupplierAddressDTO, Supplier supplier) {
+    public SupplierAddress(RequestSupplierAddressDTO data, Supplier supplier) {
         this.supplier = supplier;
-        this.country = requestSupplierAddressDTO.country();
-        this.city = requestSupplierAddressDTO.city();
-        this.state = requestSupplierAddressDTO.state();
-        this.street = requestSupplierAddressDTO.street();
-        this.neighborhood = requestSupplierAddressDTO.neighborhood();
-        this.number = requestSupplierAddressDTO.number();
-        this.complement = requestSupplierAddressDTO.complement();
-        this.zipCode = requestSupplierAddressDTO.zipCode();
-        this.addressType = requestSupplierAddressDTO.addressType();
+        this.country = data.country();
+        this.city = data.city();
+        this.state = data.state();
+        this.street = data.street();
+        this.neighborhood = data.neighborhood();
+        this.number = data.number();
+        this.complement = data.complement();
+        this.zipCode = data.zipCode();
+        this.addressType = data.addressType();
     }
 }

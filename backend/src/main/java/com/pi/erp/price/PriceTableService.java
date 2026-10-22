@@ -28,10 +28,14 @@ public class PriceTableService {
             );
         }
         if (filter.endDate() != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("endDate"), filter.endDate()));
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("endDate"), filter.endDate())
+            );
         }
         if (filter.active() != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), filter.active()));
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("active"), filter.active())
+            );
         }
 
         return repository.findAll(spec);
@@ -40,36 +44,39 @@ public class PriceTableService {
     public PriceTable register(RequestPriceTableDTO data) {
         validatePeriod(data.startDate(), data.endDate());
 
-        if (repository.existsByNameIgnoreCase(data.name())) {
+        if (repository.existsByNormalizedName(data.name())) {
             throw new IllegalArgumentException("Price table already exists.");
         }
 
-        return repository.save(new PriceTable(data));
+        PriceTable priceTable = new PriceTable(data);
+        return repository.save(priceTable);
     }
 
+    @Transactional
     public PriceTable update(Long id, PatchPriceTableDTO data) {
         PriceTable priceTable = repository
-            .findById(id)
+            .findByIdForUpdate(id)
             .orElseThrow(() -> new ResourceNotFoundException("Price table not found."));
 
-        if (data.name() != null && !data.name().isBlank()) {
-            if (repository.existsByNameIgnoreCaseAndIdNot(data.name(), id)) {
-                throw new IllegalArgumentException("Price table already exists.");
-            }
-            priceTable.setName(data.name());
+        if (data.name() != null && data.name().isBlank()) {
+            throw new IllegalArgumentException("Price table name is required.");
         }
 
-        LocalDate startDate =
-            data.startDate() != null ? data.startDate() : priceTable.getStartDate();
+        String name = data.name() != null ? data.name() : priceTable.getName();
+
+        if (repository.existsByNormalizedNameAndIdNot(name, id)) {
+            throw new IllegalArgumentException("Price table already exists.");
+        }
+
+        LocalDate startDate = data.startDate() != null
+            ? data.startDate()
+            : priceTable.getStartDate();
         LocalDate endDate = data.endDate() != null ? data.endDate() : priceTable.getEndDate();
         validatePeriod(startDate, endDate);
 
-        if (data.startDate() != null) {
-            priceTable.setStartDate(data.startDate());
-        }
-        if (data.endDate() != null) {
-            priceTable.setEndDate(data.endDate());
-        }
+        priceTable.setName(name);
+        priceTable.setStartDate(startDate);
+        priceTable.setEndDate(endDate);
         if (data.active() != null) {
             priceTable.setActive(data.active());
         }
@@ -80,7 +87,7 @@ public class PriceTableService {
     @Transactional
     public void delete(Long id) {
         PriceTable priceTable = repository
-            .findById(id)
+            .findByIdForUpdate(id)
             .orElseThrow(() -> new ResourceNotFoundException("Price table not found."));
 
         repository.delete(priceTable);

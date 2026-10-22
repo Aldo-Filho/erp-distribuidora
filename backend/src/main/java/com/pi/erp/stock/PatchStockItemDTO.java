@@ -6,5 +6,6 @@ public record PatchStockItemDTO(
     Integer quantity,
     Integer reservedQuantity,
     Integer minQuantity,
-    Integer maxQuantity
+    Integer maxQuantity,
+    Boolean removeMaxQuantity
 ) {}

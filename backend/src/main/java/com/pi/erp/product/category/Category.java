@@ -2,6 +2,7 @@ package com.pi.erp.product.category;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pi.erp.product.Product;
+import com.pi.erp.supplier.category.SupplierCategory;
 import jakarta.persistence.*;
 import java.util.List;
 import lombok.*;
@@ -28,7 +29,11 @@ public class Category {
     @OneToMany(mappedBy = "category")
     private List<Product> products;
 
-    public Category(RequestCategoryDTO requestCategoryDTO) {
-        this.name = requestCategoryDTO.name();
+    @JsonIgnore
+    @OneToMany(mappedBy = "category")
+    private List<SupplierCategory> supplierCategories;
+
+    public Category(RequestCategoryDTO data) {
+        this.name = data.name();
     }
 }

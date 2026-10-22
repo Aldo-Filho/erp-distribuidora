@@ -2,16 +2,20 @@ package com.pi.erp.supplier;
 
 import com.pi.erp.supplier.address.AddressType;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 
 public record RequestSupplierDTO(
     @NotBlank String legalName,
-    @NotBlank String tradeName,
+    String tradeName,
     @NotBlank String taxId,
-    @NotBlank String email,
-    @NotBlank String phone,
+    @Email String email,
+    String phone,
     String whatsapp,
+    @PositiveOrZero Integer avgDeliveryDays,
+    Boolean active,
 
     @Valid AddressDTO address
 ) {
@@ -22,7 +26,7 @@ public record RequestSupplierDTO(
         @NotBlank String street,
         @NotBlank String neighborhood,
         @NotBlank String number,
-        @NotBlank String complement,
+        String complement,
         @NotBlank String zipCode,
         @NotNull AddressType addressType
     ) {}

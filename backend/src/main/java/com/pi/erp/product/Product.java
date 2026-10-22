@@ -1,10 +1,13 @@
 package com.pi.erp.product;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pi.erp.product.brand.Brand;
 import com.pi.erp.product.category.Category;
+import com.pi.erp.supplier.product.ProductSupplier;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.*;
 
 @Entity
@@ -36,6 +39,10 @@ public class Product {
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "product")
+    private List<ProductSupplier> productSuppliers;
+
     @Column(name = "cost", nullable = false)
     private BigDecimal cost;
 
@@ -60,7 +67,7 @@ public class Product {
     @Column(name = "size")
     private String size;
 
-    // Faltam os dados fiscais
+    // TODO: Map the tax details.
 
     @Column(name = "active", nullable = false)
     private boolean active;
@@ -81,19 +88,20 @@ public class Product {
         updatedAt = LocalDateTime.now();
     }
 
-    public Product(RequestProductDTO requestProductDTO, Brand brand, Category category) {
-        this.name = requestProductDTO.name();
-        // Ajustar SKU para geração automática
-        this.sku = requestProductDTO.sku();
+    public Product(RequestProductDTO data, Brand brand, Category category) {
+        this.name = data.name();
+        // TODO: Generate the SKU automatically.
+        this.sku = data.sku();
         this.brand = brand;
         this.category = category;
-        this.cost = requestProductDTO.cost();
-        this.price = requestProductDTO.price();
-        this.weightKg = requestProductDTO.weightKg();
-        this.color = requestProductDTO.color();
-        this.dimensionX = requestProductDTO.dimensionX();
-        this.dimensionY = requestProductDTO.dimensionY();
-        this.dimensionZ = requestProductDTO.dimensionZ();
-        this.active = true;
+        this.cost = data.cost();
+        this.price = data.price();
+        this.weightKg = data.weightKg();
+        this.color = data.color();
+        this.dimensionX = data.dimensionX();
+        this.dimensionY = data.dimensionY();
+        this.dimensionZ = data.dimensionZ();
+        this.size = data.size();
+        this.active = data.active() == null || data.active();
     }
 }

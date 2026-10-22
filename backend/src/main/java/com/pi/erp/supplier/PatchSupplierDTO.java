@@ -1,5 +1,7 @@
 package com.pi.erp.supplier;
 
+import jakarta.validation.constraints.PositiveOrZero;
+
 public record PatchSupplierDTO(
     String legalName,
     String tradeName,
@@ -7,6 +9,6 @@ public record PatchSupplierDTO(
     String email,
     String phone,
     String whatsapp,
-    Integer avgDeliveryDays,
+    @PositiveOrZero Integer avgDeliveryDays,
     Boolean active
 ) {}

@@ -30,8 +30,8 @@ public class Warehouse {
     @OneToOne(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
     private WarehouseAddress warehouseAddress;
 
-    public Warehouse(RequestWarehouseDTO requestWarehouseDTO) {
-        this.name = requestWarehouseDTO.name();
-        this.description = requestWarehouseDTO.description();
+    public Warehouse(RequestWarehouseDTO data) {
+        this.name = data.name();
+        this.description = data.description();
     }
 }

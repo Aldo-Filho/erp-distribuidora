@@ -20,7 +20,7 @@ public class WarehouseAddress {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "warehouse_id", nullable = false)
+    @JoinColumn(name = "warehouse_id", nullable = false, unique = true)
     private Warehouse warehouse;
 
     @Column(name = "state")
@@ -45,16 +45,16 @@ public class WarehouseAddress {
     private String zipCode;
 
     public WarehouseAddress(
-        RequestWarehouseAddressDTO requestWarehouseAddressDTO,
+        RequestWarehouseAddressDTO data,
         Warehouse warehouse
     ) {
         this.warehouse = warehouse;
-        this.city = requestWarehouseAddressDTO.city();
-        this.state = requestWarehouseAddressDTO.state();
-        this.street = requestWarehouseAddressDTO.street();
-        this.neighborhood = requestWarehouseAddressDTO.neighborhood();
-        this.number = requestWarehouseAddressDTO.number();
-        this.complement = requestWarehouseAddressDTO.complement();
-        this.zipCode = requestWarehouseAddressDTO.zipCode();
+        this.state = data.state();
+        this.city = data.city();
+        this.street = data.street();
+        this.neighborhood = data.neighborhood();
+        this.number = data.number();
+        this.complement = data.complement();
+        this.zipCode = data.zipCode();
     }
 }

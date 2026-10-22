@@ -3,6 +3,7 @@ package com.pi.erp.product.category;
 import com.pi.erp.exception.ResourceNotFoundException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,20 +13,23 @@ public class CategoryService {
     @Autowired
     private CategoryRepository repository;
 
-    // Verifica se o usuário inseriu algum nome e procura por categorias com esse nome
-    // Se o usuário não tiver inserido nome, lista todas as categorias existentes
-    public List<Category> search(String name) {
-        if (name == null || name.isBlank()) {
-            return repository.findAll();
+    public List<Category> search(CategoryFilter filter) {
+        Specification<Category> spec = Specification.allOf();
+
+        if (filter.name() != null && !filter.name().isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                cb.like(cb.lower(root.get("name")), "%" + filter.name().toLowerCase() + "%")
+            );
         }
-        return repository.findByNameContainingIgnoreCase(name);
+
+        return repository.findAll(spec);
     }
 
-    // Verifica se a categoria a ser cadastrada já existe
     public Category register(RequestCategoryDTO data) {
-        if (repository.existsByNameIgnoreCase(data.name())) {
+        if (repository.existsByNormalizedName(data.name())) {
             throw new IllegalArgumentException("This category already exists.");
         }
+
         Category category = new Category(data);
         return repository.save(category);
     }

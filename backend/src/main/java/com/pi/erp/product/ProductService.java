@@ -37,7 +37,9 @@ public class ProductService {
             );
         }
         if (filter.sku() != null && !filter.sku().isBlank()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("sku"), filter.sku()));
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("sku"), filter.sku())
+            );
         }
         if (filter.categoryId() != null) {
             spec = spec.and((root, query, cb) ->
@@ -50,8 +52,11 @@ public class ProductService {
             );
         }
         if (filter.active() != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), filter.active()));
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("active"), filter.active())
+            );
         }
+
         return repository.findAll(spec);
     }
 
@@ -61,16 +66,8 @@ public class ProductService {
             throw new IllegalArgumentException("Product already exists.");
         }
 
-        Brand brand = brandRepository
-            .findById(data.brandId())
-            .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
-
-        Category category = null;
-        if (data.categoryId() != null) {
-            category = categoryRepository
-                .findById(data.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
-        }
+        Brand brand = findBrand(data.brandId());
+        Category category = findCategory(data.categoryId());
 
         Product product = new Product(data, brand, category);
         Product savedProduct = repository.save(product);
@@ -94,42 +91,48 @@ public class ProductService {
     public Product update(Long id, PatchProductDTO data) {
         Product product = repository
             .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
-        if (data.name() != null && !data.name().isBlank()) {
-            product.setName(data.name());
+        if (Boolean.TRUE.equals(data.removeCategory()) && data.categoryId() != null) {
+            throw new IllegalArgumentException(
+                "Cannot provide a category and request its removal at the same time."
+            );
         }
+
+        if (data.name() != null && data.name().isBlank()) {
+            throw new IllegalArgumentException("Product name is required.");
+        }
+
+        Brand brand = product.getBrand();
+        Category category = product.getCategory();
 
         if (data.brandId() != null) {
-            Brand brand = brandRepository
-                .findById(data.brandId())
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found"));
-            product.setBrand(brand);
+            brand = findBrand(data.brandId());
+        }
+        if (Boolean.TRUE.equals(data.removeCategory())) {
+            category = null;
+        } else if (data.categoryId() != null) {
+            category = findCategory(data.categoryId());
         }
 
-        if (data.categoryId() != null) {
-            Category category = categoryRepository
-                .findById(data.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
-            product.setCategory(category);
-        }
+        product.setBrand(brand);
+        product.setCategory(category);
 
+        if (data.name() != null) {
+            product.setName(data.name());
+        }
         if (data.cost() != null) {
             product.setCost(data.cost());
         }
-
         if (data.price() != null) {
             product.setPrice(data.price());
         }
-
         if (data.weightKg() != null) {
             product.setWeightKg(data.weightKg());
         }
-
-        if (data.color() != null && !data.color().isBlank()) {
-            product.setColor(data.color());
+        if (data.color() != null) {
+            product.setColor(data.color().isBlank() ? null : data.color());
         }
-
         if (data.dimensionX() != null) {
             product.setDimensionX(data.dimensionX());
         }
@@ -139,9 +142,11 @@ public class ProductService {
         if (data.dimensionZ() != null) {
             product.setDimensionZ(data.dimensionZ());
         }
-
-        if (data.size() != null && !data.size().isBlank()) {
-            product.setSize(data.size());
+        if (data.size() != null) {
+            product.setSize(data.size().isBlank() ? null : data.size());
+        }
+        if (data.active() != null) {
+            product.setActive(data.active());
         }
 
         return repository.save(product);
@@ -154,5 +159,25 @@ public class ProductService {
             .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
 
         repository.delete(product);
+    }
+
+    private Brand findBrand(Long brandId) {
+        if (brandId == null) {
+            throw new IllegalArgumentException("Brand ID is required.");
+        }
+
+        return brandRepository
+            .findById(brandId)
+            .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
+    }
+
+    private Category findCategory(Long categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+
+        return categoryRepository
+            .findById(categoryId)
+            .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
     }
 }

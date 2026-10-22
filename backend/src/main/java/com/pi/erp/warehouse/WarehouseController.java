@@ -5,25 +5,31 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/warehouse")
 public class WarehouseController {
 
     @Autowired
-    private WarehouseRepository repository;
-
-    @Autowired
     private WarehouseService service;
 
     @GetMapping("/search")
-    public List<Warehouse> findAll(@RequestParam(required = false) String name) {
-        return service.search(name);
+    public ResponseEntity<List<Warehouse>> search(WarehouseFilter filter) {
+        return ResponseEntity.ok(service.search(filter));
     }
 
     @PostMapping
-    public ResponseEntity<Warehouse> register(@RequestBody @Valid RequestWarehouseDTO data) {
+    public ResponseEntity<Warehouse> register(
+        @RequestBody @Valid RequestWarehouseDTO data
+    ) {
         Warehouse warehouse = service.register(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(warehouse);
     }
@@ -31,14 +37,14 @@ public class WarehouseController {
     @PatchMapping("/{id}")
     public ResponseEntity<Warehouse> update(
         @PathVariable Long id,
-        @RequestBody @Valid PatchWarehouseDTO data
+        @RequestBody PatchWarehouseDTO data
     ) {
         Warehouse warehouse = service.update(id, data);
         return ResponseEntity.ok(warehouse);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Warehouse> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

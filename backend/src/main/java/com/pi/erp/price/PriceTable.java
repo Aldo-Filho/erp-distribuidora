@@ -59,6 +59,6 @@ public class PriceTable {
         this.name = data.name();
         this.startDate = data.startDate();
         this.endDate = data.endDate();
-        this.active = true;
+        this.active = data.active() == null || data.active();
     }
 }

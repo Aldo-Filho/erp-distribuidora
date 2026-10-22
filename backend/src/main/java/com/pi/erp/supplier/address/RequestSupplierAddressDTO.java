@@ -11,7 +11,7 @@ public record RequestSupplierAddressDTO(
     @NotBlank String street,
     @NotBlank String neighborhood,
     @NotBlank String number,
-    @NotBlank String complement,
+    String complement,
     @NotBlank String zipCode,
     @NotNull AddressType addressType
 ) {}

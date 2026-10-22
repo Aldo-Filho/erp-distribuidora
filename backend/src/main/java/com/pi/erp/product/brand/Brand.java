@@ -2,6 +2,7 @@ package com.pi.erp.product.brand;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pi.erp.product.Product;
+import com.pi.erp.supplier.brand.SupplierBrand;
 import jakarta.persistence.*;
 import java.util.List;
 import lombok.*;
@@ -28,7 +29,11 @@ public class Brand {
     @OneToMany(mappedBy = "brand")
     private List<Product> products;
 
-    public Brand(RequestBrandDTO requestBrandDTO) {
-        this.name = requestBrandDTO.name();
+    @JsonIgnore
+    @OneToMany(mappedBy = "brand")
+    private List<SupplierBrand> supplierBrands;
+
+    public Brand(RequestBrandDTO data) {
+        this.name = data.name();
     }
 }

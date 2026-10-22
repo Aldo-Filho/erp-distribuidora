@@ -45,10 +45,16 @@ CREATE TABLE categories (
     name          VARCHAR(100) NOT NULL
 );
 
+CREATE UNIQUE INDEX uk_category_name_normalized
+    ON categories (lower(btrim(name)));
+
 CREATE TABLE brands (
     brand_id      BIGSERIAL PRIMARY KEY,
     name          VARCHAR(100) NOT NULL
 );
+
+CREATE UNIQUE INDEX uk_brand_name_normalized
+    ON brands (lower(btrim(name)));
 
 CREATE TABLE products (
     product_id       BIGSERIAL PRIMARY KEY,
@@ -88,6 +94,9 @@ CREATE TABLE warehouses (
     description   VARCHAR(255)
 );
 
+CREATE UNIQUE INDEX uk_warehouse_name_normalized
+    ON warehouses (lower(btrim(name)));
+
 CREATE TABLE warehouse_addresses (
     warehouse_address_id BIGSERIAL PRIMARY KEY,
     warehouse_id  BIGINT NOT NULL UNIQUE REFERENCES warehouses(warehouse_id),
@@ -99,6 +108,16 @@ CREATE TABLE warehouse_addresses (
     complement    VARCHAR(100) NOT NULL,
     zip_code      VARCHAR(9)   NOT NULL
 );
+
+CREATE UNIQUE INDEX uk_warehouse_address_identity
+    ON warehouse_addresses (
+        lower(btrim(state)),
+        lower(btrim(city)),
+        lower(btrim(street)),
+        lower(btrim(zip_code)),
+        lower(btrim(number)),
+        lower(btrim(complement))
+    );
 
 CREATE TABLE stock_items (
     stock_item_id     BIGSERIAL PRIMARY KEY,
@@ -144,6 +163,19 @@ CREATE TABLE supplier_addresses (
     address_type  VARCHAR(20) CHECK (address_type IN ('BILLING', 'SHIPPING', 'MAIN'))
 );
 
+CREATE UNIQUE INDEX uk_supplier_address_identity
+    ON supplier_addresses (
+        supplier_id,
+        lower(btrim(coalesce(address_type, ''))),
+        lower(btrim(coalesce(country, ''))),
+        lower(btrim(coalesce(state, ''))),
+        lower(btrim(coalesce(city, ''))),
+        lower(btrim(coalesce(street, ''))),
+        lower(btrim(coalesce(zip_code, ''))),
+        lower(btrim(coalesce(number, ''))),
+        lower(btrim(coalesce(complement, '')))
+    );
+
 CREATE TABLE product_suppliers (
     product_supplier_id   BIGSERIAL PRIMARY KEY,
     product_id            BIGINT NOT NULL REFERENCES products(product_id),
@@ -182,6 +214,9 @@ CREATE TABLE price_tables (
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMP
 );
+
+CREATE UNIQUE INDEX uk_price_table_name_normalized
+    ON price_tables (lower(btrim(name)));
 
 CREATE TABLE price_table_items (
     price_table_item_id BIGSERIAL PRIMARY KEY,

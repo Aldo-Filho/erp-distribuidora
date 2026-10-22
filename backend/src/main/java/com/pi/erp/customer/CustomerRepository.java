@@ -6,7 +6,11 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface CustomerRepository
     extends JpaRepository<Customer, Long>, JpaSpecificationExecutor<Customer>
 {
-    boolean existsByTaxId(String taxId);
-
-    boolean existsByTaxIdAndIdNot(String taxId, Long id);
+    boolean existsByTaxId(
+        String taxId
+    );
+    boolean existsByTaxIdAndIdNot(
+        String taxId,
+        Long id
+    );
 }

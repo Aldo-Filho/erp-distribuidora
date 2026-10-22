@@ -67,23 +67,27 @@ public class WarehouseAddressService {
                 cb.like(cb.lower(root.get("zipCode")), "%" + filter.zipCode().toLowerCase() + "%")
             );
         }
+
         return repository.findAll(spec);
     }
 
     public WarehouseAddress register(RequestWarehouseAddressDTO data) {
-        if (
-            repository.existsByZipCodeAndNumberAndComplementIgnoreCase(
-                data.zipCode(),
-                data.number(),
-                data.complement()
-            )
-        ) {
-            throw new IllegalArgumentException("Address already exists");
+        Warehouse warehouse = findWarehouse(data.warehouseId());
+
+        if (repository.existsByWarehouseId(data.warehouseId())) {
+            throw new IllegalArgumentException("Warehouse already has an address.");
         }
 
-        Warehouse warehouse = warehouseRepository
-            .findById(data.warehouseId())
-            .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found"));
+        if (repository.existsDuplicateAddress(
+            data.state(),
+            data.city(),
+            data.street(),
+            data.zipCode(),
+            data.number(),
+            data.complement()
+        )) {
+            throw new IllegalArgumentException("Warehouse address already exists.");
+        }
 
         WarehouseAddress address = new WarehouseAddress(data, warehouse);
         return repository.save(address);
@@ -92,53 +96,71 @@ public class WarehouseAddressService {
     public WarehouseAddress update(Long id, PatchWarehouseAddressDTO data) {
         WarehouseAddress address = repository
             .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Warehouse Address not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Warehouse address not found."));
+
+        if (data.state() != null && data.state().isBlank()) {
+            throw new IllegalArgumentException("State is required.");
+        }
+        if (data.city() != null && data.city().isBlank()) {
+            throw new IllegalArgumentException("City is required.");
+        }
+        if (data.street() != null && data.street().isBlank()) {
+            throw new IllegalArgumentException("Street is required.");
+        }
+        if (data.neighborhood() != null && data.neighborhood().isBlank()) {
+            throw new IllegalArgumentException("Neighborhood is required.");
+        }
+        if (data.number() != null && data.number().isBlank()) {
+            throw new IllegalArgumentException("Number is required.");
+        }
+        if (data.complement() != null && data.complement().isBlank()) {
+            throw new IllegalArgumentException("Complement is required.");
+        }
+        if (data.zipCode() != null && data.zipCode().isBlank()) {
+            throw new IllegalArgumentException("Zip code is required.");
+        }
+
+        Warehouse warehouse = address.getWarehouse();
 
         if (data.warehouseId() != null) {
-            Warehouse warehouse = warehouseRepository
-                .findById(data.warehouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found"));
-            address.setWarehouse(warehouse);
+            warehouse = findWarehouse(data.warehouseId());
         }
 
-        if (data.state() != null) {
-            address.setState(data.state());
+        String state = data.state() != null ? data.state() : address.getState();
+        String city = data.city() != null ? data.city() : address.getCity();
+        String street = data.street() != null ? data.street() : address.getStreet();
+        String zipCode = data.zipCode() != null ? data.zipCode() : address.getZipCode();
+        String number = data.number() != null ? data.number() : address.getNumber();
+        String complement = data.complement() != null
+            ? data.complement()
+            : address.getComplement();
+
+        if (repository.existsByWarehouseIdAndIdNot(warehouse.getId(), id)) {
+            throw new IllegalArgumentException("Warehouse already has an address.");
+        }
+        if (repository.existsDuplicateAddressAndIdNot(
+            state,
+            city,
+            street,
+            zipCode,
+            number,
+            complement,
+            id
+        )) {
+            throw new IllegalArgumentException("Warehouse address already exists.");
         }
 
-        if (data.city() != null) {
-            address.setCity(data.city());
-        }
-
-        if (data.street() != null) {
-            address.setStreet(data.street());
-        }
+        address.setWarehouse(warehouse);
+        address.setState(state);
+        address.setCity(city);
+        address.setStreet(street);
 
         if (data.neighborhood() != null) {
             address.setNeighborhood(data.neighborhood());
         }
-
-        if (data.number() != null) {
-            address.setNumber(data.number());
-        }
-
-        if (data.complement() != null) {
-            address.setComplement(data.complement());
-        }
-
-        if (data.zipCode() != null) {
-            address.setZipCode(data.zipCode());
-        }
-
-        if (
-            repository.existsByZipCodeAndNumberAndComplementIgnoreCaseAndIdNot(
-                address.getZipCode(),
-                address.getNumber(),
-                address.getComplement(),
-                id
-            )
-        ) {
-            throw new IllegalArgumentException("Address already exists");
-        }
+        address.setNumber(number);
+        address.setComplement(complement);
+        address.setZipCode(zipCode);
 
         return repository.save(address);
     }
@@ -148,9 +170,20 @@ public class WarehouseAddressService {
         WarehouseAddress address = repository
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Warehouse address not found."));
+
         Warehouse warehouse = address.getWarehouse();
-        warehouse.setWarehouseAddress(null); // desfaz o lado do cascade/orphanRemoval
+        warehouse.setWarehouseAddress(null);
 
         repository.delete(address);
+    }
+
+    private Warehouse findWarehouse(Long warehouseId) {
+        if (warehouseId == null) {
+            throw new IllegalArgumentException("Warehouse ID is required.");
+        }
+
+        return warehouseRepository
+            .findById(warehouseId)
+            .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
     }
 }

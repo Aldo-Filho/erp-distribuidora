@@ -1,7 +1,7 @@
 # Módulo de clientes — desenho da primeira versão
 
 Data: 2026-10-10
-Status: desenho aprovado no chat; documento aguardando revisão do usuário.
+Status: desenho e documento aprovados pelo usuário no chat.
 
 ## Objetivo e escopo
 
@@ -14,8 +14,8 @@ Ficam fora desta versão: exclusão de clientes, seleção/gestão de tabelas de
 - Reconhecer `#clientes` na inicialização e nas mudanças do fragmento da URL, mantendo Produtos e Armazéns acessíveis e a navegação pelo histórico do navegador.
 - Usar o item Clientes já existente na barra lateral. Preservar o comportamento responsivo e as margens do conteúdo.
 - Mostrar título, quantidade de clientes cadastrados e botão Novo cliente.
-- Tabela com nome/razão social, CPF/CNPJ, telefone, situação e ações.
-- Busca única por nome/razão social, nome fantasia, documento, telefone, e-mail ou WhatsApp. Combinar a busca com filtros de tipo (todos/PF/PJ) e situação (todos/ativos/inativos).
+- Lista em grade no padrão de Produtos, com cabeçalho branco de 44 px, linhas de 64 px, separadores e sombra. Colunas: nome/razão social, CPF/CNPJ, telefone, status e ações. Indicadores de status usam verde para ativo e vermelho para inativo; ações ficam no menu de três pontos, com Editar, Endereços e Ativar/Desativar.
+- Barra de filtros no padrão de Produtos, sem painel externo: seletor do campo à esquerda, busca ao centro e filtros de tipo e situação à direita. O seletor limita a busca a Nome (nome/razão social e nome fantasia), CPF/CNPJ ou Contato (telefone, e-mail e WhatsApp). Combinar a busca com filtros de tipo (todos/PF/PJ) e situação (todos/ativos/inativos).
 - Filtrar localmente a coleção retornada por `/customer/search`, como nos módulos existentes. Comparação textual sem diferença entre maiúsculas e minúsculas; documentos e telefones comparados sem pontuação.
 - Exibir carregamento, falha com opção de tentar novamente, coleção vazia e ausência de resultados para os filtros.
 - Ações por cliente: editar, abrir endereços e ativar/desativar. Confirmar mudanças de situação e impedir envios repetidos durante a operação.

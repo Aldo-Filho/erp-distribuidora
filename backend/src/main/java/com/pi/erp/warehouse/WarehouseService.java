@@ -3,6 +3,7 @@ package com.pi.erp.warehouse;
 import com.pi.erp.exception.ResourceNotFoundException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,17 +13,23 @@ public class WarehouseService {
     @Autowired
     private WarehouseRepository repository;
 
-    public List<Warehouse> search(String name) {
-        if (name == null || name.isBlank()) {
-            return repository.findAll();
+    public List<Warehouse> search(WarehouseFilter filter) {
+        Specification<Warehouse> spec = Specification.allOf();
+
+        if (filter.name() != null && !filter.name().isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                cb.like(cb.lower(root.get("name")), "%" + filter.name().toLowerCase() + "%")
+            );
         }
-        return repository.findByNameContainingIgnoreCase(name);
+
+        return repository.findAll(spec);
     }
 
     public Warehouse register(RequestWarehouseDTO data) {
-        if (repository.existsByNameIgnoreCase(data.name())) {
-            throw new IllegalArgumentException("This Warehouse name already exists.");
+        if (repository.existsByNormalizedName(data.name())) {
+            throw new IllegalArgumentException("This warehouse name already exists.");
         }
+
         Warehouse warehouse = new Warehouse(data);
         return repository.save(warehouse);
     }
@@ -32,7 +39,10 @@ public class WarehouseService {
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
-        warehouse.setDescription(data.description());
+        if (data.description() != null) {
+            warehouse.setDescription(data.description().isBlank() ? null : data.description());
+        }
+
         return repository.save(warehouse);
     }
 

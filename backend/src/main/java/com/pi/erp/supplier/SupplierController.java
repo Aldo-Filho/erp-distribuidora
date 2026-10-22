@@ -25,7 +25,7 @@ public class SupplierController {
     private SupplierService service;
 
     @GetMapping("/search")
-    public ResponseEntity<List<Supplier>> search(SupplierFilter filter) {
+    public ResponseEntity<List<Supplier>> search(@Valid SupplierFilter filter) {
         return ResponseEntity.ok(service.search(filter));
     }
 
@@ -38,7 +38,9 @@ public class SupplierController {
     }
 
     @PostMapping
-    public ResponseEntity<Supplier> register(@RequestBody @Valid RequestSupplierDTO data) {
+    public ResponseEntity<Supplier> register(
+        @RequestBody @Valid RequestSupplierDTO data
+    ) {
         Supplier supplier = service.register(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(supplier);
     }
@@ -46,7 +48,7 @@ public class SupplierController {
     @PatchMapping("/{id}")
     public ResponseEntity<Supplier> update(
         @PathVariable Long id,
-        @RequestBody PatchSupplierDTO data
+        @RequestBody @Valid PatchSupplierDTO data
     ) {
         Supplier supplier = service.update(id, data);
         return ResponseEntity.ok(supplier);

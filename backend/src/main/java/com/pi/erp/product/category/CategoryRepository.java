@@ -1,11 +1,24 @@
 package com.pi.erp.product.category;
 
-import jakarta.validation.constraints.NotBlank;
-import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-public interface CategoryRepository extends JpaRepository<Category, Long> {
-    List<Category> findByNameContainingIgnoreCase(@NotBlank String name);
-
-    boolean existsByNameIgnoreCase(String name);
+public interface CategoryRepository
+    extends JpaRepository<Category, Long>, JpaSpecificationExecutor<Category>
+{
+    @Query(
+        value = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM categories
+                WHERE lower(btrim(name)) = lower(btrim(cast(:name AS text)))
+            )
+            """,
+        nativeQuery = true
+    )
+    boolean existsByNormalizedName(
+        @Param("name") String name
+    );
 }

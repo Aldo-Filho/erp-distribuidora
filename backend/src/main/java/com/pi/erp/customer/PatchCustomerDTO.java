@@ -3,7 +3,6 @@ package com.pi.erp.customer;
 import java.time.LocalDate;
 
 public record PatchCustomerDTO(
-    PersonType personType,
     String taxId,
     String legalName,
     String tradeName,
@@ -14,5 +13,6 @@ public record PatchCustomerDTO(
     String phone,
     String whatsapp,
     Boolean active,
-    Long priceTableId
+    Long priceTableId,
+    Boolean removePriceTable
 ) {}

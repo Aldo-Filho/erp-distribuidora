@@ -1,5 +1,7 @@
 package com.pi.erp.supplier;
 
+import jakarta.validation.constraints.PositiveOrZero;
+
 public record SupplierFilter(
     Long supplierAddressId,
     String legalName,
@@ -8,6 +10,9 @@ public record SupplierFilter(
     String email,
     String phone,
     String whatsapp,
-    Integer avgDeliveryDays,
-    Boolean active
+    @PositiveOrZero Integer avgDeliveryDays,
+    Boolean active,
+    Long productId,
+    Long brandId,
+    Long categoryId
 ) {}

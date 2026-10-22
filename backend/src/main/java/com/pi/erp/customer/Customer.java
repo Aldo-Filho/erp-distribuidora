@@ -59,7 +59,7 @@ public class Customer {
     private String whatsapp;
 
     @Column(name = "active")
-    private boolean active;
+    private Boolean active;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -85,18 +85,18 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CustomerAddress> customerAddresses;
 
-    public Customer(RequestCustomerDTO requestCustomerDTO, PriceTable priceTable) {
-        this.personType = requestCustomerDTO.personType();
-        this.taxId = requestCustomerDTO.taxId();
-        this.legalName = requestCustomerDTO.legalName();
-        this.tradeName = requestCustomerDTO.tradeName();
-        this.birthDate = requestCustomerDTO.birthDate();
-        this.municipalReg = requestCustomerDTO.municipalReg();
-        this.stateReg = requestCustomerDTO.stateReg();
-        this.email = requestCustomerDTO.email();
-        this.phone = requestCustomerDTO.phone();
-        this.whatsapp = requestCustomerDTO.whatsapp();
-        this.active = true;
+    public Customer(RequestCustomerDTO data, PriceTable priceTable) {
+        this.personType = data.personType();
+        this.taxId = data.taxId();
+        this.legalName = data.legalName();
+        this.tradeName = data.tradeName();
+        this.birthDate = data.birthDate();
+        this.municipalReg = data.municipalReg();
+        this.stateReg = data.stateReg();
+        this.email = data.email();
+        this.phone = data.phone();
+        this.whatsapp = data.whatsapp();
+        this.active = data.active() == null || data.active();
         this.priceTable = priceTable;
     }
 }

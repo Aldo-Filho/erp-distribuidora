@@ -47,19 +47,15 @@ public class StockItem {
     private Integer maxQuantity;
 
     public StockItem(
-        RequestStockItemDTO requestStockItemDTO,
+        RequestStockItemDTO data,
         Warehouse warehouse,
         Product product
     ) {
         this.warehouse = warehouse;
         this.product = product;
-        this.quantity = requestStockItemDTO.quantity() != null ? requestStockItemDTO.quantity() : 0;
-        this.reservedQuantity =
-            requestStockItemDTO.reservedQuantity() != null
-                ? requestStockItemDTO.reservedQuantity()
-                : 0;
-        this.minQuantity =
-            requestStockItemDTO.minQuantity() != null ? requestStockItemDTO.minQuantity() : 0;
-        this.maxQuantity = requestStockItemDTO.maxQuantity();
+        this.quantity = data.quantity() != null ? data.quantity() : 0;
+        this.reservedQuantity = data.reservedQuantity() != null ? data.reservedQuantity() : 0;
+        this.minQuantity = data.minQuantity() != null ? data.minQuantity() : 0;
+        this.maxQuantity = data.maxQuantity();
     }
 }

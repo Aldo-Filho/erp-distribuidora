@@ -1,0 +1,1907 @@
+type: collection.insomnia.rest/5.0
+schema_version: '5.1'
+name: ERP - JamsHub API
+meta:
+  id: wrk_40b91de1c8c6455792d1b26ece5e64ce
+  created: 1790129555061
+  modified: 1790129555061
+  description: ''
+collection:
+- name: Produtos
+  meta:
+    id: fld_311795a145ef4310b6ba07b77b9d97e7
+    created: 1788304060808
+    modified: 1788304060808
+    sortKey: 200
+    description: Endpoints do módulo de Produtos (com.pi.erp.product). brandId é obrigatório no cadastro; categoryId é opcional.
+  children:
+  - url: '{{ _.base_url }}/product/{{ _.product_id }}'
+    name: Remover produto
+    meta:
+      id: req_727ef4eee3dd49a8b8e42e593361c909
+      created: 1788304060808
+      modified: 1788897822215
+      isPrivate: false
+      description: Exclui o produto; vínculos existentes podem impedir a operação com 409.
+      sortKey: 600
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/product/{{ _.product_id }}'
+    name: Atualizar produto (patch)
+    meta:
+      id: req_75c45edf065446349a32f800317bfc41
+      created: 1788304060808
+      modified: 1788304060808
+      isPrivate: false
+      description: Envie apenas campos a alterar. Omissão ou null preserva valores. removeCategory=true remove a categoria;
+        omitido, null ou false não remove. Não combine remoção com categoryId. Retorna Product.
+      sortKey: 500
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"name\": \"Console PlayStation 5 - Slim\",\n  \"price\": 3799.9,\n  \"active\": false\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/product/{{ _.product_id }}'
+    name: Remover categoria do produto
+    meta:
+      id: req_30005aa712c0412b901d9eacc6aeeb48
+      created: 1792638002113
+      modified: 1792638002113
+      isPrivate: false
+      description: Remove somente a associação da categoria. Não envie categoryId no mesmo PATCH.
+      sortKey: 500
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"removeCategory\": true\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/product/search'
+    name: Buscar produtos (filtros)
+    meta:
+      id: req_78effb61bdd14d71a14a4f34ac290a94
+      created: 1788304060808
+      modified: 1788832235175
+      isPrivate: false
+      description: Consulta produtos e retorna entidades Product. A busca aceita filtros opcionais; consulta por ID ausente
+        retorna 204.
+      sortKey: 300
+    method: GET
+    parameters:
+    - name: name
+      value: A54
+      disabled: true
+    - name: sku
+      value: SKU-0001
+      disabled: true
+    - name: brandId
+      value: '4'
+      disabled: true
+    - name: categoryId
+      value: '1'
+      disabled: true
+    - name: active
+      value: 'true'
+      disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/product/{{ _.product_id }}'
+    name: Buscar produto para edição
+    meta:
+      id: req_7136b1084eb546789d04b2cc4fd967f9
+      created: 1791648000000
+      modified: 1791648000000
+      isPrivate: false
+      description: GET /product/{id}. Consulta um produto pelo ID definido em product_id.
+      sortKey: 350
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/product'
+    name: Cadastrar produto
+    meta:
+      id: req_98f04da27bf84ea29d8487ecbafd0bfe
+      created: 1788304060808
+      modified: 1788832237599
+      isPrivate: false
+      description: Cadastro com name, sku, brandId, cost e price obrigatórios. categoryId e stock são opcionais. Stock inicial
+        exige warehouseId, quantity, reservedQuantity e minQuantity; maxQuantity é opcional. Retorna a entidade Product; active
+        omitido assume true.
+      sortKey: 400
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"name\": \"Console PlayStation 5\",\n  \"sku\": \"SKU-0001\",\n  \"brandId\": \"{{ _.brand_id }}\",\n \
+        \ \"categoryId\": \"{{ _.category_id }}\",\n  \"cost\": 2500.0,\n  \"price\": 3999.9,\n  \"weightKg\": 3.9,\n  \"\
+        color\": \"Branco\",\n  \"dimensionX\": 39.0,\n  \"dimensionY\": 10.4,\n  \"dimensionZ\": 26.0,\n  \"size\": \"Padrão\"\
+        ,\n  \"active\": true\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/product'
+    name: Cadastrar produto com estoque inicial
+    meta:
+      id: req_c5b40326a28b4b2cbfc5dfc134ff5650
+      created: 1792638002113
+      modified: 1792638002113
+      isPrivate: false
+      description: Cadastro transacional de produto e estoque inicial. maxQuantity pode ser omitido; se houver erro no estoque,
+        o produto não deve ser persistido.
+      sortKey: 400
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"name\": \"Produto com estoque inicial\",\n  \"sku\": \"SKU-ESTOQUE-001\",\n  \"brandId\": \"{{ _.brand_id\
+        \ }}\",\n  \"cost\": 10,\n  \"price\": 20,\n  \"stock\": {\n    \"warehouseId\": \"{{ _.warehouse_id }}\",\n    \"\
+        quantity\": 10,\n    \"reservedQuantity\": 0,\n    \"minQuantity\": 0\n  }\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - name: Marcas
+    meta:
+      id: fld_150b75f5eb4b41148cd29feb5c1b2118
+      created: 1788304060808
+      modified: 1788304060808
+      sortKey: 700
+      description: Endpoints do submódulo de Marcas (com.pi.erp.product.brand).
+    children:
+    - url: '{{ _.base_url }}/brand/{{ _.brand_id }}'
+      name: Buscar marca por ID
+      meta:
+        id: req_62703c60c92f42a0887e0c193c471a4e
+        created: 1788304060808
+        modified: 1788304060808
+        isPrivate: false
+        description: GET /brand/{id}. Retorna 204 sem corpo se não encontrar (repository.findById().map/orElseGet).
+        sortKey: 900
+      method: GET
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/brand'
+      name: Cadastrar marca
+      meta:
+        id: req_7d08fd3d830e4ec89805172f432e2440
+        created: 1788304060808
+        modified: 1788304060808
+        isPrivate: false
+        description: 'POST /brand. Campo obrigatório (RequestBrandDTO): name. Retorna erro se já existir marca com esse nome.'
+        sortKey: 1000
+      method: POST
+      body:
+        mimeType: application/json
+        text: "{\n  \"name\": \"Sony\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/brand/{{ _.brand_id }}'
+      name: Remover marca
+      meta:
+        id: req_8de77de3ae414ebe8127e6abc8a3d031
+        created: 1788304060808
+        modified: 1788304060808
+        isPrivate: false
+        description: DELETE /brand/{id}. Substitua o {id} na URL por um ID existente.
+        sortKey: 1100
+      method: DELETE
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/brand'
+      name: Listar marcas
+      meta:
+        id: req_a3abbb4759624e1da8b9d89e9d9aa782
+        created: 1788304060808
+        modified: 1788304060808
+        isPrivate: false
+        description: GET /brand. Parâmetro 'name' é opcional (busca parcial, case-insensitive). Sem o parâmetro, retorna todas
+          as marcas.
+        sortKey: 800
+      method: GET
+      parameters:
+      - name: name
+        value: Sony
+        disabled: true
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+  - name: Categorias
+    meta:
+      id: fld_d7780d9b4e6f4655bd89ca9cd54ad879
+      created: 1788304060808
+      modified: 1788304060808
+      sortKey: 1200
+      description: Endpoints do submódulo de Categorias (com.pi.erp.product.category).
+    children:
+    - url: '{{ _.base_url }}/category'
+      name: Listar categorias
+      meta:
+        id: req_894572a77f0d4846a87dc45727cce306
+        created: 1788304060808
+        modified: 1788304060808
+        isPrivate: false
+        description: GET /category. Parâmetro 'name' é opcional (busca parcial, case-insensitive). Sem o parâmetro, retorna
+          todas as categorias.
+        sortKey: 1300
+      method: GET
+      parameters:
+      - name: name
+        value: Eletrônicos
+        disabled: true
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/category/{{ _.category_id }}'
+      name: Remover categoria
+      meta:
+        id: req_8cab7a106dff4304a8c29ac4808028c3
+        created: 1788304060808
+        modified: 1788304060808
+        isPrivate: false
+        description: DELETE /category/{id}. Substitua o {id} na URL por um ID existente.
+        sortKey: 1600
+      method: DELETE
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/category'
+      name: Cadastrar categoria
+      meta:
+        id: req_9571dd6f965e408d93bb12ee3e4af066
+        created: 1788304060808
+        modified: 1788304060808
+        isPrivate: false
+        description: 'POST /category. Campo obrigatório (RequestCategoryDTO): name. Retorna erro se já existir categoria com
+          esse nome.'
+        sortKey: 1500
+      method: POST
+      body:
+        mimeType: application/json
+        text: "{\n  \"name\": \"Eletrônicos\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/category/{{ _.category_id }}'
+      name: Buscar categoria por ID
+      meta:
+        id: req_feb7dc4f039140e39ad277b0460e9084
+        created: 1788304060808
+        modified: 1788304060808
+        isPrivate: false
+        description: GET /category/{id}. Retorna 204 sem corpo se não encontrar.
+        sortKey: 1400
+      method: GET
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+- name: Armazéns
+  meta:
+    id: fld_6d6b9b07f7f3482f9e2d4caa356c5d1c
+    created: 1788304060808
+    modified: 1788304060808
+    sortKey: 1700
+    description: Endpoints do módulo de Armazéns (com.pi.erp.warehouse).
+  children:
+  - url: '{{ _.base_url }}/warehouse/{{ _.warehouse_id }}'
+    name: Atualizar armazém (patch)
+    meta:
+      id: req_5f238d044d724385b84933d55c15763d
+      created: 1788304060808
+      modified: 1788304060808
+      isPrivate: false
+      description: PATCH de description. Omitido ou null preserva; vazio limpa para null. O nome não é editável por este endpoint.
+      sortKey: 2000
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"description\": \"Novo texto\"\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/warehouse/search'
+    name: Buscar armazéns
+    meta:
+      id: req_5feb38acacf243868a612bf32b4646a1
+      created: 1788304060808
+      modified: 1790128329455
+      isPrivate: false
+      description: GET /warehouse/search. Parâmetro 'name' é opcional (busca parcial, case-insensitive). Sem o parâmetro,
+        retorna todos os armazéns.
+      sortKey: 1800
+    method: GET
+    parameters:
+    - name: name
+      value: Central
+      disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/warehouse'
+    name: Cadastrar armazém
+    meta:
+      id: req_919c2b796f374325b80a90a006215283
+      created: 1788304060808
+      modified: 1788304060808
+      isPrivate: false
+      description: 'POST /warehouse. Campo obrigatório (RequestWarehouseDTO): name. ''description'' é opcional. Retorna erro
+        se já existir armazém com esse nome.'
+      sortKey: 1900
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"name\": \"Armazém Central\",\n  \"description\": \"Depósito principal - matriz\"\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/warehouse/{{ _.warehouse_id }}'
+    name: Remover armazém
+    meta:
+      id: req_dbb5a7f33d3e4766a7c5a9644279a413
+      created: 1788304060808
+      modified: 1788473255440
+      isPrivate: false
+      description: DELETE /warehouse/{id}. Substitua o {id} na URL por um ID existente.
+      sortKey: 2100
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - name: Endereços de Armazém
+    meta:
+      id: fld_8043cd28814f40e1873bdb9f4392cd45
+      created: 1788304060808
+      modified: 1788400824573
+      sortKey: 2200
+      description: CRUD de endereços de armazéns implementado. Complemento é obrigatório. Configure warehouse_id e warehouse_address_id
+        no ambiente.
+    children:
+    - url: '{{ _.base_url }}/warehouseAddress/search'
+      name: Buscar Endereço de Armazém
+      meta:
+        id: req_88634665ac4a4404aaf873aeb8d6da3c
+        created: 1788399158879
+        modified: 1788400110244
+        isPrivate: false
+        description: 'Endereço de armazém: um por armazém. Estado, cidade, rua, bairro, número, complemento e CEP são obrigatórios
+          no cadastro. A identidade física compara estado, cidade, rua, CEP, número e complemento; números ou complementos
+          diferentes são permitidos. PATCH omitido/null preserva valores; textos obrigatórios vazios são rejeitados.'
+        sortKey: -1788399158879
+      method: GET
+      parameters:
+      - name: state
+        value: ''
+        description: ''
+        disabled: true
+      - name: city
+        value: ''
+        description: ''
+        disabled: true
+      - name: street
+        value: ''
+        description: ''
+        disabled: true
+      - name: neighborhood
+        value: ''
+        description: ''
+        disabled: true
+      - name: number
+        value: ''
+        description: ''
+        disabled: true
+      - name: complement
+        value: ''
+        description: ''
+        disabled: true
+      - name: warehouseId
+        value: '{{ _.warehouse_id }}'
+        disabled: true
+      - name: zipCode
+        value: 55025-230
+        disabled: true
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/warehouseAddress/{{ _.warehouse_address_id }}'
+      name: Buscar endereço de armazém por ID
+      meta:
+        id: req_975e5b48b60a4fefa05c6b3e5183d6c4
+        created: 1788399158879
+        modified: 1788400110244
+        isPrivate: false
+        description: 'Consulta por ID: retorna a entidade com 200 ou 204 quando ausente.'
+        sortKey: -1788399158879
+      method: GET
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/warehouseAddress'
+      name: Cadastrar Endereço
+      meta:
+        id: req_d45f8b802a5844dcb3c38335bbcd5943
+        created: 1788400088642
+        modified: 1788474025536
+        isPrivate: false
+        description: 'Endereço de armazém: um por armazém. Estado, cidade, rua, bairro, número, complemento e CEP são obrigatórios
+          no cadastro. A identidade física compara estado, cidade, rua, CEP, número e complemento; números ou complementos
+          diferentes são permitidos. PATCH omitido/null preserva valores; textos obrigatórios vazios são rejeitados.'
+        sortKey: -1788400088642
+      method: POST
+      body:
+        mimeType: application/json
+        text: "{\n\t\"warehouseId\": \"{{ _.warehouse_id }}\",\n\t\"state\": \"Pernambuco\",\n\t\"city\": \"Caruaru\",\n\t\
+          \"street\": \"Av. Joaquim José de Freitas\",\n\t\"neighborhood\": \"Indianópolis\",\n\t\"number\": 220,\n\t\"complement\"\
+          : \"Bloco 03 Apto 304\",\n\t\"zipCode\": \"55025-230\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/warehouseAddress/{{ _.warehouse_address_id }}'
+      name: Atualizar Endereço
+      meta:
+        id: req_3e427eae370146918415de45d4efe079
+        created: 1788400365911
+        modified: 1788400814320
+        isPrivate: false
+        description: 'PATCH parcial: campos omitidos ou null são preservados. Campos obrigatórios não aceitam strings vazias.
+          Envie somente os campos que deseja modificar.'
+        sortKey: -1788400365911
+      method: PATCH
+      body:
+        mimeType: application/json
+        text: "{\n  \"neighborhood\": \"Universitário\",\n  \"complement\": \"Bloco 02, Sala 01\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/warehouseAddress/{{ _.warehouse_address_id }}'
+      name: Remover Endereço
+      meta:
+        id: req_604984dd25c6441d9bd767b609272587
+        created: 1788400463144
+        modified: 1788476544945
+        isPrivate: false
+        description: 'Endereço de armazém: um por armazém. Estado, cidade, rua, bairro, número, complemento e CEP são obrigatórios
+          no cadastro. A identidade física compara estado, cidade, rua, CEP, número e complemento; números ou complementos
+          diferentes são permitidos. PATCH omitido/null preserva valores; textos obrigatórios vazios são rejeitados.'
+        sortKey: -1788400463144
+      method: DELETE
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+- name: Estoque
+  meta:
+    id: fld_997cb9b7830440848f5e8be1800e5c9b
+    created: 1788832215680
+    modified: 1788832215680
+    sortKey: -1788832215680
+    description: ''
+  children:
+  - url: '{{ _.base_url }}/stockItem/search'
+    name: Buscar item de estoque
+    meta:
+      id: req_f10b62a7df92444a83f225f8fec5d3f7
+      created: 1788832223911
+      modified: 1791045161700
+      isPrivate: false
+      description: Busca por warehouseId e productId opcionais. Retorna entidades StockItem com product, warehouse e quantidades.
+      sortKey: -1788832223911
+    method: GET
+    parameters:
+    - name: warehouseId
+      value: '{{ _.warehouse_id }}'
+      disabled: true
+    - name: productId
+      value: '{{ _.product_id }}'
+      disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/stockItem'
+    name: Cadastrar item de estoque
+    meta:
+      id: req_aa5c133a7b374c26b78096d04d628190
+      created: 1788832284713
+      modified: 1791045140632
+      isPrivate: false
+      description: Cadastre um único item por produto/armazém. quantity, reservedQuantity e minQuantity são obrigatórios e
+        não negativos; maxQuantity é opcional. Reserva não pode exceder saldo; mínimo não pode exceder máximo quando definido.
+        Retorna StockItem.
+      sortKey: -1788832284713
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"warehouseId\": \"{{ _.warehouse_id }}\",\n  \"productId\": \"{{ _.product_id }}\",\n  \"quantity\": 100,\n\
+        \  \"reservedQuantity\": 10,\n  \"minQuantity\": 20,\n  \"maxQuantity\": 200\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/stockItem'
+    name: Cadastrar estoque sem máximo
+    meta:
+      id: req_8425f49fb13e4055b1aec6729be76185
+      created: 1792638002113
+      modified: 1792638002113
+      isPrivate: false
+      description: Cadastro sem máximo. O par produto/armazém não pode já existir.
+      sortKey: -1788832284713
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"warehouseId\": \"{{ _.warehouse_id }}\",\n  \"productId\": \"{{ _.product_id }}\",\n  \"quantity\": 10,\n\
+        \  \"reservedQuantity\": 0,\n  \"minQuantity\": 0\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/stockItem/{{ _.stock_item_id }}'
+    name: Remover item de estoque
+    meta:
+      id: req_f33354035b5147ffb7f8060456236011
+      created: 1788832610323
+      modified: 1791044593556
+      isPrivate: false
+      description: Exclui o item; movimentações vinculadas impedem a exclusão com 409.
+      sortKey: -1788832610323
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/stockItem/{{ _.stock_item_id }}'
+    name: Atualizar item de estoque
+    meta:
+      id: req_43ea8f749bb4459faf3e9827d1e42c2e
+      created: 1788832630601
+      modified: 1791045128584
+      isPrivate: false
+      description: PATCH parcial. removeMaxQuantity=true remove o máximo; omitido, null ou false preserva. Não combine remoção
+        com maxQuantity, inclusive zero. Produto ou armazém não podem ser trocados quando houver movimentações. Edição usa
+        bloqueio transacional.
+      sortKey: -1788832447518
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"quantity\": 80\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/stockItem/{{ _.stock_item_id }}'
+    name: Remover quantidade máxima
+    meta:
+      id: req_8ccd5b5faaf849c585c01dea9ae9a178
+      created: 1792638002113
+      modified: 1792638002113
+      isPrivate: false
+      description: Deixa o estoque sem máximo definido. Não envie maxQuantity no mesmo PATCH.
+      sortKey: -1788832447518
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"removeMaxQuantity\": true\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: Clientes
+  meta:
+    id: fld_1fdc3eaacb184a0192cd28b1891943ca
+    created: 1790128307998
+    modified: 1790129000000
+    sortKey: -1790128307998
+    description: Endpoints de clientes e seus endereços.
+  children:
+  - url: '{{ _.base_url }}/customer/search'
+    name: Buscar clientes
+    meta:
+      id: req_a8faafe3da1d4050aa4a2afbe79e44a1
+      created: 1790128310882
+      modified: 1790129000000
+      isPrivate: false
+      description: GET /customer/search. Todos os filtros são opcionais. Habilite os parâmetros desejados.
+      sortKey: 100
+    method: GET
+    parameters:
+    - name: personType
+      value: PJ
+      disabled: true
+    - name: taxId
+      value: '12345678000195'
+      disabled: true
+    - name: legalName
+      value: Distribuidora
+      disabled: true
+    - name: tradeName
+      value: JAMS
+      disabled: true
+    - name: email
+      value: contato@jams.com.br
+      disabled: true
+    - name: priceTableId
+      value: '1'
+      disabled: true
+    - name: active
+      value: 'true'
+      disabled: true
+    - name: municipalReg
+      value: Exemplo
+      disabled: true
+    - name: stateReg
+      value: Exemplo
+      disabled: true
+    - name: phone
+      value: Exemplo
+      disabled: true
+    - name: whatsapp
+      value: Exemplo
+      disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+    name: Atualizar cliente
+    meta:
+      id: req_3ab9c43b6d334fe5bc08f0b1c618064b
+      created: 1790129000000
+      modified: 1790129000000
+      isPrivate: false
+      description: 'PATCH parcial: nome obrigatório não aceita vazio; textos opcionais vazios são limpos. removePriceTable=true
+        remove a tabela; omitido, null ou false não remove. Não combine remoção com priceTableId.'
+      sortKey: 400
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"tradeName\": \"JAMS Hub Distribuidora\",\n  \"email\": \"comercial@jamshub.com.br\",\n  \"active\": true\n\
+        }"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+    name: Remover tabela de preço do cliente
+    meta:
+      id: req_9794849cea5a429ea32e3eb2a2ee6940
+      created: 1792638002113
+      modified: 1792638002113
+      isPrivate: false
+      description: Remove somente a associação da tabela de preço. Não envie priceTableId no mesmo PATCH.
+      sortKey: 400
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"removePriceTable\": true\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+    name: Remover cliente
+    meta:
+      id: req_955c9a1cd14345fdbbac72dd1fefedbc
+      created: 1790129000000
+      modified: 1790129000000
+      isPrivate: false
+      description: DELETE /customer/{id}. Substitua o ID por um cliente existente.
+      sortKey: 500
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+    name: Buscar cliente por ID
+    meta:
+      id: req_a800166f86eb464298dab36684aed273
+      created: 1790129000000
+      modified: 1790129000000
+      isPrivate: false
+      description: GET /customer/{id}. Substitua o ID por um cliente existente.
+      sortKey: 200
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/customer'
+    name: Cadastrar cliente
+    meta:
+      id: req_ed6607e9bda441848234da4c04dd5e3e
+      created: 1790129000000
+      modified: 1790129000000
+      isPrivate: false
+      description: POST /customer. priceTableId é opcional; configure price_table_id no ambiente caso seja utilizado. O cadastro
+        aceita também um objeto address opcional para criar o endereço inicial.
+      sortKey: 300
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"personType\": \"PJ\",\n  \"taxId\": \"12345678000195\",\n  \"legalName\": \"Distribuidora JAMS Hub LTDA\"\
+        ,\n  \"tradeName\": \"JAMS Hub\",\n  \"birthDate\": \"2020-01-15\",\n  \"municipalReg\": \"123456789\",\n  \"stateReg\"\
+        : \"987654321\",\n  \"email\": \"contato@jamshub.com.br\",\n  \"phone\": \"81999990000\",\n  \"whatsapp\": \"81999990000\"\
+        ,\n  \"active\": true,\n  \"priceTableId\": \"{{ _.price_table_id }}\"\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - name: Endereços de Clientes
+    meta:
+      id: fld_426e3672ae4d49d3b6f48d9ee5a9e440
+      created: 1790129000000
+      modified: 1790129000000
+      sortKey: 600
+      description: 'Um cliente pode ter um endereço de cada tipo: MAIN, BILLING e SHIPPING.'
+    children:
+    - url: '{{ _.base_url }}/customerAddress/{{ _.customer_address_id }}'
+      name: Remover endereço de cliente
+      meta:
+        id: req_33e8e9835eca45779150cd2e909acb94
+        created: 1790129000000
+        modified: 1790129000000
+        isPrivate: false
+        description: DELETE /customerAddress/{id}. Substitua o ID por um endereço existente.
+        sortKey: 400
+      method: DELETE
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/customerAddress/{{ _.customer_address_id }}'
+      name: Atualizar endereço de cliente
+      meta:
+        id: req_45c4c0bf4f63473e85a100c3120fa509
+        created: 1790129000000
+        modified: 1790129000000
+        isPrivate: false
+        description: PATCH /customerAddress/{id}. Envie apenas os campos que deseja alterar.
+        sortKey: 300
+      method: PATCH
+      body:
+        mimeType: application/json
+        text: "{\n  \"neighborhood\": \"Universitário\",\n  \"complement\": \"Casa\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/customerAddress'
+      name: Cadastrar endereço de cliente
+      meta:
+        id: req_a1bfe306163947c69a7dc596b18d04d2
+        created: 1790129000000
+        modified: 1790129000000
+        isPrivate: false
+        description: POST /customerAddress. Cadastre antes um cliente e configure customer_id no ambiente.
+        sortKey: 200
+      method: POST
+      body:
+        mimeType: application/json
+        text: "{\n  \"customerId\": \"{{ _.customer_id }}\",\n  \"addressType\": \"MAIN\",\n  \"state\": \"Pernambuco\",\n\
+          \  \"city\": \"Caruaru\",\n  \"street\": \"Avenida Joaquim José de Freitas\",\n  \"neighborhood\": \"Indianópolis\"\
+          ,\n  \"number\": \"220\",\n  \"complement\": \"Bloco 03, Apto 304\",\n  \"zipCode\": \"55025-230\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/customerAddress/search'
+      name: Buscar endereços de clientes
+      meta:
+        id: req_ea6b2f8a905d4ebdb9eed1a35c777f22
+        created: 1790129000000
+        modified: 1790130818808
+        isPrivate: false
+        description: GET /customerAddress/search. Todos os filtros são opcionais.
+        sortKey: 100
+      method: GET
+      parameters:
+      - name: customerId
+        value: '{{ _.customer_id }}'
+        disabled: false
+      - name: addressType
+        value: MAIN
+        disabled: true
+      - name: city
+        value: Caruaru
+        disabled: true
+      - name: zipCode
+        value: 55025-230
+        disabled: true
+      - name: state
+        value: Exemplo
+        disabled: true
+      - name: street
+        value: Exemplo
+        disabled: true
+      - name: neighborhood
+        value: Exemplo
+        disabled: true
+      - name: number
+        value: Exemplo
+        disabled: true
+      - name: complement
+        value: Exemplo
+        disabled: true
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/customerAddress/{{ _.customer_address_id }}'
+      name: Buscar endereço de cliente por ID
+      meta:
+        id: req_964f5ce3aad94353a099c4973d30302f
+        created: 1790129000000
+        modified: 1790130818808
+        isPrivate: false
+        description: 'Consulta por ID: retorna a entidade com 200 ou 204 quando ausente.'
+        sortKey: 100
+      method: GET
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+  - url: '{{ _.base_url }}/customer'
+    name: Cadastrar cliente com endereço inicial
+    meta:
+      id: req_a88e67851d354abd9635632560f222b8
+      created: 1792640527580
+      modified: 1792640527580
+      isPrivate: false
+      description: Cria cliente e endereço inicial na mesma operação, usando o campo opcional address do RequestCustomerDTO.
+        Configure price_table_id ou remova priceTableId.
+      sortKey: 310
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"personType\": \"PJ\",\n  \"taxId\": \"98765432000110\",\n  \"legalName\": \"Distribuidora Exemplo LTDA\"\
+        ,\n  \"tradeName\": \"JAMS Hub\",\n  \"birthDate\": \"2020-01-15\",\n  \"municipalReg\": \"123456789\",\n  \"stateReg\"\
+        : \"987654321\",\n  \"email\": \"contato@jamshub.com.br\",\n  \"phone\": \"81999990000\",\n  \"whatsapp\": \"81999990000\"\
+        ,\n  \"active\": true,\n  \"priceTableId\": \"{{ _.price_table_id }}\",\n  \"address\": {\n    \"addressType\": \"\
+        MAIN\",\n    \"state\": \"Pernambuco\",\n    \"city\": \"Caruaru\",\n    \"street\": \"Avenida Exemplo\",\n    \"\
+        neighborhood\": \"Centro\",\n    \"number\": \"100\",\n    \"complement\": \"Sala 01\",\n    \"zipCode\": \"55000-000\"\
+        \n  }\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: Tabelas de Preço
+  meta:
+    id: fld_b8db19e03838478191bbf9d969b839d5
+    created: 1790129000000
+    modified: 1790129000000
+    sortKey: -1790129000000
+    description: Endpoints do módulo de tabelas de preço.
+  children:
+  - url: '{{ _.base_url }}/price-table/{{ _.price_table_id }}'
+    name: Atualizar tabela de preço
+    meta:
+      id: req_1817f596cec14a48afa0ff4bb6b761c9
+      created: 1790129000000
+      modified: 1790129000000
+      isPrivate: false
+      description: Nome obrigatório e único, ignorando maiúsculas e espaços nas extremidades. Datas são opcionais; início
+        não pode ser posterior ao fim. active=false é respeitado. PATCH omitido/null preserva dados; datas preenchidas não
+        são removidas por este contrato. Retorna PriceTable.
+      sortKey: 400
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"name\": \"Varejo 2026 - Atualizada\",\n  \"active\": true\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/price-table/search'
+    name: Buscar tabelas de preço
+    meta:
+      id: req_729e7f83a95642bc89cd8f4c85f1f590
+      created: 1790129000000
+      modified: 1790129815651
+      isPrivate: false
+      description: GET /price-table/search. Todos os filtros são opcionais.
+      sortKey: 100
+    method: GET
+    parameters:
+    - name: name
+      value: Varejo
+      disabled: true
+    - name: startDate
+      value: 2026-01-01
+      disabled: true
+    - name: endDate
+      value: 2026-12-31
+      disabled: true
+    - name: active
+      value: 'true'
+      disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/price-table/{{ _.price_table_id }}'
+    name: Remover tabela de preço
+    meta:
+      id: req_7a0f37b9b82b4a1ea6f18957a98631c2
+      created: 1790129000000
+      modified: 1790129000000
+      isPrivate: false
+      description: DELETE /price-table/{id}. A tabela não pode estar vinculada a clientes.
+      sortKey: 500
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/price-table'
+    name: Cadastrar tabela de preço
+    meta:
+      id: req_939a87e7b7364c439b452225a15d63ef
+      created: 1790129000000
+      modified: 1790129000000
+      isPrivate: false
+      description: Nome obrigatório e único, ignorando maiúsculas e espaços nas extremidades. Datas são opcionais; início
+        não pode ser posterior ao fim. active=false é respeitado. PATCH omitido/null preserva dados; datas preenchidas não
+        são removidas por este contrato. Retorna PriceTable.
+      sortKey: 300
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"name\": \"Varejo 2026\",\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-12-31\",\n  \"active\"\
+        : true\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/price-table/{{ _.price_table_id }}'
+    name: Buscar tabela de preço por ID
+    meta:
+      id: req_a317bd89f7604d66b6a007146a827329
+      created: 1790129000000
+      modified: 1790129000000
+      isPrivate: false
+      description: GET /price-table/{id}. Substitua o ID por uma tabela existente.
+      sortKey: 200
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: Fornecedores
+  meta:
+    id: fld_5f42d17b1e1349618e3531495db33dcc
+    created: 1791427699214
+    modified: 1791427699214
+    sortKey: -1791427699214
+    description: Cadastre um fornecedor e configure supplier_id. Para vínculos, configure product_id, brand_id e category_id
+      com registros existentes. Copie o ID do vínculo de produto para supplier_product_id e o do endereço para supplier_address_id.
+      Execute exclusões por último.
+  children:
+  - url: '{{ _.base_url }}/supplier/search'
+    name: Buscar fornecedores (filtros)
+    meta:
+      id: req_5bbd248250d44ff6b41d6b5e195fc8f1
+      created: 1791427699214
+      modified: 1791427699214
+      isPrivate: false
+      description: Todos os filtros são opcionais. Habilite os parâmetros desejados; sem filtros, lista todos os fornecedores.
+      sortKey: 100
+    method: GET
+    parameters:
+    - name: supplierAddressId
+      value: '1'
+      disabled: true
+    - name: legalName
+      value: Fornecedor
+      disabled: true
+    - name: tradeName
+      value: Exemplo
+      disabled: true
+    - name: taxId
+      value: '12345678000195'
+      disabled: true
+    - name: email
+      value: fornecedor.example
+      disabled: true
+    - name: phone
+      value: '8133334444'
+      disabled: true
+    - name: whatsapp
+      value: '81999994444'
+      disabled: true
+    - name: avgDeliveryDays
+      value: '5'
+      disabled: true
+    - name: active
+      value: 'true'
+      disabled: true
+    - name: productId
+      value: '{{ _.product_id }}'
+      disabled: true
+    - name: brandId
+      value: '{{ _.brand_id }}'
+      disabled: true
+    - name: categoryId
+      value: '{{ _.category_id }}'
+      disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}'
+    name: Buscar fornecedor por ID
+    meta:
+      id: req_33644a4e4e564d628f2d0a2b09926171
+      created: 1791427699214
+      modified: 1791427699214
+      isPrivate: false
+      description: Defina supplier_id no ambiente com o ID retornado pelo cadastro. Retorna 204 quando não encontrado.
+      sortKey: 200
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/supplier'
+    name: Cadastrar fornecedor com endereço
+    meta:
+      id: req_daabfaae212d44e68363a0a4ad434dd7
+      created: 1791427699214
+      modified: 1791427699214
+      isPrivate: false
+      description: Cria fornecedor e endereço na mesma transação. Não envie supplierId no endereço. CNPJ deve ser único; complemento
+        é opcional. avgDeliveryDays e active também são opcionais. Copie o ID retornado para supplier_id no ambiente.
+      sortKey: 300
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"legalName\": \"Fornecedor Exemplo LTDA\",\n  \"tradeName\": \"Fornecedor Exemplo\",\n  \"taxId\": \"12345678000195\"\
+        ,\n  \"email\": \"contato@fornecedor.example\",\n  \"phone\": \"8133334444\",\n  \"whatsapp\": \"81999994444\",\n\
+        \  \"avgDeliveryDays\": 5,\n  \"active\": true,\n  \"address\": {\n    \"country\": \"Brasil\",\n    \"state\": \"\
+        Pernambuco\",\n    \"city\": \"Caruaru\",\n    \"street\": \"Avenida Agamenon Magalhães\",\n    \"neighborhood\":\
+        \ \"Maurício de Nassau\",\n    \"number\": \"1200\",\n    \"complement\": \"Sala 01\",\n    \"zipCode\": \"55012-290\"\
+        ,\n    \"addressType\": \"MAIN\"\n  }\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/supplier'
+    name: Cadastrar fornecedor sem endereço
+    meta:
+      id: req_8536efbf2e564c4495ab372e3a1927ce
+      created: 1791427699214
+      modified: 1791427699214
+      isPrivate: false
+      description: Use este cadastro antes de cadastrar um endereço separado. Copie o ID retornado para supplier_id no ambiente.
+        Use um CNPJ diferente a cada novo cadastro.
+      sortKey: 350
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"legalName\": \"Fornecedor Sem Endereço LTDA\",\n  \"tradeName\": \"Fornecedor Sem Endereço\",\n  \"taxId\"\
+        : \"98765432000198\",\n  \"email\": \"contato@segundo-fornecedor.example\",\n  \"phone\": \"8133334444\",\n  \"whatsapp\"\
+        : \"81999994444\",\n  \"avgDeliveryDays\": 5,\n  \"active\": true\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}'
+    name: Atualizar fornecedor (patch)
+    meta:
+      id: req_698e3761a1964e0fabdf0fd041c1920a
+      created: 1791427699214
+      modified: 1791427699214
+      isPrivate: false
+      description: Todos os campos são opcionais. Envie apenas o que deseja alterar. O exemplo atualiza contato, prazo de
+        entrega e situação do fornecedor.
+      sortKey: 400
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"tradeName\": \"Fornecedor Exemplo Atualizado\",\n  \"email\": \"comercial@fornecedor.example\",\n  \"\
+        phone\": \"8133335555\",\n  \"whatsapp\": \"81999995555\",\n  \"avgDeliveryDays\": 5,\n  \"active\": true\n}"
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}'
+    name: Remover fornecedor
+    meta:
+      id: req_88ad955a36e54eb7bf3b569c63f18f6f
+      created: 1791427699214
+      modified: 1791427699214
+      isPrivate: false
+      description: Remove fornecedor, endereços e vínculos de produtos, marcas e categorias na mesma transação. Referências
+        de compras ou outros módulos impedem a exclusão e revertem a operação. Defina supplier_id e execute por último.
+      sortKey: 500
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - name: Endereços de Fornecedores
+    meta:
+      id: fld_79aa143af4674c99a5b5134fc4055455
+      created: 1791427699214
+      modified: 1791427699214
+      sortKey: 600
+      description: Cadastre endereços junto com o fornecedor ou separadamente. Um fornecedor pode ter vários endereços. Os
+        IDs de fornecedor e endereço são independentes.
+    children:
+    - url: '{{ _.base_url }}/supplierAddress/search'
+      name: Buscar endereços de fornecedores (filtros)
+      meta:
+        id: req_fd6bc20188ed46ea9b72f61b50d811d9
+        created: 1791427699214
+        modified: 1791427699214
+        isPrivate: false
+        description: Todos os filtros são opcionais. Para localizar o endereço criado junto com o fornecedor, habilite supplierId.
+          Copie o ID do endereço para supplier_address_id no ambiente.
+        sortKey: 100
+      method: GET
+      parameters:
+      - name: supplierId
+        value: '{{ _.supplier_id }}'
+        disabled: true
+      - name: addressType
+        value: MAIN
+        disabled: true
+      - name: country
+        value: Brasil
+        disabled: true
+      - name: state
+        value: Pernambuco
+        disabled: true
+      - name: city
+        value: Caruaru
+        disabled: true
+      - name: street
+        value: Agamenon
+        disabled: true
+      - name: neighborhood
+        value: Nassau
+        disabled: true
+      - name: number
+        value: '1200'
+        disabled: true
+      - name: complement
+        value: Sala
+        disabled: true
+      - name: zipCode
+        value: 55012-290
+        disabled: true
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}'
+      name: Buscar endereço de fornecedor por ID
+      meta:
+        id: req_3621528499804dbca5f02723d978da49
+        created: 1791427699214
+        modified: 1791427699214
+        isPrivate: false
+        description: Use o ID do endereço, que pode ser diferente do ID do fornecedor. Retorna 204 quando não encontrado.
+        sortKey: 200
+      method: GET
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/supplierAddress'
+      name: Cadastrar endereço de fornecedor
+      meta:
+        id: req_eb6d0b7e9bbc4c3486822aa1a5452b38
+        created: 1791427699214
+        modified: 1791427699214
+        isPrivate: false
+        description: Defina supplier_id de um fornecedor existente. É possível cadastrar vários endereços. Duplicidade é verificada
+          por fornecedor, tipo, CEP, número e complemento. Copie o ID retornado para supplier_address_id.
+        sortKey: 300
+      method: POST
+      body:
+        mimeType: application/json
+        text: "{\n  \"supplierId\": \"{{ _.supplier_id }}\",\n  \"country\": \"Brasil\",\n  \"state\": \"Pernambuco\",\n \
+          \ \"city\": \"Caruaru\",\n  \"street\": \"Avenida Agamenon Magalhães\",\n  \"neighborhood\": \"Maurício de Nassau\"\
+          ,\n  \"number\": \"1250\",\n  \"complement\": \"Sala 02\",\n  \"zipCode\": \"55012-290\",\n  \"addressType\": \"\
+          MAIN\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}'
+      name: Atualizar endereço de fornecedor (patch)
+      meta:
+        id: req_4c8c95148b4a4b19a9cfc582863c664b
+        created: 1791427699214
+        modified: 1791427699214
+        isPrivate: false
+        description: Envie apenas os campos que deseja alterar. Uma string vazia em complement limpa o complemento. Não envie
+          supplierId; o vínculo com o fornecedor é preservado.
+        sortKey: 400
+      method: PATCH
+      body:
+        mimeType: application/json
+        text: "{\n  \"neighborhood\": \"Centro\",\n  \"number\": \"1300\",\n  \"complement\": \"Sala 03\",\n  \"addressType\"\
+          : \"BILLING\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}'
+      name: Remover endereço de fornecedor
+      meta:
+        id: req_c17a077b5f47454ca617adf3ef66a982
+        created: 1791427699214
+        modified: 1791427699214
+        isPrivate: false
+        description: Remove apenas o endereço e desfaz o vínculo com o fornecedor. Defina supplier_address_id no ambiente.
+        sortKey: 500
+      method: DELETE
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+  - name: Produtos do Fornecedor
+    meta:
+      id: fld_10a1282c36fd7d51b5acecb400000006
+      created: 1791678654231
+      modified: 1791678654231
+      sortKey: 700
+      description: Cadastre antes o fornecedor e o produto. Configure supplier_id e product_id. Depois do POST, copie o ID
+        do vínculo para supplier_product_id; ele é diferente de product_id.
+    children:
+    - url: '{{ _.base_url }}/productSupplier/search'
+      name: Buscar produtos do fornecedor (filtros)
+      meta:
+        id: req_10a1282c36fd7d51b5acecb400000001
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Filtra por fornecedor, produto, marca/categoria do produto, nome, código, custo, prazo, preferência e
+          situação. supplierId está habilitado para listar os vínculos do fornecedor selecionado.
+        sortKey: 100
+      method: GET
+      parameters:
+      - name: supplierId
+        value: '{{ _.supplier_id }}'
+        disabled: false
+      - name: productId
+        value: '{{ _.product_id }}'
+        disabled: true
+      - name: brandId
+        value: '{{ _.brand_id }}'
+        disabled: true
+      - name: categoryId
+        value: '{{ _.category_id }}'
+        disabled: true
+      - name: productName
+        value: Exemplo
+        disabled: true
+      - name: supplierProductCode
+        value: ABC
+        disabled: true
+      - name: minCost
+        value: '0'
+        disabled: true
+      - name: maxCost
+        value: '1000'
+        disabled: true
+      - name: avgDeliveryDays
+        value: '5'
+        disabled: true
+      - name: preferred
+        value: 'true'
+        disabled: true
+      - name: active
+        value: 'true'
+        disabled: true
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/productSupplier/{{ _.supplier_product_id }}'
+      name: Buscar vínculo de produto por ID
+      meta:
+        id: req_10a1282c36fd7d51b5acecb400000002
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Use supplier_product_id, o ID retornado pelo cadastro do vínculo. Consulta inexistente retorna 204.
+        sortKey: 200
+      method: GET
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/productSupplier'
+      name: Vincular produto ao fornecedor
+      meta:
+        id: req_10a1282c36fd7d51b5acecb400000003
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Produto, fornecedor e custo são obrigatórios. O par produto/fornecedor é único. preferred assume false
+          e active assume true quando omitidos. Copie o ID retornado para supplier_product_id.
+        sortKey: 300
+      method: POST
+      body:
+        mimeType: application/json
+        text: "{\n  \"productId\": \"{{ _.product_id }}\",\n  \"supplierId\": \"{{ _.supplier_id }}\",\n  \"cost\": 42.5,\n\
+          \  \"avgDeliveryDays\": 5,\n  \"supplierProductCode\": \"ABC-25\",\n  \"preferred\": true,\n  \"active\": true\n\
+          }"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/productSupplier/{{ _.supplier_product_id }}'
+      name: Atualizar vínculo de produto (patch)
+      meta:
+        id: req_10a1282c36fd7d51b5acecb400000004
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Envie somente os campos desejados. Aceita productId, supplierId, cost, avgDeliveryDays, supplierProductCode,
+          preferred e active; um novo par não pode duplicar um vínculo existente. false e zero são aplicados.
+        sortKey: 400
+      method: PATCH
+      body:
+        mimeType: application/json
+        text: "{\n  \"cost\": 45,\n  \"avgDeliveryDays\": 7,\n  \"supplierProductCode\": \"ABC-25-ATUALIZADO\",\n  \"preferred\"\
+          : false,\n  \"active\": true\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/productSupplier/{{ _.supplier_product_id }}'
+      name: Remover vínculo de produto
+      meta:
+        id: req_10a1282c36fd7d51b5acecb400000005
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Remove apenas o vínculo e seus dados comerciais, preservando o produto e o fornecedor. Use supplier_product_id.
+        sortKey: 500
+      method: DELETE
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+  - name: Marcas do Fornecedor
+    meta:
+      id: fld_10a1282c36fd7d51b5acecb40000000a
+      created: 1791678654231
+      modified: 1791678654231
+      sortKey: 800
+      description: Use supplier_id e brand_id de registros existentes. Estes endpoints administram os vínculos em supplier_brands,
+        separados do cadastro de marcas.
+    children:
+    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/brands'
+      name: Listar marcas do fornecedor
+      meta:
+        id: req_10a1282c36fd7d51b5acecb400000007
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Retorna os vínculos com id composto, supplier e brand. Fornecedor inexistente retorna 404; fornecedor
+          sem vínculos retorna lista vazia.
+        sortKey: 100
+      method: GET
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/brands'
+      name: Vincular marca ao fornecedor
+      meta:
+        id: req_10a1282c36fd7d51b5acecb400000008
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Recebe brandId; o fornecedor vem da URL. A marca deve existir. Retorna 201 com o vínculo. Vínculo já
+          cadastrado retorna 400.
+        sortKey: 200
+      method: POST
+      body:
+        mimeType: application/json
+        text: "{\n  \"brandId\": \"{{ _.brand_id }}\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/brands/{{ _.brand_id }}'
+      name: Remover vínculo de marca
+      meta:
+        id: req_10a1282c36fd7d51b5acecb400000009
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Remove apenas o vínculo fornecedor/marca. A marca e o fornecedor são preservados. Vínculo inexistente
+          retorna 404.
+        sortKey: 300
+      method: DELETE
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+  - name: Categorias do Fornecedor
+    meta:
+      id: fld_10a1282c36fd7d51b5acecb40000000e
+      created: 1791678654231
+      modified: 1791678654231
+      sortKey: 900
+      description: Use supplier_id e category_id de registros existentes. Estes endpoints administram os vínculos em supplier_categories,
+        separados do cadastro de categorias.
+    children:
+    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/categories'
+      name: Listar categorias do fornecedor
+      meta:
+        id: req_10a1282c36fd7d51b5acecb40000000b
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Retorna os vínculos com id composto, supplier e category. Fornecedor inexistente retorna 404; fornecedor
+          sem vínculos retorna lista vazia.
+        sortKey: 100
+      method: GET
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/categories'
+      name: Vincular categoria ao fornecedor
+      meta:
+        id: req_10a1282c36fd7d51b5acecb40000000c
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Recebe categoryId; o fornecedor vem da URL. A categoria deve existir. Retorna 201 com o vínculo. Vínculo
+          já cadastrado retorna 400.
+        sortKey: 200
+      method: POST
+      body:
+        mimeType: application/json
+        text: "{\n  \"categoryId\": \"{{ _.category_id }}\"\n}"
+      headers:
+      - name: Content-Type
+        value: application/json
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/categories/{{ _.category_id }}'
+      name: Remover vínculo de categoria
+      meta:
+        id: req_10a1282c36fd7d51b5acecb40000000d
+        created: 1791678654231
+        modified: 1791678654231
+        isPrivate: false
+        description: Remove apenas o vínculo fornecedor/categoria. A categoria e o fornecedor são preservados. Vínculo inexistente
+          retorna 404.
+        sortKey: 300
+      method: DELETE
+      settings:
+        renderRequestBody: true
+        encodeUrl: true
+        followRedirects: global
+        cookies:
+          send: true
+          store: true
+        rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_be68713610f046e8bdde78be28ba8391
+    created: 1788305305373
+    modified: 1788305305373
+environments:
+  name: Base Environment
+  meta:
+    id: env_3f887e3dbeca419e95454ead8e4402b3
+    created: 1788304060808
+    modified: 1788304060808
+    isPrivate: false
+  data:
+    base_url: http://localhost:8080
+    supplier_id: 1
+    supplier_address_id: 1
+    product_id: 1
+    supplier_product_id: 1
+    brand_id: 1
+    category_id: 1
+    warehouse_id: 1
+    warehouse_address_id: 1
+    stock_item_id: 1
+    customer_id: 1
+    customer_address_id: 1
+    price_table_id: 1

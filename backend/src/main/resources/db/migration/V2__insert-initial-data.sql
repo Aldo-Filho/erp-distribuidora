@@ -15,6 +15,8 @@ DECLARE
     category_key BIGINT;
     brand_key BIGINT;
     product_key BIGINT;
+    sku_number BIGINT;
+    product_sku TEXT;
     warehouse_key BIGINT;
     stock_key BIGINT;
     supplier_key BIGINT;
@@ -42,29 +44,32 @@ DECLARE
 BEGIN
     FOR item IN
         SELECT * FROM (VALUES
-            (1, 'Café torrado tradicional 500 g', 'CAF-TR-500', 'Cafés e chás', 'Serra Clara', 'Torrefação Horizonte', 'Marina Albuquerque', 'Campinas', 'SP', '19', 12.40, 19.90),
-            (2, 'Arroz parboilizado 5 kg', 'ARR-PB-5KG', 'Arroz e cereais', 'Campo Dourado', 'Cereais Rio Verde', 'Rafael Monteiro', 'Ribeirão Preto', 'SP', '16', 18.50, 28.90),
-            (3, 'Feijão carioca 1 kg', 'FEI-CA-1KG', 'Feijões e leguminosas', 'Terra Mansa', 'Grãos Santa Helena', 'Beatriz Azevedo', 'Uberlândia', 'MG', '34', 5.80, 8.90),
-            (4, 'Macarrão espaguete 500 g', 'MAC-ES-500', 'Massas secas', 'Vila Trigo', 'Massas Bela Mesa', 'Gustavo Farias', 'Juiz de Fora', 'MG', '32', 3.20, 5.49),
-            (5, 'Óleo de girassol 900 ml', 'OLE-GI-900', 'Óleos e azeites', 'Sol do Vale', 'Óleos Primavera', 'Camila Nogueira', 'Londrina', 'PR', '43', 6.70, 10.90),
-            (6, 'Açúcar demerara 1 kg', 'ACU-DE-1KG', 'Açúcares e adoçantes', 'Doce Estação', 'Engenho Aurora', 'Lucas Peixoto', 'Maringá', 'PR', '44', 4.10, 6.99),
-            (7, 'Farinha de mandioca 1 kg', 'FAR-MA-1KG', 'Farinhas e féculas', 'Raiz Serena', 'Alimentos Raiz do Campo', 'Juliana Vasconcelos', 'Joinville', 'SC', '47', 4.60, 7.90),
-            (8, 'Biscoito integral 400 g', 'BIS-IN-400', 'Biscoitos e snacks', 'Forno Alegre', 'Biscoitos Boa Fornada', 'Henrique Barros', 'Blumenau', 'SC', '47', 5.20, 8.49),
-            (9, 'Molho de tomate 300 g', 'MOL-TO-300', 'Molhos e temperos', 'Horta Viva', 'Conservas Jardim Sul', 'Fernanda Siqueira', 'Caxias do Sul', 'RS', '54', 1.90, 3.29),
-            (10, 'Leite em pó integral 400 g', 'LEI-PO-400', 'Leites e derivados', 'Pastos Altos', 'Laticínios Pedra Branca', 'Tiago Medeiros', 'Pelotas', 'RS', '53', 10.30, 16.90),
-            (11, 'Suco de uva integral 1 l', 'SUC-UV-1LT', 'Sucos e néctares', 'Fruta Nobre', 'Bebidas Vale da Uva', 'Empório Ponto Certo', 'Sorocaba', 'SP', '15', 8.90, 14.90),
-            (12, 'Água mineral sem gás 1,5 l', 'AGU-SG-15L', 'Águas minerais', 'Fonte Cristal', 'Águas Serra Azul', 'Mercadinho Vila Nova', 'Bauru', 'SP', '14', 1.60, 2.99),
-            (13, 'Sabão em pó 800 g', 'SAB-PO-800', 'Lavanderia', 'Brilho Leve', 'Química Limpa Casa', 'Comercial Flor do Bairro', 'Anápolis', 'GO', '62', 6.90, 11.90),
-            (14, 'Detergente neutro 500 ml', 'DET-NE-500', 'Limpeza de cozinha', 'Prato Limpo', 'Higiene Água Clara', 'Armazém Bom Vizinho', 'Dourados', 'MS', '67', 1.25, 2.39),
-            (15, 'Desinfetante lavanda 2 l', 'DES-LA-2LT', 'Limpeza de ambientes', 'Casa Fresca', 'Saneantes Porto Limpo', 'Mercearia Três Irmãos', 'Rondonópolis', 'MT', '66', 4.80, 8.49),
-            (16, 'Papel higiênico 12 rolos', 'PAP-HI-12R', 'Papéis sanitários', 'Toque Suave', 'Papéis Lago Branco', 'Loja Utilidades Sol Nascente', 'Feira de Santana', 'BA', '75', 8.30, 13.90),
-            (17, 'Sabonete vegetal 90 g', 'SAB-VE-090', 'Higiene pessoal', 'Pele Serena', 'Cosméticos Flor Nativa', 'Conveniência Esquina Azul', 'Campina Grande', 'PB', '83', 1.80, 3.49),
-            (18, 'Creme dental menta 90 g', 'CRE-ME-090', 'Cuidados bucais', 'Sorriso Vivo', 'Higiene Oral Novo Dia', 'Supermercado Canto Verde', 'Mossoró', 'RN', '84', 2.90, 5.29),
-            (19, 'Ração para cães adultos 3 kg', 'RAC-CA-3KG', 'Alimentação animal', 'Amigo Fiel', 'Nutrição Animal Campo Bom', 'Pet Shop Patas e Companhia', 'Sobral', 'CE', '88', 19.70, 32.90),
-            (20, 'Saco de lixo reforçado 50 l', 'SAC-LI-50L', 'Descartáveis domésticos', 'Eco Prático', 'Embalagens Novo Ciclo', 'Distribuidora Bairro Unido', 'Caruaru', 'PE', '81', 3.60, 6.49)
-        ) AS data(n, product_name, sku, category_name, brand_name, supplier_name,
+            (1, 'Café torrado tradicional 500 g', 'Cafés e chás', 'Serra Clara', 'Torrefação Horizonte', 'Marina Albuquerque', 'Campinas', 'SP', '19', 12.40, 19.90),
+            (2, 'Arroz parboilizado 5 kg', 'Arroz e cereais', 'Campo Dourado', 'Cereais Rio Verde', 'Rafael Monteiro', 'Ribeirão Preto', 'SP', '16', 18.50, 28.90),
+            (3, 'Feijão carioca 1 kg', 'Feijões e leguminosas', 'Terra Mansa', 'Grãos Santa Helena', 'Beatriz Azevedo', 'Uberlândia', 'MG', '34', 5.80, 8.90),
+            (4, 'Macarrão espaguete 500 g', 'Massas secas', 'Vila Trigo', 'Massas Bela Mesa', 'Gustavo Farias', 'Juiz de Fora', 'MG', '32', 3.20, 5.49),
+            (5, 'Óleo de girassol 900 ml', 'Óleos e azeites', 'Sol do Vale', 'Óleos Primavera', 'Camila Nogueira', 'Londrina', 'PR', '43', 6.70, 10.90),
+            (6, 'Açúcar demerara 1 kg', 'Açúcares e adoçantes', 'Doce Estação', 'Engenho Aurora', 'Lucas Peixoto', 'Maringá', 'PR', '44', 4.10, 6.99),
+            (7, 'Farinha de mandioca 1 kg', 'Farinhas e féculas', 'Raiz Serena', 'Alimentos Raiz do Campo', 'Juliana Vasconcelos', 'Joinville', 'SC', '47', 4.60, 7.90),
+            (8, 'Biscoito integral 400 g', 'Biscoitos e snacks', 'Forno Alegre', 'Biscoitos Boa Fornada', 'Henrique Barros', 'Blumenau', 'SC', '47', 5.20, 8.49),
+            (9, 'Molho de tomate 300 g', 'Molhos e temperos', 'Horta Viva', 'Conservas Jardim Sul', 'Fernanda Siqueira', 'Caxias do Sul', 'RS', '54', 1.90, 3.29),
+            (10, 'Leite em pó integral 400 g', 'Leites e derivados', 'Pastos Altos', 'Laticínios Pedra Branca', 'Tiago Medeiros', 'Pelotas', 'RS', '53', 10.30, 16.90),
+            (11, 'Suco de uva integral 1 l', 'Sucos e néctares', 'Fruta Nobre', 'Bebidas Vale da Uva', 'Empório Ponto Certo', 'Sorocaba', 'SP', '15', 8.90, 14.90),
+            (12, 'Água mineral sem gás 1,5 l', 'Águas minerais', 'Fonte Cristal', 'Águas Serra Azul', 'Mercadinho Vila Nova', 'Bauru', 'SP', '14', 1.60, 2.99),
+            (13, 'Sabão em pó 800 g', 'Lavanderia', 'Brilho Leve', 'Química Limpa Casa', 'Comercial Flor do Bairro', 'Anápolis', 'GO', '62', 6.90, 11.90),
+            (14, 'Detergente neutro 500 ml', 'Limpeza de cozinha', 'Prato Limpo', 'Higiene Água Clara', 'Armazém Bom Vizinho', 'Dourados', 'MS', '67', 1.25, 2.39),
+            (15, 'Desinfetante lavanda 2 l', 'Limpeza de ambientes', 'Casa Fresca', 'Saneantes Porto Limpo', 'Mercearia Três Irmãos', 'Rondonópolis', 'MT', '66', 4.80, 8.49),
+            (16, 'Papel higiênico 12 rolos', 'Papéis sanitários', 'Toque Suave', 'Papéis Lago Branco', 'Loja Utilidades Sol Nascente', 'Feira de Santana', 'BA', '75', 8.30, 13.90),
+            (17, 'Sabonete vegetal 90 g', 'Higiene pessoal', 'Pele Serena', 'Cosméticos Flor Nativa', 'Conveniência Esquina Azul', 'Campina Grande', 'PB', '83', 1.80, 3.49),
+            (18, 'Creme dental menta 90 g', 'Cuidados bucais', 'Sorriso Vivo', 'Higiene Oral Novo Dia', 'Supermercado Canto Verde', 'Mossoró', 'RN', '84', 2.90, 5.29),
+            (19, 'Ração para cães adultos 3 kg', 'Alimentação animal', 'Amigo Fiel', 'Nutrição Animal Campo Bom', 'Pet Shop Patas e Companhia', 'Sobral', 'CE', '88', 19.70, 32.90),
+            (20, 'Saco de lixo reforçado 50 l', 'Descartáveis domésticos', 'Eco Prático', 'Embalagens Novo Ciclo', 'Distribuidora Bairro Unido', 'Caruaru', 'PE', '81', 3.60, 6.49)
+        ) AS data(n, product_name, category_name, brand_name, supplier_name,
             customer_name, city, state, area_code, cost, price)
     LOOP
+        sku_number := nextval('product_sku_seq');
+        product_sku := 'PRD-' || LPAD(sku_number::TEXT, GREATEST(6, LENGTH(sku_number::TEXT)), '0');
+
         event_date := DATE '2026-09-01' + item.n;
         purchase_quantity := 20 + item.n;
         sale_quantity := 1 + item.n % 5;
@@ -83,10 +88,10 @@ BEGIN
         RETURNING role_id INTO role_key;
 
         INSERT INTO permissions (module, action, permission_key)
-        VALUES ('regional_distribution', 'read', 'distribution.' || LOWER(item.sku) || '.read')
+        VALUES ('regional_distribution', 'read', 'distribution.' || LOWER(product_sku) || '.read')
         RETURNING permission_id INTO read_permission_key;
         INSERT INTO permissions (module, action, permission_key)
-        VALUES ('regional_distribution', 'write', 'distribution.' || LOWER(item.sku) || '.write')
+        VALUES ('regional_distribution', 'write', 'distribution.' || LOWER(product_sku) || '.write')
         RETURNING permission_id INTO write_permission_key;
 
         INSERT INTO role_permissions (role_id, permission_id)
@@ -103,7 +108,7 @@ BEGIN
         INSERT INTO products (
             name, sku, category_id, brand_id, cost, price, weight_kg,
             commercial_unit, origin, active, created_at
-        ) VALUES (item.product_name, item.sku, category_key, brand_key, item.cost, item.price,
+        ) VALUES (item.product_name, product_sku, category_key, brand_key, item.cost, item.price,
             0.100 + item.n * 0.050, 'UN', 'NATIONAL', item.n % 7 <> 0, TIMESTAMP '2026-08-01 08:00:00')
         RETURNING product_id INTO product_key;
 
@@ -141,7 +146,7 @@ BEGIN
         INSERT INTO product_suppliers (
             product_id, supplier_id, cost, avg_delivery_days, supplier_product_code, preferred, active
         ) VALUES (product_key, supplier_key, item.cost, 1 + item.n % 18,
-            'FAB-' || item.sku, item.n % 3 <> 0, item.n % 6 <> 0 AND item.n % 7 <> 0);
+            'FAB-' || product_sku, item.n % 3 <> 0, item.n % 6 <> 0 AND item.n % 7 <> 0);
         INSERT INTO supplier_categories (supplier_id, category_id) VALUES (supplier_key, category_key);
         INSERT INTO supplier_brands (supplier_id, brand_id) VALUES (supplier_key, brand_key);
 

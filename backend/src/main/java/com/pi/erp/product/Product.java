@@ -88,10 +88,9 @@ public class Product {
         updatedAt = LocalDateTime.now();
     }
 
-    public Product(RequestProductDTO data, Brand brand, Category category) {
+    public Product(RequestProductDTO data, Brand brand, Category category, String sku) {
         this.name = data.name();
-        // TODO: Generate the SKU automatically.
-        this.sku = data.sku();
+        this.sku = sku;
         this.brand = brand;
         this.category = category;
         this.cost = data.cost();

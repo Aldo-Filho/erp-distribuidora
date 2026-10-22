@@ -28,6 +28,9 @@ public class ProductService {
     @Autowired
     private StockItemService stockItemService;
 
+    @Autowired
+    private SkuGenerator skuGenerator;
+
     public List<Product> search(ProductFilter filter) {
         Specification<Product> spec = Specification.allOf();
 
@@ -62,14 +65,13 @@ public class ProductService {
 
     @Transactional
     public Product register(RequestProductDTO data) {
-        if (repository.existsBySku(data.sku())) {
-            throw new IllegalArgumentException("Product already exists.");
-        }
-
         Brand brand = findBrand(data.brandId());
         Category category = findCategory(data.categoryId());
 
-        Product product = new Product(data, brand, category);
+        long number = repository.nextSkuNumber();
+        String sku = skuGenerator.generate(number);
+
+        Product product = new Product(data, brand, category, sku);
         Product savedProduct = repository.save(product);
 
         if (data.stock() != null) {

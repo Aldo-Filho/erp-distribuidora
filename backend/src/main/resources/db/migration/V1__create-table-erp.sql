@@ -56,6 +56,13 @@ CREATE TABLE brands (
 CREATE UNIQUE INDEX uk_brand_name_normalized
     ON brands (lower(btrim(name)));
 
+CREATE SEQUENCE product_sku_seq
+    AS BIGINT
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 1
+    NO CYCLE;
+
 CREATE TABLE products (
     product_id       BIGSERIAL PRIMARY KEY,
     name             VARCHAR(150) NOT NULL,

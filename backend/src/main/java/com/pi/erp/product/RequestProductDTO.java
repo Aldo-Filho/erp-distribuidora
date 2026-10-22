@@ -8,8 +8,6 @@ import java.math.BigDecimal;
 
 public record RequestProductDTO(
     @NotBlank String name,
-    // TODO: Generate the SKU automatically.
-    @NotBlank String sku,
     @NotNull Long brandId,
     Long categoryId,
     @NotNull @PositiveOrZero BigDecimal cost,

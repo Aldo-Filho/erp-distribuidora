@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { access } from "../../services/access";
 import useLoad from "../../components/feedback/useLoad";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
+import RecordMetadata from "../../components/record/RecordMetadata";
 
 const modules = {
   customers: "Clientes",
@@ -201,6 +202,16 @@ export default function RolesPage() {
                     )}
                   </div>
                 </form>
+                {selected &&
+                  !creating &&
+                  !loading &&
+                  !error &&
+                  data?.roles.some((role) => role.id === selected) && (
+                    <RecordMetadata
+                      record={data.roles.find((role) => role.id === selected)}
+                      fields={["createdAt"]}
+                    />
+                  )}
               </section>
               {selected && (
                 <section className="panel">

@@ -12,6 +12,7 @@ import SessionsPage from "../pages/Security/SessionsPage";
 import SecuritySettingsPage from "../pages/Security/SecuritySettingsPage";
 import SecurityAuditPage from "../pages/Security/SecurityAuditPage";
 import AccountPage from "../pages/Account/AccountPage";
+import CustomersPage from "../pages/Customers/CustomersPage";
 import useAuth from "../auth/useAuth";
 import { firstRoute } from "./navigation";
 
@@ -32,6 +33,9 @@ export default function AppRoutes() {
           <Route index element={<Home />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/security/sessions" element={<SessionsPage />} />
+          <Route element={<ProtectedRoute permission="customers.read" />}>
+            <Route path="/customers" element={<CustomersPage />} />
+          </Route>
           <Route element={<ProtectedRoute permission="access.users.manage" />}>
             <Route path="/access/users" element={<UsersPage />} />
             <Route path="/access/invitations" element={<InvitationsPage />} />

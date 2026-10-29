@@ -14,5 +14,6 @@ public record PatchCustomerDTO(
     String whatsapp,
     Boolean active,
     Long priceTableId,
-    Boolean removePriceTable
+    Boolean removePriceTable,
+    Boolean removeBirthDate
 ) {}

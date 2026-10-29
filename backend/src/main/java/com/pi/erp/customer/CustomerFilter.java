@@ -11,5 +11,7 @@ public record CustomerFilter(
     String phone,
     String whatsapp,
     Long priceTableId,
-    Boolean active
+    Boolean active,
+    String query,
+    CustomerSearchField searchField
 ) {}

@@ -545,6 +545,165 @@ td strong {
   gap: 10px;
   margin: 20px 0;
 }
+
+/* Shared record dialogs and the Customers module. */
+.record-dialog.dialog-wide {
+  max-width: 840px;
+}
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.dialog-heading h2 {
+  margin: 0;
+}
+.record-metadata {
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding-top: 16px;
+}
+.record-metadata h3 {
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+.record-metadata dl,
+.customer-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 14px 24px;
+  margin: 0;
+  font-size: 13px;
+}
+.record-metadata dt,
+.customer-details dt {
+  color: #61747e;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.record-metadata dd,
+.customer-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.customer-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 18px;
+}
+.customer-filters label {
+  flex: 1 1 135px;
+  min-width: 0;
+}
+.customer-filters .customer-query {
+  flex: 2 1 220px;
+}
+.customer-icon-label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+.customer-row-actions {
+  min-width: 130px;
+}
+.customer-list-footer {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+}
+.customer-list-footer > span {
+  margin-right: auto;
+}
+.customer-list-footer label {
+  flex-direction: row;
+  align-items: center;
+  font-size: 12px;
+}
+.customer-list-footer select {
+  width: auto;
+  padding: 7px;
+}
+.customer-list-footer .pagination {
+  padding: 0;
+  border: 0;
+}
+.customer-form-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.customer-address-fields {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 0;
+}
+.customer-address-fields legend {
+  padding: 0 6px;
+  font-size: 14px;
+}
+.postal-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.postal-control input {
+  flex: 1 1 100px;
+}
+.postal-control button {
+  flex: 0 0 auto;
+}
+.customer-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.customer-detail-title h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.customer-detail-addresses {
+  margin-top: 24px;
+}
+.customer-detail-addresses h3 {
+  font-size: 14px;
+}
+.customer-address-card {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.customer-address-card p {
+  margin: 8px 0;
+}
+@media (max-width: 480px) {
+  .record-dialog {
+    padding: 18px;
+  }
+  .customer-filters label {
+    flex-basis: 100%;
+  }
+  .customer-list-footer {
+    padding: 14px;
+    gap: 12px;
+  }
+  .customer-list-footer .pagination {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
 .choice {
   display: flex;
   flex-direction: row;

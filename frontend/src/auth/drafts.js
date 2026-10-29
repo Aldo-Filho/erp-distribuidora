@@ -13,7 +13,11 @@ export function clearDrafts() {
   owner = null;
 }
 
-// Only non-secret administrative fields. State survives a session redirect,
+export function removeDraft(key) {
+  drafts.delete(key);
+}
+
+// Only non-secret form fields. State survives a session redirect,
 // stays in this tab's memory and is discarded on reload, logout or account switch.
 export function useDraft(key, initial) {
   const [value, setValue] = useState(() => (drafts.has(key) ? drafts.get(key) : initial));

@@ -3,6 +3,7 @@ import { access } from "../../services/access";
 import { useDraft } from "../../auth/drafts";
 import useLoad from "../../components/feedback/useLoad";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
+import UserDetailsModal from "./UserDetailsModal";
 
 export default function UsersPage() {
   const loader = useCallback(
@@ -15,6 +16,7 @@ export default function UsersPage() {
   const [failure, setFailure] = useState("");
   const [notice, setNotice] = useState("");
   const [filter, setFilter] = useState("");
+  const [detailsId, setDetailsId] = useState(null);
   const run = async (action) => {
     setPending(true);
     setFailure("");
@@ -30,6 +32,13 @@ export default function UsersPage() {
   };
   return (
     <>
+      {detailsId && (
+        <UserDetailsModal
+          key={detailsId}
+          userId={detailsId}
+          onClose={() => setDetailsId(null)}
+        />
+      )}
       <div className="page-title">
         <h1>Funcionários</h1>
         <input
@@ -157,6 +166,13 @@ export default function UsersPage() {
                       </td>
                       <td>
                         <div className="row-actions">
+                          <button
+                            className="secondary"
+                            disabled={pending}
+                            onClick={() => setDetailsId(user.id)}
+                          >
+                            Detalhes
+                          </button>
                           <button
                             className="secondary"
                             disabled={pending}

@@ -1,6 +1,7 @@
 import { api } from "./api";
 
 export const access = {
+  user: (id, options) => api("/user/" + id, options),
   users: () => api("/user/search"),
   updateUser: (id, body) => api("/user/" + id, { method: "PATCH", body }),
   deleteUser: (id) => api("/user/" + id, { method: "DELETE" }),

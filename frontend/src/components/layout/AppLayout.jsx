@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import {
   Users,
+  ContactRound,
   ShieldCheck,
   Mail,
   Monitor,
@@ -17,6 +18,7 @@ import { navigation } from "../../routes/navigation";
 import ErrorAlert from "../feedback/ErrorAlert";
 
 const icons = {
+  customers: ContactRound,
   users: Users,
   roles: KeyRound,
   mail: Mail,
@@ -88,7 +90,7 @@ export default function AppLayout() {
           >
             <Menu size={22} />
           </button>
-          <span>Administração de acessos</span>
+          <span>ERP Distribuidora</span>
           <span className="environment">Local</span>
         </header>
         <main>

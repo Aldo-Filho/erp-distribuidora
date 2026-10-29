@@ -139,3 +139,24 @@ Os testes autorizados anteriores exercitaram sessões JDBC, cookies/CSRF, concor
 Para repetir somente com autorização: executar tools/run-auth-verification.ps1 a partir de backend. O executor cria banco novo auth_verify_ na porta 55433 e encerra os processos; não apaga bancos anteriores. O AuthenticationManager explícito impede a criação da conta padrão de desenvolvimento do Spring; credenciais do ERP continuam exclusivamente no fluxo AuthenticationService.
 
 A suíte mantém o bootstrap desativado e cria suas próprias contas no banco isolado, sem usar credenciais reais. A expectativa atual de migrations inclui V1–V5, ainda sem execução após a melhoria da auditoria.
+
+
+## Clientes — contrato atualizado em 29/10/2026
+
+`GET /customer/search` passou de array para `Page<Customer>`. Consumir `content`, `number`, `size`, `totalElements` e `totalPages`; não depender dos demais campos internos de serialização. `GET /customer/{id}` ausente mantém 204. Endereços e tabelas de preços continuam retornando listas em suas buscas.
+
+Paginação no banco: `page=0`, `size=25` por padrão; page entre 0 e 100000, size entre 1 e 100; limites inválidos retornam 400. Ordem fixa: `legalName` e `id`, ascendentes. Página além dos resultados retorna conteúdo vazio com total filtrado.
+
+Todos os filtros individuais foram mantidos: `personType`, `taxId`, `legalName`, `tradeName`, `municipalReg`, `stateReg`, `email`, `phone`, `whatsapp`, `priceTableId`, `active`. Combinam-se por AND. Nome/fantasia/email continuam parciais sem diferença de caixa; os demais mantêm igualdade. Curingas `%`/`_` fornecidos são literais.
+
+A busca agrupada usa `query` e `searchField=NAME|DOCUMENT|CONTACT` (padrão NAME). NAME procura nome OU fantasia; DOCUMENT compara parcialmente letras/dígitos sem pontuação, preservando zeros e letras; CONTACT procura email, acrescentando telefone/WhatsApp somente para consulta composta por dígitos e pontuação de telefone. Email com dígitos não vira busca numérica. Query ausente/branca não restringe; documento que se torne vazio e campo inválido retornam 400. O grupo combina-se com os filtros individuais por AND.
+
+Exemplo: `/customer/search?query=Mercado&searchField=NAME&active=true&page=0&size=25`.
+
+`PATCH /customer/{id}` aceita `removeBirthDate` Boolean opcional: true remove; omitido/null/false preserva. A combinação de true e `birthDate` preenchido é rejeitada antes dos setters; nascimento futuro continua inválido. `removePriceTable` mantém a mesma intenção explícita e não pode ser combinado com novo `priceTableId`.
+
+Complemento agora é opcional nos dois cadastros de endereço. No cadastro, ausente/vazio/branco vira null; no PATCH, omissão/null preserva e vazio/branco limpa. O POST com endereço inicial continua transacional. A nova `V6__allow-null-customer-address-complement.sql` apenas relaxa NOT NULL; V1–V5 não foram editadas e os dados existentes são preservados. A V6 foi criada, **não aplicada**. A próxima inicialização com Flyway poderá aplicá-la; iniciar contra o banco exige autorização e revisão do histórico/backup.
+
+A tela oferece ativação/inativação, mantendo o DELETE de cliente na API. Remover endereço é operação separada. Nenhum preço de pedido antigo é recalculado.
+
+Revisão desta entrega: leitura direta dos arquivos. Sem testes, build, lint, SQL, migrations ou inicialização. `backend/tools/backend-audit.cjs`, executor legado ignorado pelo Git, foi adaptado para consumir Page em Clientes e percorrer as páginas preservando filtros; os demais endpoints mantêm arrays. A adaptação recebeu revisão direta e não foi executada. Ela não valida as demais compatibilidades do executor antigo com autenticação/CSRF atuais. Nenhum resultado antigo de autenticação valida esta entrega. Roteiro manual e progresso: `docs/superpowers/plans/2026-10-29-customers-progress.md`, na raiz.

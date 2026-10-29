@@ -1446,7 +1446,12 @@ collection:
     created: 1790128307998
     modified: 1790129000000
     sortKey: -1790128307998
-    description: Endpoints de clientes e seus endereços.
+    description: >-
+      Clientes e endereços. Busca retorna Page<Customer>; detalhe ausente continua 204.
+      Complemento opcional no endereço inicial e posterior: ausente/branco no cadastro vira null;
+      no PATCH, null/omissão preserva e branco limpa. Requer V6 aplicada por fluxo autorizado.
+      DELETE de cliente permanece na API, mas não é oferecido pela tela (somente ativar/inativar).
+      Exclusão de endereço é separada, com customers.delete.
   children:
   - url: '{{ _.base_url }}/customer/search'
     name: Buscar clientes
@@ -1455,10 +1460,28 @@ collection:
       created: 1790128310882
       modified: 1790129000000
       isPrivate: false
-      description: GET /customer/search. Todos os filtros são opcionais. Habilite os parâmetros desejados.
+      description: >-
+        GET /customer/search retorna Page<Customer> (content, number, size, totalElements,
+        totalPages), substituindo o array. Filtros individuais continuam combinados por AND.
+        query/searchField agrupam NAME (nome OU fantasia), DOCUMENT (documento normalizado)
+        ou CONTACT (email OU telefone/WhatsApp quando a consulta for numérica).
+        NAME é o padrão; curingas %/_ são literais. page 0–100000, size 1–100 (padrão 25).
+        Ordem fixa legalName/id ascendente; falhas não são páginas vazias.
       sortKey: 100
     method: GET
     parameters:
+    - name: page
+      value: '0'
+      disabled: false
+    - name: size
+      value: '25'
+      disabled: false
+    - name: searchField
+      value: NAME
+      disabled: true
+    - name: query
+      value: Distribuidora
+      disabled: true
     - name: personType
       value: PJ
       disabled: true
@@ -1508,7 +1531,7 @@ collection:
       modified: 1790129000000
       isPrivate: false
       description: 'PATCH parcial: nome obrigatório não aceita vazio; textos opcionais vazios são limpos. removePriceTable=true
-        remove a tabela; omitido, null ou false não remove. Não combine remoção com priceTableId.'
+        remove a tabela; omitido, null ou false não remove. Não combine remoção com priceTableId. removeBirthDate=true remove nascimento; omissão/null/false preserva. Não combine remoção com birthDate.'
       sortKey: 400
     method: PATCH
     body:
@@ -1541,6 +1564,32 @@ collection:
     body:
       mimeType: application/json
       text: "{\n  \"removePriceTable\": true\n}"
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+    name: Remover nascimento do cliente
+    meta:
+      id: req_customer_remove_birth_date_20261029
+      created: 1792638002113
+      modified: 1792638002113
+      isPrivate: false
+      description: Remove somente a data de nascimento. Não envie birthDate no mesmo PATCH; omissão/null/false da flag preserva a data.
+      sortKey: 410
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: "{\n  \"removeBirthDate\": true\n}"
     headers:
     - name: X-CSRF-TOKEN
       value: '{{ _.csrf_token }}'

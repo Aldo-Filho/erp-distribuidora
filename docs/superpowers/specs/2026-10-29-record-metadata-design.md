@@ -1,6 +1,6 @@
 # Informações de criação e atualização dos registros
 
-Data: 29/10/2026. Escopo confirmado na conversa: incluir Funcionários e Cargos existentes e adotar o padrão nos próximos módulos. Este documento registra o desenho para revisão; nenhuma tela foi alterada.
+Data: 29/10/2026. Escopo confirmado na conversa: incluir Funcionários e Cargos existentes e adotar o padrão nos próximos módulos. Desenho incorporado à especificação aprovada de Clientes, com execução proposta no respectivo plano técnico; nenhuma tela foi alterada nesta fase.
 
 ## Objetivo
 

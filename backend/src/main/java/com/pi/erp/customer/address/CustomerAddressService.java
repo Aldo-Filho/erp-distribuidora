@@ -81,6 +81,7 @@ public class CustomerAddressService {
         }
 
         CustomerAddress address = new CustomerAddress(data, customer);
+        address.setComplement(normalizeComplement(data.complement()));
         return repository.save(address);
     }
 
@@ -136,10 +137,7 @@ public class CustomerAddressService {
             address.setNumber(data.number());
         }
         if (data.complement() != null) {
-            if (data.complement().isBlank()) {
-                throw new IllegalArgumentException("Complement is required.");
-            }
-            address.setComplement(data.complement());
+            address.setComplement(normalizeComplement(data.complement()));
         }
         if (data.zipCode() != null) {
             if (data.zipCode().isBlank()) {
@@ -158,6 +156,10 @@ public class CustomerAddressService {
             .orElseThrow(() -> new ResourceNotFoundException("Customer address not found."));
 
         repository.delete(address);
+    }
+
+    private String normalizeComplement(String complement) {
+        return complement == null || complement.isBlank() ? null : complement;
     }
 
     private Customer findCustomer(Long customerId) {

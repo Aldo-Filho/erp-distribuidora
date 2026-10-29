@@ -1,6 +1,7 @@
 package com.pi.erp.order;
 
 import com.pi.erp.customer.Customer;
+import com.pi.erp.user.User;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -52,15 +53,15 @@ public class Order {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    // TODO: Map the user relationship when the User entity is available.
-    @Column(name = "user_id")
-    private Long userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    public Order(RequestOrderDTO data, Customer customer) {
-        this.totalAmount = data.totalAmount() == null ? BigDecimal.ZERO : data.totalAmount();
+    public Order(RequestOrderDTO data, Customer customer, User user) {
+        this.totalAmount = BigDecimal.ZERO;
         this.paymentMethod = data.paymentMethod();
-        this.status = data.status();
+        this.status = OrderStatus.PENDING;
         this.customer = customer;
-        this.userId = data.userId();
+        this.user = user;
     }
 }

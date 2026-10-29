@@ -1,0 +1,61 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
+import AppLayout from "../components/layout/AppLayout";
+import LoginPage from "../pages/Auth/LoginPage";
+import PasswordRecoveryPage from "../pages/Auth/PasswordRecoveryPage";
+import InvitationAcceptancePage from "../pages/Auth/InvitationAcceptancePage";
+import PasswordResetPage from "../pages/Auth/PasswordResetPage";
+import UsersPage from "../pages/Access/UsersPage";
+import RolesPage from "../pages/Access/RolesPage";
+import InvitationsPage from "../pages/Access/InvitationsPage";
+import SessionsPage from "../pages/Security/SessionsPage";
+import SecuritySettingsPage from "../pages/Security/SecuritySettingsPage";
+import SecurityAuditPage from "../pages/Security/SecurityAuditPage";
+import AccountPage from "../pages/Account/AccountPage";
+import useAuth from "../auth/useAuth";
+import { firstRoute } from "./navigation";
+
+function Home() {
+  const { session } = useAuth();
+  return <Navigate to={firstRoute(session)} replace />;
+}
+
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<PasswordRecoveryPage />} />
+      <Route path="/accept-invitation" element={<InvitationAcceptancePage />} />
+      <Route path="/reset-password" element={<PasswordResetPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<Home />} />
+          <Route path="/account" element={<AccountPage />} />
+          <Route path="/security/sessions" element={<SessionsPage />} />
+          <Route element={<ProtectedRoute permission="access.users.manage" />}>
+            <Route path="/access/users" element={<UsersPage />} />
+            <Route path="/access/invitations" element={<InvitationsPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="access.roles.manage" />}>
+            <Route path="/access/roles" element={<RolesPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="security.settings.manage" />}>
+            <Route path="/security/settings" element={<SecuritySettingsPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="security.audit.read" />}>
+            <Route path="/security/audit" element={<SecurityAuditPage />} />
+          </Route>
+          <Route
+            path="*"
+            element={
+              <section className="panel">
+                <h1>Página não encontrada</h1>
+                <a href="/account">Abrir minha conta</a>
+              </section>
+            }
+          />
+        </Route>
+      </Route>
+    </Routes>
+  );
+}

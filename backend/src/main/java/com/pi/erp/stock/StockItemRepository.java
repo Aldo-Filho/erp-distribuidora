@@ -1,20 +1,29 @@
 package com.pi.erp.stock;
 
-import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface StockItemRepository
     extends JpaRepository<StockItem, Long>, JpaSpecificationExecutor<StockItem>
 {
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT stockItem FROM StockItem stockItem WHERE stockItem.id = :id")
+    @Query(
+        value = "SELECT * FROM stock_items WHERE stock_item_id = :id FOR UPDATE",
+        nativeQuery = true
+    )
     Optional<StockItem> findByIdForUpdate(
         @Param("id") Long id
+    );
+
+    @Query("""
+        SELECT stockItem.id FROM StockItem stockItem
+        WHERE stockItem.warehouse.id = :warehouseId AND stockItem.product.id = :productId
+        """)
+    Optional<Long> findIdByWarehouseIdAndProductId(
+        @Param("warehouseId") Long warehouseId,
+        @Param("productId") Long productId
     );
 
     boolean existsByWarehouseIdAndProductId(

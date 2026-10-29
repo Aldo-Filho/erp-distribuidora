@@ -287,10 +287,27 @@ CREATE TABLE order_items (
     order_item_id BIGSERIAL PRIMARY KEY,
     order_id      BIGINT NOT NULL REFERENCES orders(order_id),
     product_id    BIGINT NOT NULL REFERENCES products(product_id),
+    warehouse_id  BIGINT NOT NULL REFERENCES warehouses(warehouse_id),
     quantity      INT NOT NULL,
     unit_price    NUMERIC(12,2) NOT NULL,
-    discount      NUMERIC(12,2) NOT NULL DEFAULT 0
+    discount      NUMERIC(12,2) NOT NULL DEFAULT 0,
+    discount_type VARCHAR(20) NOT NULL DEFAULT 'AMOUNT',
+    CONSTRAINT chk_order_item_discount_type
+        CHECK (discount_type IN ('AMOUNT', 'PERCENTAGE'))
 );
+
+CREATE TABLE stock_reservations (
+    stock_reservation_id BIGSERIAL PRIMARY KEY,
+    order_item_id BIGINT NOT NULL REFERENCES order_items(order_item_id),
+    stock_item_id BIGINT NOT NULL REFERENCES stock_items(stock_item_id),
+    quantity INT NOT NULL CHECK (quantity > 0),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('ACTIVE', 'RELEASED', 'CONSUMED')),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP,
+    CONSTRAINT uk_stock_reservation_order_item UNIQUE (order_item_id)
+);
+
+CREATE INDEX idx_stock_reservation_stock_status ON stock_reservations (stock_item_id, status);
 
 
 -- =====================================================================
@@ -322,10 +339,32 @@ CREATE TABLE purchase_items (
     purchase_item_id  BIGSERIAL PRIMARY KEY,
     purchase_id       BIGINT NOT NULL REFERENCES purchases(purchase_id),
     product_id        BIGINT NOT NULL REFERENCES products(product_id),
+    warehouse_id      BIGINT NOT NULL REFERENCES warehouses(warehouse_id),
     quantity          INT NOT NULL,
     unit_cost         NUMERIC(12,2) NOT NULL,
     received_quantity INT NOT NULL DEFAULT 0
 );
+
+CREATE TABLE purchase_receipts (
+    purchase_receipt_id BIGSERIAL PRIMARY KEY,
+    purchase_id BIGINT NOT NULL REFERENCES purchases(purchase_id),
+    request_id UUID NOT NULL,
+    operator_user_id BIGINT NOT NULL REFERENCES users(user_id),
+    received_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    notes VARCHAR(255),
+    CONSTRAINT uk_purchase_receipt_request UNIQUE (purchase_id, request_id)
+);
+
+CREATE TABLE purchase_receipt_items (
+    purchase_receipt_item_id BIGSERIAL PRIMARY KEY,
+    purchase_receipt_id BIGINT NOT NULL REFERENCES purchase_receipts(purchase_receipt_id),
+    purchase_item_id BIGINT NOT NULL REFERENCES purchase_items(purchase_item_id),
+    stock_item_id BIGINT NOT NULL REFERENCES stock_items(stock_item_id),
+    quantity INT NOT NULL CHECK (quantity > 0),
+    CONSTRAINT uk_purchase_receipt_item UNIQUE (purchase_receipt_id, purchase_item_id)
+);
+
+CREATE INDEX idx_purchase_receipt_item_stock ON purchase_receipt_items (stock_item_id);
 
 CREATE TABLE purchase_suggestion_items (
     purchase_suggestion_item_id BIGSERIAL PRIMARY KEY,
@@ -357,7 +396,23 @@ CREATE TABLE stock_movements (
     user_id            BIGINT NOT NULL REFERENCES users(user_id),
     occurred_at        TIMESTAMP NOT NULL DEFAULT NOW(),
     notes              VARCHAR(255),
-    CONSTRAINT chk_stock_movement_origin CHECK (num_nonnulls(order_id, purchase_id) <= 1)
+    stock_reservation_id BIGINT REFERENCES stock_reservations(stock_reservation_id),
+    purchase_receipt_item_id BIGINT REFERENCES purchase_receipt_items(purchase_receipt_item_id),
+    CONSTRAINT uk_stock_movement_receipt_item UNIQUE (purchase_receipt_item_id),
+    CONSTRAINT uk_stock_movement_reservation UNIQUE (stock_reservation_id),
+    CONSTRAINT chk_stock_movement_origin CHECK (num_nonnulls(order_id, purchase_id) <= 1),
+    CONSTRAINT chk_stock_movement_receipt CHECK (
+        purchase_receipt_item_id IS NULL OR (
+            type = 'INBOUND' AND reason IS NOT NULL AND reason = 'PURCHASE'
+            AND purchase_id IS NOT NULL AND order_id IS NULL AND stock_reservation_id IS NULL
+        )
+    ),
+    CONSTRAINT chk_stock_movement_reservation CHECK (
+        stock_reservation_id IS NULL OR (
+            type = 'OUTBOUND' AND reason IS NOT NULL AND reason = 'SALE'
+            AND order_id IS NOT NULL AND purchase_id IS NULL
+        )
+    )
 );
 
 

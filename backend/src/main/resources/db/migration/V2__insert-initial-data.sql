@@ -123,7 +123,7 @@ BEGIN
 
         INSERT INTO stock_items (
             warehouse_id, product_id, quantity, reserved_quantity, min_quantity, max_quantity
-        ) VALUES (warehouse_key, product_key, final_balance, item.n % 7, 10 + item.n, 250 + item.n)
+        ) VALUES (warehouse_key, product_key, final_balance, 0, 10 + item.n, 250 + item.n)
         RETURNING stock_item_id INTO stock_key;
 
         INSERT INTO suppliers (
@@ -220,15 +220,16 @@ BEGIN
             event_date, event_date, purchase_total)
         RETURNING purchase_id INTO purchase_key;
 
-        INSERT INTO purchase_items (purchase_id, product_id, quantity, unit_cost, received_quantity)
-        VALUES (purchase_key, product_key, purchase_quantity, item.cost, purchase_quantity);
+        INSERT INTO purchase_items (
+            purchase_id, product_id, warehouse_id, quantity, unit_cost, received_quantity
+        ) VALUES (purchase_key, product_key, warehouse_key, purchase_quantity, item.cost, purchase_quantity);
 
         INSERT INTO orders (total_amount, payment_method, status, created_at, customer_id, user_id)
         VALUES (sale_total, CASE WHEN item.n % 2 = 0 THEN 'BOLETO' ELSE 'PIX' END,
             'INVOICED', event_date + 1, customer_key, user_key)
         RETURNING order_id INTO order_key;
-        INSERT INTO order_items (order_id, product_id, quantity, unit_price, discount)
-        VALUES (order_key, product_key, sale_quantity, item.price, 0.00);
+        INSERT INTO order_items (order_id, product_id, warehouse_id, quantity, unit_price, discount)
+        VALUES (order_key, product_key, warehouse_key, sale_quantity, item.price, 0.00);
 
         -- Entrada e saída terminam exatamente no saldo cadastrado em stock_items.
         INSERT INTO stock_movements (

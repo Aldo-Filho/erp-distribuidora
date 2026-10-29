@@ -3,8 +3,10 @@ package com.pi.erp.stock;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.product.Product;
 import com.pi.erp.product.ProductRepository;
+import com.pi.erp.stock.reservation.StockReservationRepository;
 import com.pi.erp.warehouse.Warehouse;
 import com.pi.erp.warehouse.WarehouseRepository;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,6 +24,12 @@ public class StockItemService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private StockReservationRepository stockReservationRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     public List<StockItem> search(StockItemFilter filter) {
         Specification<StockItem> spec = Specification.allOf();
@@ -48,6 +56,10 @@ public class StockItemService {
             data.maxQuantity()
         );
 
+        if (data.reservedQuantity() != 0) {
+            throw new IllegalArgumentException("Initial reserved quantity must be zero.");
+        }
+
         if (repository.existsByWarehouseIdAndProductId(data.warehouseId(), data.productId())) {
             throw new IllegalArgumentException("This product already exists in this warehouse.");
         }
@@ -64,6 +76,17 @@ public class StockItemService {
         StockItem stockItem = repository
             .findByIdForUpdate(id)
             .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
+
+        entityManager.refresh(stockItem);
+
+        if (data.reservedQuantity() != null
+            && !data.reservedQuantity().equals(stockItem.getReservedQuantity())) {
+            throw new IllegalArgumentException("Reserved quantity is managed by order reservations.");
+        }
+
+        if (data.quantity() != null && !data.quantity().equals(stockItem.getQuantity())) {
+            throw new IllegalArgumentException("Use a stock movement to change quantity.");
+        }
 
         if (Boolean.TRUE.equals(data.removeMaxQuantity()) && data.maxQuantity() != null) {
             throw new IllegalArgumentException(
@@ -83,6 +106,14 @@ public class StockItemService {
             && repository.existsMovementsByStockItemId(id)) {
             throw new IllegalArgumentException(
                 "Cannot change the product or warehouse of a stock item with movements."
+            );
+        }
+
+        if ((!warehouseId.equals(stockItem.getWarehouse().getId())
+            || !productId.equals(stockItem.getProduct().getId()))
+            && stockReservationRepository.existsByStockItemId(id)) {
+            throw new IllegalArgumentException(
+                "Cannot change the product or warehouse of a stock item with reservations."
             );
         }
 
@@ -132,6 +163,16 @@ public class StockItemService {
         StockItem stockItem = repository
             .findByIdForUpdate(id)
             .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
+
+        entityManager.refresh(stockItem);
+
+        if (stockReservationRepository.existsByStockItemId(id)) {
+            throw new IllegalArgumentException("Cannot delete a stock item with reservations.");
+        }
+
+        if (repository.existsMovementsByStockItemId(id)) {
+            throw new IllegalArgumentException("Cannot delete a stock item with movements.");
+        }
 
         repository.delete(stockItem);
     }

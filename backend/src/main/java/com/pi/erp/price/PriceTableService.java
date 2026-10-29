@@ -1,6 +1,7 @@
 package com.pi.erp.price;
 
 import com.pi.erp.exception.ResourceNotFoundException;
+import com.pi.erp.price.item.PriceTableItemRepository;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,9 @@ public class PriceTableService {
 
     @Autowired
     private PriceTableRepository repository;
+
+    @Autowired
+    private PriceTableItemRepository priceTableItemRepository;
 
     public List<PriceTable> search(PriceTableFilter filter) {
         Specification<PriceTable> spec = Specification.allOf();
@@ -89,6 +93,10 @@ public class PriceTableService {
         PriceTable priceTable = repository
             .findByIdForUpdate(id)
             .orElseThrow(() -> new ResourceNotFoundException("Price table not found."));
+
+        if (priceTableItemRepository.existsByPriceTableId(id)) {
+            throw new IllegalArgumentException("Cannot delete a price table with items.");
+        }
 
         repository.delete(priceTable);
     }

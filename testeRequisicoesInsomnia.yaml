@@ -5,8 +5,626 @@ meta:
   id: wrk_40b91de1c8c6455792d1b26ece5e64ce
   created: 1790129555061
   modified: 1790129555061
-  description: ''
+  description: 'API local do ERP. Configure o Base Environment com IDs reais e suas credenciais; os campos de senha permanecem vazios neste arquivo. Primeiro execute Obter CSRF, copie o token para csrf_token e depois Entrar. Mantenha cookies habilitados e obtenha novo CSRF após login/logout. As pastas de acesso incluem funcionários, convites, cargos, permissões, sessões, política e auditoria. Filtros opcionais ficam desativados até serem preenchidos. Datas audit_from/audit_to usam ISO 8601 com fuso, por exemplo 2026-10-29T00:00:00-03:00. access_link_token recebe somente o valor de token do link de convite/recuperação, sem a URL. Não há endpoint HTTP de bootstrap: a criação inicial é feita pelo terminal, conforme backend/README.md. Nenhuma requisição é executada automaticamente ao importar.'
 collection:
+- name: Acesso e sessões
+  meta:
+    id: fld_authentication_access_20261023
+    description: 'Obtenha o CSRF, copie token em csrf_token e mantenha cookies. Após login/logout obtenha novo CSRF. Escritas sem sessão retornam 401; sem permissão/CSRF, 403. POST /user e escritas /permission retornam 405 para autenticados. Operadores de novos movimentos/saídas/recebimentos vêm da sessão; legado divergente retorna 400. Retry de recebimento aceita operador histórico ou omissão e exige purchases.receive. Não repetir gravações automaticamente.'
+    sortKey: 0
+  children:
+  - url: '{{ _.base_url }}/auth/csrf'
+    name: Obter CSRF
+    meta:
+      id: req_1b89132a1f5e4ebe9d04c59a7694a43b
+      isPrivate: true
+    method: GET
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/login'
+    name: Entrar
+    meta:
+      id: req_ddc541d083424d36ad5549c3d83d5628
+      isPrivate: true
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"email\": \"{{ _.login_email }}\",\n  \"password\": \"{{ _.login_password }}\"\n}"
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/session'
+    name: Consultar sessão
+    meta:
+      id: req_db7079931e964bad9eefbd5530f34f97
+      isPrivate: true
+    method: GET
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/sessions'
+    name: Minhas sessões
+    meta:
+      id: req_7a7f2c040b144ac7b9dc610666a107e0
+      isPrivate: true
+    method: GET
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/sessionReplacement'
+    name: Substituir sessão (409 após senha válida)
+    meta:
+      id: req_706f9d6d77be4bacab9e5ac44b3353c9
+      isPrivate: true
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"challengeToken\": \"{{ _.challenge_token }}\",\n  \"sessionId\": \"{{ _.public_session_id }}\"\n}"
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/activity'
+    name: Sinal de atividade interativa
+    meta:
+      id: req_613e61b2cc404f5ba878d4cf076ea422
+      isPrivate: true
+    method: POST
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/logout'
+    name: Sair
+    meta:
+      id: req_69b28d38cf5c4532aba28e85e6183a04
+      isPrivate: true
+    method: POST
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/passwordRecovery'
+    name: Solicitar recuperação
+    meta:
+      id: req_2a44c33c126741cda84a91d2138c23f4
+      isPrivate: true
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"email\": \"{{ _.login_email }}\"\n}"
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/passwordReset'
+    name: Redefinir senha
+    meta:
+      id: req_8dae4013df47462d9bf0716c97695f8a
+      isPrivate: true
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"token\": \"{{ _.access_link_token }}\",\n  \"newPassword\": \"{{ _.new_password }}\"\n}"
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/invitationAcceptance'
+    name: Aceitar convite
+    meta:
+      id: req_ffa885cd3f1e499990c6edd02a9f3119
+      isPrivate: true
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"token\": \"{{ _.access_link_token }}\",\n  \"password\": \"{{ _.new_password }}\"\n}"
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/security/settings'
+    name: Política de acesso
+    meta:
+      id: req_8434c340b7f948ac8dfbd4c76157a08d
+      isPrivate: true
+    method: GET
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/invitation/search'
+    name: Listar convites
+    meta:
+      id: req_5270bf7edbe24e34afafd6b6f5c052df
+      isPrivate: true
+    method: GET
+    parameters:
+    - name: page
+      value: '{{ _.access_page }}'
+    - name: size
+      value: '{{ _.access_page_size }}'
+    - name: email
+      value: '{{ _.invitation_email }}'
+      disabled: true
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/invitation'
+    name: Convidar funcionário
+    meta:
+      id: req_18365d36d23a4a31879be57e6c4600f2
+      isPrivate: true
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{\n  \"name\": \"{{ _.invitation_name }}\",\n  \"email\": \"{{ _.invitation_email }}\",\n  \"roleId\": {{ _.invitation_role_id }}\n}"
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/security/audit/search'
+    name: Auditoria
+    meta:
+      id: req_2994c9901f91434fbb543c25ab5d5cd8
+      description: 'Exige security.audit.read. Retorna responsável/alvo com nomes históricos e IDs, ação, resultado, data e detalhes. Eventos antigos podem não ter nomes. actorName consulta o nome gravado no evento; action/outcome usam códigos internos. Ative somente os filtros desejados.'
+      isPrivate: true
+    method: GET
+    parameters:
+    - name: page
+      value: '{{ _.access_page }}'
+    - name: size
+      value: '{{ _.access_page_size }}'
+    - name: from
+      value: '{{ _.audit_from }}'
+      disabled: true
+    - name: to
+      value: '{{ _.audit_to }}'
+      disabled: true
+    - name: actorId
+      value: '{{ _.audit_actor_id }}'
+      disabled: true
+    - name: actorName
+      value: '{{ _.audit_actor_name }}'
+      disabled: true
+    - name: action
+      value: '{{ _.audit_action }}'
+      disabled: true
+    - name: outcome
+      value: '{{ _.audit_outcome }}'
+      disabled: true
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/password'
+    name: 'Alterar minha senha'
+    meta:
+      id: req_9dee9937dea74ed4bcad41b5753a5cb1
+      isPrivate: true
+      description: 'Sessão própria e CSRF. Nova senha: 15 a 128 caracteres. Encerra todas as sessões; entre novamente e renove o CSRF.'
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "currentPassword": "{{ _.current_password }}",
+          "newPassword": "{{ _.new_password }}"
+        }
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/auth/sessions/{{ _.public_session_id }}'
+    name: 'Encerrar uma das minhas sessões'
+    meta:
+      id: req_01b07afd5cfd454fa08d22fed029c8c8
+      isPrivate: true
+      description: 'Sessão própria e CSRF. Use o UUID retornado por Minhas sessões; pode encerrar a sessão usada nesta requisição.'
+    method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/invitation/{{ _.invitation_id }}/resend'
+    name: 'Reenviar convite'
+    meta:
+      id: req_91da1fe2d97b487a88b15ab6076a248e
+      isPrivate: true
+      description: 'Exige access.users.manage e CSRF. Envia novo link e invalida o anterior. Use o UUID retornado ao criar/listar convites.'
+    method: POST
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/invitation/{{ _.invitation_id }}'
+    name: 'Cancelar convite'
+    meta:
+      id: req_888fbac8df044dbbab2417e488c5fe3b
+      isPrivate: true
+      description: 'Exige access.users.manage e CSRF. Cancela o convite, sem excluir funcionários.'
+    method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/security/settings'
+    name: 'Atualizar política de acesso'
+    meta:
+      id: req_a9a8d19bc9434bf880f4c6ddc745c5b1
+      isPrivate: true
+      description: 'Exige security.settings.manage e CSRF. Inatividade: 15–240 min; duração absoluta: 60–1440; sessões: 1–5. Inatividade não supera duração absoluta. Pode encerrar sessões.'
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "idleMinutes": {{ _.policy_idle_minutes }},
+          "absoluteMinutes": {{ _.policy_absolute_minutes }},
+          "maxSessions": {{ _.policy_max_sessions }}
+        }
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+- name: Funcionários
+  meta:
+    id: fld_users_access_20261029
+    sortKey: 50
+    description: 'Novos funcionários entram por convite. Sem senha padrão ou cadastro direto por POST /user. Preencha user_id com um ID real. Escritas exigem CSRF.'
+  children:
+  - url: '{{ _.base_url }}/user/search'
+    name: 'Buscar funcionários'
+    meta:
+      id: req_c9b5766c0d924a8d8293dd5cf1f9696c
+      isPrivate: true
+      description: 'Exige access.users.manage ou security.sessions.manage. Ative os filtros desejados após preenchê-los.'
+    method: GET
+    parameters:
+    - name: name
+      value: '{{ _.user_name }}'
+      disabled: true
+    - name: email
+      value: '{{ _.user_email }}'
+      disabled: true
+    - name: roleId
+      value: '{{ _.role_id }}'
+      disabled: true
+    - name: active
+      value: 'true'
+      disabled: true
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/{{ _.user_id }}'
+    name: 'Consultar funcionário por ID'
+    meta:
+      id: req_328623a731f645a18c675275c99a5a25
+      isPrivate: true
+      description: 'Exige access.users.manage ou security.sessions.manage. Não retorna senha, hash ou versão de credencial.'
+    method: GET
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/{{ _.user_id }}'
+    name: 'Atualizar funcionário'
+    meta:
+      id: req_8470fb2efc4f4ba696b86024b044eae8
+      isPrivate: true
+      description: 'Exige access.users.manage e CSRF. Exemplo altera nome/cargo; omissão ou null preserva os demais campos. Para e-mail/estado acrescente email/active. Não aceita definir senha. Mudanças de acesso podem encerrar sessões.'
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "name": "{{ _.user_name }}",
+          "roleId": {{ _.role_id }}
+        }
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/{{ _.user_id }}'
+    name: 'Excluir funcionário'
+    meta:
+      id: req_844407a9af8f4aefbcfbd1b606a10985
+      isPrivate: true
+      description: 'Exige access.users.manage e CSRF. Referências históricas podem impedir exclusão; deve permanecer um administrador ativo.'
+    method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/{{ _.user_id }}/passwordRecovery'
+    name: 'Enviar recuperação de senha ao funcionário'
+    meta:
+      id: req_a0ffb9e79d6741f2bbee3632ad81e0e1
+      isPrivate: true
+      description: 'Exige access.users.manage e CSRF. Solicita envio de link ao e-mail cadastrado; não define senha nem confirma entrega. Retorna 202.'
+    method: POST
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/{{ _.user_id }}/sessions'
+    name: 'Listar sessões do funcionário'
+    meta:
+      id: req_c3d1debd01624707a543bd1b1ac8a64f
+      isPrivate: true
+      description: 'Exige security.sessions.manage. Copie o UUID desejado para public_session_id.'
+    method: GET
+    parameters:
+    - name: page
+      value: '{{ _.access_page }}'
+    - name: size
+      value: '{{ _.access_page_size }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/user/{{ _.user_id }}/sessions/{{ _.public_session_id }}'
+    name: 'Encerrar sessão do funcionário'
+    meta:
+      id: req_2bae92166c0e42fc9ea066dc548a39ae
+      isPrivate: true
+      description: 'Exige security.sessions.manage e CSRF. Use o UUID de uma sessão pertencente ao funcionário selecionado.'
+    method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+- name: Cargos e permissões
+  meta:
+    id: fld_roles_access_20261029
+    sortKey: 100
+    description: 'Gerenciamento com access.roles.manage. Catálogo de permissões somente leitura. Preencha IDs reais e mantenha cookies/CSRF.'
+  children:
+  - url: '{{ _.base_url }}/role/search'
+    name: 'Buscar cargos'
+    meta:
+      id: req_769f75959e0f4b8ab149a337a6a9fcae
+      isPrivate: true
+      description: 'Exige access.roles.manage ou access.users.manage.'
+    method: GET
+    parameters:
+    - name: name
+      value: '{{ _.role_name }}'
+      disabled: true
+    - name: active
+      value: 'true'
+      disabled: true
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/role/{{ _.role_id }}'
+    name: 'Consultar cargo por ID'
+    meta:
+      id: req_66f7e2016ff64b5992ec65189431e6d9
+      isPrivate: true
+      description: 'Exige access.roles.manage ou access.users.manage.'
+    method: GET
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/role'
+    name: 'Criar cargo'
+    meta:
+      id: req_36b639a2da6447d7a188cd7f1951bb1a
+      isPrivate: true
+      description: 'Exige access.roles.manage e CSRF. Não concede permissões automaticamente.'
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "name": "{{ _.role_name }}",
+          "description": "{{ _.role_description }}",
+          "active": true
+        }
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/role/{{ _.role_id }}'
+    name: 'Atualizar cargo'
+    meta:
+      id: req_abbf72ee4e83425b9b0754f607e4bae7
+      isPrivate: true
+      description: 'Exige access.roles.manage e CSRF. Exemplo atualiza nome/descrição. Para ativar/inativar acrescente active. Deve permanecer um administrador ativo.'
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "name": "{{ _.role_name }}",
+          "description": "{{ _.role_description }}"
+        }
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/role/{{ _.role_id }}'
+    name: 'Excluir cargo'
+    meta:
+      id: req_6d87829de97c457eb060779a7b633f70
+      isPrivate: true
+      description: 'Exige access.roles.manage e CSRF. Vínculos com funcionários ou permissões impedem a exclusão.'
+    method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/permission/search'
+    name: 'Consultar catálogo de permissões'
+    meta:
+      id: req_8804f99730cf4c0cb59a6ec32a96227b
+      isPrivate: true
+      description: 'Exige access.roles.manage. Catálogo somente leitura.'
+    method: GET
+    parameters:
+    - name: module
+      value: '{{ _.permission_module }}'
+      disabled: true
+    - name: action
+      value: '{{ _.permission_action }}'
+      disabled: true
+    - name: permissionKey
+      value: '{{ _.permission_key }}'
+      disabled: true
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/permission/{{ _.permission_id }}'
+    name: 'Consultar permissão por ID'
+    meta:
+      id: req_4f034de3915846ceb21ee013ada08060
+      isPrivate: true
+      description: 'Exige access.roles.manage.'
+    method: GET
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/role/{{ _.role_id }}/permissions'
+    name: 'Listar permissões do cargo'
+    meta:
+      id: req_5c4de350c0b84b50821f44c2a27c69f0
+      isPrivate: true
+      description: 'Exige access.roles.manage.'
+    method: GET
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/role/{{ _.role_id }}/permissions'
+    name: 'Conceder permissão ao cargo'
+    meta:
+      id: req_ee607abe968347dcb26d1a917003b5e8
+      isPrivate: true
+      description: 'Exige access.roles.manage e CSRF. Use um ID do catálogo; afeta os funcionários do cargo.'
+    method: POST
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "permissionId": {{ _.permission_id }}
+        }
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    - name: Content-Type
+      value: application/json
+    settings:
+      cookies:
+        send: true
+        store: true
+  - url: '{{ _.base_url }}/role/{{ _.role_id }}/permissions/{{ _.permission_id }}'
+    name: 'Remover permissão do cargo'
+    meta:
+      id: req_f72ecdd056344d6eaaf9a65094efcfe4
+      isPrivate: true
+      description: 'Exige access.roles.manage e CSRF. Afeta os funcionários do cargo; preserva ao menos um administrador válido.'
+    method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
+    settings:
+      cookies:
+        send: true
+        store: true
 - name: Produtos
   meta:
     id: fld_311795a145ef4310b6ba07b77b9d97e7
@@ -25,6 +643,9 @@ collection:
       description: Exclui o produto; vínculos existentes podem impedir a operação com 409.
       sortKey: 600
     method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -48,6 +669,8 @@ collection:
       mimeType: application/json
       text: "{\n  \"name\": \"Console PlayStation 5 - Slim\",\n  \"price\": 3799.9,\n  \"active\": false\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -72,6 +695,8 @@ collection:
       mimeType: application/json
       text: "{\n  \"removeCategory\": true\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -154,6 +779,8 @@ collection:
         color\": \"Branco\",\n  \"dimensionX\": 39.0,\n  \"dimensionY\": 10.4,\n  \"dimensionZ\": 26.0,\n  \"size\": \"Padrão\"\
         ,\n  \"active\": true\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -181,6 +808,8 @@ collection:
         \ }}\",\n  \"cost\": 10,\n  \"price\": 20,\n  \"stock\": {\n    \"warehouseId\": \"{{ _.warehouse_id }}\",\n    \"\
         quantity\": 10,\n    \"reservedQuantity\": 0,\n    \"minQuantity\": 0\n  }\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -231,6 +860,8 @@ collection:
         mimeType: application/json
         text: "{\n  \"name\": \"Sony\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -251,6 +882,9 @@ collection:
         description: DELETE /brand/{id}. Substitua o {id} na URL por um ID existente.
         sortKey: 1100
       method: DELETE
+      headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       settings:
         renderRequestBody: true
         encodeUrl: true
@@ -323,6 +957,9 @@ collection:
         description: DELETE /category/{id}. Substitua o {id} na URL por um ID existente.
         sortKey: 1600
       method: DELETE
+      headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       settings:
         renderRequestBody: true
         encodeUrl: true
@@ -346,6 +983,8 @@ collection:
         mimeType: application/json
         text: "{\n  \"name\": \"Eletrônicos\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -396,6 +1035,8 @@ collection:
       mimeType: application/json
       text: "{\n  \"description\": \"Novo texto\"\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -444,6 +1085,8 @@ collection:
       mimeType: application/json
       text: "{\n  \"name\": \"Armazém Central\",\n  \"description\": \"Depósito principal - matriz\"\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -464,6 +1107,9 @@ collection:
       description: DELETE /warehouse/{id}. Substitua o {id} na URL por um ID existente.
       sortKey: 2100
     method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -568,6 +1214,8 @@ collection:
           \"street\": \"Av. Joaquim José de Freitas\",\n\t\"neighborhood\": \"Indianópolis\",\n\t\"number\": 220,\n\t\"complement\"\
           : \"Bloco 03 Apto 304\",\n\t\"zipCode\": \"55025-230\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -593,6 +1241,8 @@ collection:
         mimeType: application/json
         text: "{\n  \"neighborhood\": \"Universitário\",\n  \"complement\": \"Bloco 02, Sala 01\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -615,6 +1265,9 @@ collection:
           diferentes são permitidos. PATCH omitido/null preserva valores; textos obrigatórios vazios são rejeitados.'
         sortKey: -1788400463144
       method: DELETE
+      headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       settings:
         renderRequestBody: true
         encodeUrl: true
@@ -673,6 +1326,8 @@ collection:
       text: "{\n  \"warehouseId\": \"{{ _.warehouse_id }}\",\n  \"productId\": \"{{ _.product_id }}\",\n  \"quantity\": 100,\n\
         \  \"reservedQuantity\": 10,\n  \"minQuantity\": 20,\n  \"maxQuantity\": 200\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -698,6 +1353,8 @@ collection:
       text: "{\n  \"warehouseId\": \"{{ _.warehouse_id }}\",\n  \"productId\": \"{{ _.product_id }}\",\n  \"quantity\": 10,\n\
         \  \"reservedQuantity\": 0,\n  \"minQuantity\": 0\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -718,6 +1375,9 @@ collection:
       description: Exclui o item; movimentações vinculadas impedem a exclusão com 409.
       sortKey: -1788832610323
     method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -742,6 +1402,8 @@ collection:
       mimeType: application/json
       text: "{\n  \"quantity\": 80\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -766,6 +1428,8 @@ collection:
       mimeType: application/json
       text: "{\n  \"removeMaxQuantity\": true\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -852,6 +1516,8 @@ collection:
       text: "{\n  \"tradeName\": \"JAMS Hub Distribuidora\",\n  \"email\": \"comercial@jamshub.com.br\",\n  \"active\": true\n\
         }"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -876,6 +1542,8 @@ collection:
       mimeType: application/json
       text: "{\n  \"removePriceTable\": true\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -896,6 +1564,9 @@ collection:
       description: DELETE /customer/{id}. Substitua o ID por um cliente existente.
       sortKey: 500
     method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -940,6 +1611,8 @@ collection:
         : \"987654321\",\n  \"email\": \"contato@jamshub.com.br\",\n  \"phone\": \"81999990000\",\n  \"whatsapp\": \"81999990000\"\
         ,\n  \"active\": true,\n  \"priceTableId\": \"{{ _.price_table_id }}\"\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -968,6 +1641,9 @@ collection:
         description: DELETE /customerAddress/{id}. Substitua o ID por um endereço existente.
         sortKey: 400
       method: DELETE
+      headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       settings:
         renderRequestBody: true
         encodeUrl: true
@@ -990,6 +1666,8 @@ collection:
         mimeType: application/json
         text: "{\n  \"neighborhood\": \"Universitário\",\n  \"complement\": \"Casa\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -1016,6 +1694,8 @@ collection:
           \  \"city\": \"Caruaru\",\n  \"street\": \"Avenida Joaquim José de Freitas\",\n  \"neighborhood\": \"Indianópolis\"\
           ,\n  \"number\": \"220\",\n  \"complement\": \"Bloco 03, Apto 304\",\n  \"zipCode\": \"55025-230\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -1111,6 +1791,8 @@ collection:
         neighborhood\": \"Centro\",\n    \"number\": \"100\",\n    \"complement\": \"Sala 01\",\n    \"zipCode\": \"55000-000\"\
         \n  }\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -1145,6 +1827,8 @@ collection:
       mimeType: application/json
       text: "{\n  \"name\": \"Varejo 2026 - Atualizada\",\n  \"active\": true\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -1196,6 +1880,9 @@ collection:
       description: DELETE /price-table/{id}. A tabela não pode estar vinculada a clientes.
       sortKey: 500
     method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -1221,6 +1908,8 @@ collection:
       text: "{\n  \"name\": \"Varejo 2026\",\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-12-31\",\n  \"active\"\
         : true\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -1352,6 +2041,8 @@ collection:
         \ \"Maurício de Nassau\",\n    \"number\": \"1200\",\n    \"complement\": \"Sala 01\",\n    \"zipCode\": \"55012-290\"\
         ,\n    \"addressType\": \"MAIN\"\n  }\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -1379,6 +2070,8 @@ collection:
         : \"98765432000198\",\n  \"email\": \"contato@segundo-fornecedor.example\",\n  \"phone\": \"8133334444\",\n  \"whatsapp\"\
         : \"81999994444\",\n  \"avgDeliveryDays\": 5,\n  \"active\": true\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -1405,6 +2098,8 @@ collection:
       text: "{\n  \"tradeName\": \"Fornecedor Exemplo Atualizado\",\n  \"email\": \"comercial@fornecedor.example\",\n  \"\
         phone\": \"8133335555\",\n  \"whatsapp\": \"81999995555\",\n  \"avgDeliveryDays\": 5,\n  \"active\": true\n}"
     headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     - name: Content-Type
       value: application/json
     settings:
@@ -1426,6 +2121,9 @@ collection:
         de compras ou outros módulos impedem a exclusão e revertem a operação. Defina supplier_id e execute por último.
       sortKey: 500
     method: DELETE
+    headers:
+    - name: X-CSRF-TOKEN
+      value: '{{ _.csrf_token }}'
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -1529,6 +2227,8 @@ collection:
           ,\n  \"number\": \"1250\",\n  \"complement\": \"Sala 02\",\n  \"zipCode\": \"55012-290\",\n  \"addressType\": \"\
           MAIN\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -1555,6 +2255,8 @@ collection:
         text: "{\n  \"neighborhood\": \"Centro\",\n  \"number\": \"1300\",\n  \"complement\": \"Sala 03\",\n  \"addressType\"\
           : \"BILLING\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -1575,6 +2277,9 @@ collection:
         description: Remove apenas o endereço e desfaz o vínculo com o fornecedor. Defina supplier_address_id no ambiente.
         sortKey: 500
       method: DELETE
+      headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       settings:
         renderRequestBody: true
         encodeUrl: true
@@ -1680,6 +2385,8 @@ collection:
           \  \"avgDeliveryDays\": 5,\n  \"supplierProductCode\": \"ABC-25\",\n  \"preferred\": true,\n  \"active\": true\n\
           }"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -1706,6 +2413,8 @@ collection:
         text: "{\n  \"cost\": 45,\n  \"avgDeliveryDays\": 7,\n  \"supplierProductCode\": \"ABC-25-ATUALIZADO\",\n  \"preferred\"\
           : false,\n  \"active\": true\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -1726,6 +2435,9 @@ collection:
         description: Remove apenas o vínculo e seus dados comerciais, preservando o produto e o fornecedor. Use supplier_product_id.
         sortKey: 500
       method: DELETE
+      headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       settings:
         renderRequestBody: true
         encodeUrl: true
@@ -1777,6 +2489,8 @@ collection:
         mimeType: application/json
         text: "{\n  \"brandId\": \"{{ _.brand_id }}\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -1798,6 +2512,9 @@ collection:
           retorna 404.
         sortKey: 300
       method: DELETE
+      headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       settings:
         renderRequestBody: true
         encodeUrl: true
@@ -1849,6 +2566,8 @@ collection:
         mimeType: application/json
         text: "{\n  \"categoryId\": \"{{ _.category_id }}\"\n}"
       headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       - name: Content-Type
         value: application/json
       settings:
@@ -1870,6 +2589,9 @@ collection:
           retorna 404.
         sortKey: 300
       method: DELETE
+      headers:
+      - name: X-CSRF-TOKEN
+        value: '{{ _.csrf_token }}'
       settings:
         renderRequestBody: true
         encodeUrl: true
@@ -1905,3 +2627,36 @@ environments:
     customer_id: 1
     customer_address_id: 1
     price_table_id: 1
+    csrf_token: ''
+    login_email: ''
+    login_password: ''
+    challenge_token: ''
+    public_session_id: ''
+    access_link_token: ''
+    new_password: ''
+    invitation_name: ''
+    invitation_email: ''
+    invitation_role_id: 0
+    current_password: ''
+    invitation_id: ''
+    user_id: 0
+    user_name: ''
+    user_email: ''
+    role_id: 0
+    role_name: ''
+    role_description: ''
+    permission_id: 0
+    permission_module: ''
+    permission_action: ''
+    permission_key: ''
+    access_page: 0
+    access_page_size: 25
+    policy_idle_minutes: 60
+    policy_absolute_minutes: 720
+    policy_max_sessions: 2
+    audit_from: ''
+    audit_to: ''
+    audit_actor_id: ''
+    audit_actor_name: ''
+    audit_action: 'LOGIN'
+    audit_outcome: 'SUCCESS'

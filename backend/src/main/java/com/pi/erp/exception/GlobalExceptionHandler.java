@@ -12,15 +12,43 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ResponseErrorDTO> handleAccessDenied(
+        AccessDeniedException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseErrorDTO(
+            403, "Forbidden", "Permission denied.", LocalDateTime.now()
+        ));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ResponseErrorDTO> handleStatus(
+        ResponseStatusException exception
+    ) {
+        HttpStatusCode status = exception.getStatusCode();
+        HttpStatus value = HttpStatus.resolve(status.value());
+        ResponseEntity.BodyBuilder response = ResponseEntity.status(status);
+        if (status.value() == 429) {
+            response.header("Retry-After", "60");
+        }
+        return response.body(new ResponseErrorDTO(
+            status.value(), value == null ? "HTTP Error" : value.getReasonPhrase(),
+            value == null ? "Request could not be processed." : value.getReasonPhrase() + ".",
+            LocalDateTime.now()
+        ));
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 

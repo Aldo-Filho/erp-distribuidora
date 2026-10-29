@@ -1,5 +1,6 @@
 package com.pi.erp.product;
 
+import com.pi.erp.auth.CurrentUser;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.product.brand.Brand;
 import com.pi.erp.product.brand.BrandRepository;
@@ -65,6 +66,9 @@ public class ProductService {
 
     @Transactional
     public Product register(RequestProductDTO data) {
+        if (data.stock() != null) {
+            CurrentUser.require("stock.configure");
+        }
         Brand brand = findBrand(data.brandId());
         Category category = findCategory(data.categoryId());
 

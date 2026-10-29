@@ -12,7 +12,7 @@ public record RequestSupplierDTO(
     String tradeName,
     @NotBlank String taxId,
     @Email String email,
-    String phone,
+    @NotBlank String phone,
     String whatsapp,
     @PositiveOrZero Integer avgDeliveryDays,
     Boolean active,

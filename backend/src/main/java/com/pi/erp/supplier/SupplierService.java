@@ -6,9 +6,13 @@ import com.pi.erp.supplier.address.SupplierAddressService;
 import com.pi.erp.supplier.brand.SupplierBrandRepository;
 import com.pi.erp.supplier.category.SupplierCategoryRepository;
 import com.pi.erp.supplier.product.ProductSupplierRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
 import jakarta.validation.Validator;
-import java.util.List;
+import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +38,7 @@ public class SupplierService {
     @Autowired
     private Validator validator;
 
-    public List<Supplier> search(SupplierFilter filter) {
+    public Page<Supplier> search(SupplierFilter filter, Pageable pageable) {
         Specification<Supplier> spec = Specification.allOf();
 
         if (filter.supplierAddressId() != null) {
@@ -74,7 +78,7 @@ public class SupplierService {
             spec = spec.and((root, query, cb) ->
                 cb.like(
                     cb.lower(root.get("legalName")),
-                    "%" + filter.legalName().toLowerCase() + "%"
+                    likePattern(filter.legalName()), '!'
                 )
             );
         }
@@ -82,7 +86,7 @@ public class SupplierService {
             spec = spec.and((root, query, cb) ->
                 cb.like(
                     cb.lower(root.get("tradeName")),
-                    "%" + filter.tradeName().toLowerCase() + "%"
+                    likePattern(filter.tradeName()), '!'
                 )
             );
         }
@@ -93,7 +97,7 @@ public class SupplierService {
         }
         if (filter.email() != null && !filter.email().isBlank()) {
             spec = spec.and((root, query, cb) ->
-                cb.like(cb.lower(root.get("email")), "%" + filter.email().toLowerCase() + "%")
+                cb.like(cb.lower(root.get("email")), likePattern(filter.email()), '!')
             );
         }
         if (filter.phone() != null && !filter.phone().isBlank()) {
@@ -117,16 +121,30 @@ public class SupplierService {
             );
         }
 
-        return repository.findAll(spec);
+        if (filter.query() != null && !filter.query().isBlank()) {
+            spec = spec.and(groupedSearch(filter.query(), filter.searchField()));
+        }
+
+        return repository.findAll(spec, pageable);
     }
 
     @Transactional
     public Supplier register(RequestSupplierDTO data) {
-        if (repository.existsByTaxId(data.taxId())) {
+        String taxId = normalizeTaxId(data.taxId());
+        if (data.phone() == null || data.phone().isBlank()) {
+            throw new IllegalArgumentException("Supplier phone is required.");
+        }
+        if (repository.existsByTaxIdIgnoreCase(taxId)) {
             throw new IllegalArgumentException("Supplier already exists.");
         }
 
         Supplier supplier = new Supplier(data);
+        supplier.setTaxId(taxId);
+        supplier.setTradeName(data.tradeName() == null || data.tradeName().isBlank()
+            ? null : data.tradeName());
+        supplier.setEmail(data.email() == null || data.email().isBlank() ? null : data.email());
+        supplier.setWhatsapp(data.whatsapp() == null || data.whatsapp().isBlank()
+            ? null : data.whatsapp());
         Supplier savedSupplier = repository.save(supplier);
 
         if (data.address() != null) {
@@ -152,7 +170,7 @@ public class SupplierService {
     @Transactional
     public Supplier update(Long id, PatchSupplierDTO data) {
         Supplier supplier = findSupplier(id);
-        String taxId = data.taxId() != null ? data.taxId() : supplier.getTaxId();
+        String taxId = data.taxId() != null ? normalizeTaxId(data.taxId()) : supplier.getTaxId();
         String legalName = data.legalName() != null ? data.legalName() : supplier.getLegalName();
 
         if (taxId == null || taxId.isBlank()) {
@@ -161,8 +179,24 @@ public class SupplierService {
         if (legalName == null || legalName.isBlank()) {
             throw new IllegalArgumentException("Supplier legal name is required.");
         }
-        if (repository.existsByTaxIdAndIdNot(taxId, id)) {
+        if (data.taxId() != null && repository.existsByTaxIdIgnoreCaseAndIdNot(taxId, id)) {
             throw new IllegalArgumentException("Supplier already exists.");
+        }
+
+        boolean registrationChange = data.legalName() != null || data.tradeName() != null
+            || data.taxId() != null || data.email() != null || data.phone() != null
+            || data.whatsapp() != null || data.avgDeliveryDays() != null
+            || Boolean.TRUE.equals(data.removeAvgDeliveryDays());
+        String phone = data.phone() != null ? data.phone() : supplier.getPhone();
+        if (registrationChange && (phone == null || phone.isBlank())) {
+            throw new IllegalArgumentException("Supplier phone is required.");
+        }
+        if (Boolean.TRUE.equals(data.removeAvgDeliveryDays()) && data.avgDeliveryDays() != null) {
+            throw new IllegalArgumentException(
+                "Cannot provide average delivery days and request removal at the same time.");
+        }
+        if (data.avgDeliveryDays() != null && data.avgDeliveryDays() < 0) {
+            throw new IllegalArgumentException("Average delivery days cannot be negative.");
         }
 
         String email = supplier.getEmail();
@@ -182,12 +216,14 @@ public class SupplierService {
             supplier.setEmail(email);
         }
         if (data.phone() != null) {
-            supplier.setPhone(data.phone().isBlank() ? null : data.phone());
+            supplier.setPhone(phone);
         }
         if (data.whatsapp() != null) {
             supplier.setWhatsapp(data.whatsapp().isBlank() ? null : data.whatsapp());
         }
-        if (data.avgDeliveryDays() != null) {
+        if (Boolean.TRUE.equals(data.removeAvgDeliveryDays())) {
+            supplier.setAvgDeliveryDays(null);
+        } else if (data.avgDeliveryDays() != null) {
             supplier.setAvgDeliveryDays(data.avgDeliveryDays());
         }
         if (data.active() != null) {
@@ -206,6 +242,63 @@ public class SupplierService {
         productSupplierRepository.deleteAllBySupplierId(id);
         repository.delete(supplier);
         repository.flush();
+    }
+
+    private Specification<Supplier> groupedSearch(String query, SupplierSearchField searchField) {
+        SupplierSearchField field = searchField == null ? SupplierSearchField.NAME : searchField;
+        String text = query.trim();
+        String document = text.replaceAll("[^\\p{L}\\p{N}]", "");
+        if (field == SupplierSearchField.DOCUMENT && document.isEmpty()) {
+            throw new IllegalArgumentException("Document search must contain letters or digits.");
+        }
+        return (root, criteria, cb) -> {
+            if (field == SupplierSearchField.NAME) {
+                return cb.or(
+                    cb.like(cb.lower(root.get("legalName")), likePattern(text), '!'),
+                    cb.like(cb.lower(root.get("tradeName")), likePattern(text), '!')
+                );
+            }
+            if (field == SupplierSearchField.DOCUMENT) {
+                return cb.like(
+                    cb.lower(normalizedSearch(cb, root.get("taxId"))),
+                    likePattern(document),
+                    '!'
+                );
+            }
+            var email = cb.like(cb.lower(root.get("email")), likePattern(text), '!');
+            if (!text.matches("[+()0-9.\\s-]+") || !text.matches(".*[0-9].*")) {
+                return email;
+            }
+            String phone = text.replaceAll("[^0-9]", "");
+            return cb.or(
+                email,
+                cb.like(normalizedSearch(cb, root.get("phone")), likePattern(phone), '!'),
+                cb.like(normalizedSearch(cb, root.get("whatsapp")), likePattern(phone), '!')
+            );
+        };
+    }
+
+    private Expression<String> normalizedSearch(CriteriaBuilder cb, Expression<String> value) {
+        return cb.function(
+            "regexp_replace", String.class, value,
+            cb.literal("[^[:alnum:]]"), cb.literal(""), cb.literal("g")
+        );
+    }
+
+    private String likePattern(String text) {
+        return "%" + text.toLowerCase(Locale.ROOT).replace("!", "!!")
+            .replace("%", "!%").replace("_", "!_") + "%";
+    }
+
+    private String normalizeTaxId(String taxId) {
+        if (taxId == null || taxId.isBlank()) {
+            throw new IllegalArgumentException("Supplier tax ID is required.");
+        }
+        String normalized = taxId.replaceAll("[\\s./-]", "").toUpperCase(Locale.ROOT);
+        if (!normalized.matches("[A-Z0-9]{14}")) {
+            throw new IllegalArgumentException("Supplier tax ID must contain 14 letters or digits.");
+        }
+        return normalized;
     }
 
     private Supplier findSupplier(Long id) {

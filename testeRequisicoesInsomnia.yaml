@@ -2004,10 +2004,21 @@ collection:
       created: 1791427699214
       modified: 1791427699214
       isPrivate: false
-      description: Todos os filtros são opcionais. Habilite os parâmetros desejados; sem filtros, lista todos os fornecedores.
+      description: Retorna Page (content, number, size, totalElements, totalPages), não array. Filtros combinados por AND;
+        query usa NAME (padrão), DOCUMENT ou CONTACT. Ordem legalName/id. page 0..100000, size 1..100.
       sortKey: 100
     method: GET
     parameters:
+    - name: page
+      value: '0'
+    - name: size
+      value: '25'
+    - name: query
+      value: Fornecedor
+      disabled: true
+    - name: searchField
+      value: NAME
+      disabled: true
     - name: supplierAddressId
       value: '1'
       disabled: true
@@ -2077,8 +2088,10 @@ collection:
       created: 1791427699214
       modified: 1791427699214
       isPrivate: false
-      description: Cria fornecedor e endereço na mesma transação. Não envie supplierId no endereço. CNPJ deve ser único; complemento
-        é opcional. avgDeliveryDays e active também são opcionais. Copie o ID retornado para supplier_id no ambiente.
+      description: PJ com razão social, CNPJ e telefone obrigatórios. CNPJ novo remove espaços/ponto/barra/hífen,
+        converte para maiúsculas e exige 14 letras ou dígitos ASCII, sem validar dígitos verificadores.
+        Cria fornecedor e endereço opcional na mesma transação; não envie supplierId no endereço.
+        Nome fantasia, e-mail, WhatsApp, prazo e complemento são opcionais. Copie o ID para supplier_id.
       sortKey: 300
     method: POST
     body:
@@ -2110,7 +2123,7 @@ collection:
       modified: 1791427699214
       isPrivate: false
       description: Use este cadastro antes de cadastrar um endereço separado. Copie o ID retornado para supplier_id no ambiente.
-        Use um CNPJ diferente a cada novo cadastro.
+        Use CNPJ único de 14 letras ou dígitos e telefone obrigatório. Nome fantasia é opcional.
       sortKey: 350
     method: POST
     body:
@@ -2138,14 +2151,16 @@ collection:
       created: 1791427699214
       modified: 1791427699214
       isPrivate: false
-      description: Todos os campos são opcionais. Envie apenas o que deseja alterar. O exemplo atualiza contato, prazo de
-        entrega e situação do fornecedor.
+      description: Omissão/null preserva. Edição cadastral exige telefone final preenchido, inclusive no legado;
+        PATCH vazio ou apenas active preserva legado sem telefone. Telefone vazio é recusado.
+        removeAvgDeliveryDays true limpa prazo, false/null/omissão preserva; true com avgDeliveryDays é inválido.
+        Prazo inteiro não negativo; zero é válido. CNPJ omitido preserva legado; novo segue formato estrutural do POST.
       sortKey: 400
     method: PATCH
     body:
       mimeType: application/json
       text: "{\n  \"tradeName\": \"Fornecedor Exemplo Atualizado\",\n  \"email\": \"comercial@fornecedor.example\",\n  \"\
-        phone\": \"8133335555\",\n  \"whatsapp\": \"81999995555\",\n  \"avgDeliveryDays\": 5,\n  \"active\": true\n}"
+        phone\": \"8133335555\",\n  \"whatsapp\": \"81999995555\",\n  \"avgDeliveryDays\": 5,\n  \"removeAvgDeliveryDays\": false,\n  \"active\": true\n}"
     headers:
     - name: X-CSRF-TOKEN
       value: '{{ _.csrf_token }}'

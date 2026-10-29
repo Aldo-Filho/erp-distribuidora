@@ -10,5 +10,6 @@ public record PatchSupplierDTO(
     String phone,
     String whatsapp,
     @PositiveOrZero Integer avgDeliveryDays,
-    Boolean active
+    Boolean active,
+    Boolean removeAvgDeliveryDays
 ) {}

@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import {
+  Truck,
   Users,
   ContactRound,
   ShieldCheck,
@@ -18,6 +19,7 @@ import { navigation } from "../../routes/navigation";
 import ErrorAlert from "../feedback/ErrorAlert";
 
 const icons = {
+  suppliers: Truck,
   customers: ContactRound,
   users: Users,
   roles: KeyRound,

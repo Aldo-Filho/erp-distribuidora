@@ -52,3 +52,16 @@ Detalhes de Clientes e Funcionários e a área do Cargo selecionado mostram Info
 A entrega recebeu revisão direta, sem execução no navegador, testes automatizados, build ou lint. Resultados anteriores de autenticação não comprovam estes fluxos. Roteiro manual futuro: `docs/superpowers/plans/2026-10-29-customers-progress.md`, na raiz.
 
 Em conferência posterior solicitada pelo usuário, a tela em branco foi reproduzida no navegador: havia conflito de resolução entre CustomerForm.jsx e o auxiliar customerForm.js no Windows. O auxiliar agora é customerFormData.js e a importação do componente usa a extensão .jsx. Após a correção, a instância local exibiu a tela de login. Os fluxos autenticados de Clientes ainda não foram validados; não houve execução de testes automatizados, build ou lint.
+
+
+## Fornecedores — 29/10/2026
+
+Rota `/suppliers`, protegida por `suppliers.read`, com pesquisa por nome/documento/contato, situação e paginação real (25/50/100). Cadastro PJ com razão social, CNPJ e telefone obrigatórios; nome fantasia, e-mail, WhatsApp e prazo opcionais. Edição preserva documento legado inalterado e exige telefone cadastral. Prazo zero é exibido e a limpeza envia `removeAvgDeliveryDays=true`.
+
+Cadastro/edição/detalhes, ativação/inativação confirmada e endereços usam as permissões existentes. Não há exclusão definitiva de fornecedor na tela nem gestão de vínculos nesta etapa. Detalhes exibem datas reais via RecordMetadata, sem inferir datas de endereços.
+
+Endereço inicial opcional no POST; demais gerenciados depois, permitindo repetir tipos e preservando erros/rascunhos. País Brasil/BR/BRA habilita ViaCEP pelo hook já usado em Clientes; troca de país desmonta e cancela a consulta. Outros países mantêm preenchimento manual. Complemento é opcional. A consulta pública não envia cookies ou CSRF. Gravação e fechamento cancelam a assistência; respostas atrasadas não sobrescrevem edições.
+
+Formulários usam rascunhos em memória por usuário/modo/ID, confirmação de descarte, bloqueio de envio repetido e payload parcial sem PATCH quando nada mudou. Estados de carregamento, erro com nova tentativa, vazio e ausência por ID são distintos. A lista cancela requisições antigas, espera 400 ms para busca textual e ajusta página após redução do resultado.
+
+Arquivos específicos em `src/pages/Suppliers` e `src/services/suppliers.js`; estilos e componentes existentes reutilizados sem remodelar Clientes. Revisão estática apenas: sem testes, build, lint, servidor ou verificação visual. Roteiro futuro no plano/progresso de Fornecedores em `docs/superpowers/plans`, na raiz.

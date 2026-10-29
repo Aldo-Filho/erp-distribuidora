@@ -1,5 +1,6 @@
 export const navigation = [
   { path: "/customers", label: "Clientes", permission: "customers.read", icon: "customers" },
+  { path: "/suppliers", label: "Fornecedores", permission: "suppliers.read", icon: "suppliers" },
   {
     path: "/access/users",
     label: "Funcionários",

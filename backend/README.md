@@ -160,3 +160,24 @@ Complemento agora é opcional nos dois cadastros de endereço. No cadastro, ause
 A tela oferece ativação/inativação, mantendo o DELETE de cliente na API. Remover endereço é operação separada. Nenhum preço de pedido antigo é recalculado.
 
 Revisão desta entrega: leitura direta dos arquivos. Sem testes, build, lint, SQL, migrations ou inicialização. `backend/tools/backend-audit.cjs`, executor legado ignorado pelo Git, foi adaptado para consumir Page em Clientes e percorrer as páginas preservando filtros; os demais endpoints mantêm arrays. A adaptação recebeu revisão direta e não foi executada. Ela não valida as demais compatibilidades do executor antigo com autenticação/CSRF atuais. Nenhum resultado antigo de autenticação valida esta entrega. Roteiro manual e progresso: `docs/superpowers/plans/2026-10-29-customers-progress.md`, na raiz.
+
+
+## Fornecedores — contrato atualizado em 29/10/2026
+
+`GET /supplier/search` retorna `Page<Supplier>` em vez de array: consumir `content`, `number`, `size`, `totalElements` e `totalPages`. Paginação no banco com `page=0`, `size=25`; page entre 0 e 100000 e size entre 1 e 100, limites inválidos retornam 400. Ordenação fixa por `legalName`/`id` ascendentes. GET por ID ausente continua 204; buscas de endereços e vínculos continuam listas.
+
+Filtros individuais preservados e combinados por AND: `supplierAddressId`, `legalName`, `tradeName`, `taxId`, `email`, `phone`, `whatsapp`, `avgDeliveryDays`, `active`, `productId`, `brandId`, `categoryId`. Joins usam distinct para conteúdo e contagem. Nome/fantasia/e-mail são parciais sem caixa; demais mantêm igualdade. `%`, `_` e `!` são literais nas buscas parciais.
+
+`query` com `searchField=NAME|DOCUMENT|CONTACT` (padrão NAME) acrescenta um grupo AND: NAME procura razão social OU fantasia; DOCUMENT compara parcialmente letras/dígitos sem pontuação; CONTACT procura e-mail e acrescenta telefone/WhatsApp normalizados apenas quando toda a entrada tem formato de telefone. E-mail com números não vira busca de telefone. Query branca não filtra; documento sem letras/dígitos e enum inválido retornam 400.
+
+Exemplo: `/supplier/search?query=Distribuidora&searchField=NAME&active=true&page=0&size=25`.
+
+POST PJ exige `legalName`, `taxId` e `phone`; nome fantasia, e-mail, WhatsApp e prazo são opcionais. CNPJ novo/alterado remove apenas espaços, ponto, barra e hífen, converte para maiúsculas e exige 14 caracteres ASCII alfanuméricos. Não valida dígitos verificadores ou situação fiscal. Duplicidade compara sem diferença de caixa e exclui o próprio ID na edição; constraint existente permanece. Documentos históricos omitidos/null não são regravados ou normalizados em lote. Equivalências históricas com pontuação podem não ser detectadas pela comparação de unicidade; nenhum dado foi corrigido automaticamente.
+
+PATCH omitido/null preserva; telefone vazio é inválido. Qualquer campo cadastral informado exige telefone final preenchido, inclusive no legado. PATCH vazio ou exclusivamente de situação (com active e sem campos cadastrais/remoção true) permite manter legado sem telefone. `removeAvgDeliveryDays` é Boolean opcional: true limpa, omitido/null/false preserva; true com prazo informado é rejeitado. Prazo inteiro não negativo; zero permanece diferente de ausência. Textos opcionais vazios limpam.
+
+POST com primeiro endereço opcional continua transacional. País e campos de endereço existentes são obrigatórios quando fornecido; complemento opcional. Múltiplos endereços do mesmo tipo continuam permitidos, mantendo a proteção existente contra duplicatas. PATCH de endereço não transfere fornecedor. Não há migration nesta entrega. Nenhum vínculo ou regra de compra foi alterado; DELETE de fornecedor permanece na API, ausente da tela.
+
+Permissões existentes: `suppliers.read` consulta, `suppliers.create` cadastra fornecedor/endereço, `suppliers.update` edita fornecedor/situação/endereço e `suppliers.delete` exclui endereço na interface. A API continua sendo a autoridade de autorização.
+
+Revisão por leitura direta, sem testes, build, lint, SQL, migrations ou serviços. Após autorização específica, o executor ignorado `backend/tools/backend-audit.cjs` foi adaptado para Page em Fornecedores: checkList (incluindo cenários em tabela) percorre páginas preservando filtros e a consulta direta de rollback verifica content vazio e totais zerados. A adaptação recebeu somente revisão direta; o executor não foi executado e isso não comprova compatibilidade das demais verificações legadas com as regras e a autenticação atuais. Roteiro de validação futura e registro da entrega em `docs/superpowers/plans/2026-10-29-suppliers-progress.md`, relativo à raiz.

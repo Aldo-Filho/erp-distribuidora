@@ -14,5 +14,7 @@ public record SupplierFilter(
     Boolean active,
     Long productId,
     Long brandId,
-    Long categoryId
+    Long categoryId,
+    String query,
+    SupplierSearchField searchField
 ) {}

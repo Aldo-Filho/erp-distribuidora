@@ -102,7 +102,7 @@ Extraído por leitura dos controllers do checkout, sem executar requisições. R
 | GET | `/stockMovement/search` | stock.read | stock/movement/StockMovementController.java |
 | GET | `/stockMovement/{id}` | stock.read | stock/movement/StockMovementController.java |
 | POST | `/supplier` | suppliers.create | supplier/SupplierController.java |
-| GET | `/supplier/search` | suppliers.read | supplier/SupplierController.java |
+| GET | `/supplier/search` | suppliers.read | supplier/SupplierController.java; Page<Supplier>, page=0/size=25, query/searchField |
 | DELETE | `/supplier/{id}` | suppliers.delete | supplier/SupplierController.java |
 | GET | `/supplier/{id}` | suppliers.read | supplier/SupplierController.java |
 | PATCH | `/supplier/{id}` | suppliers.update | supplier/SupplierController.java |

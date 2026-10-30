@@ -1,67 +1,26 @@
-# Para rodar o projeto
+# JamsHub — Frontend
 
-`npm run dev`
+Interface web do JamsHub, desenvolvida com React, Vite e Tailwind CSS. Permite gerenciar cadastros, compras, vendas, estoque e acessos conforme as permissões do usuário.
 
-## Acesso e administração
+## Requisitos
 
-Configurar primeiro o backend pelo application.yaml, conforme backend/README.md, incluindo PostgreSQL e SMTP. Se ainda não houver administrador, criá-lo pelo bootstrap em um terminal interativo e desativar esse modo antes de usar a aplicação. Não é necessário selecionar perfil ou cadastrar variáveis de ambiente. O navegador usa /api pelo proxy existente para localhost:8080. O roteador react-router-dom foi instalado com lockfile atualizado; Clientes está integrado conforme a seção específica abaixo.
+- Node.js 22.12 ou superior e npm.
+- Backend em execução em `http://localhost:8080`.
 
-Rotas públicas: /login, /accept-invitation, /forgot-password e /reset-password.
-Rotas privadas: /customers, /account, /access/users, /access/roles, /access/invitations, /security/sessions, /security/settings e /security/audit.
+## Como rodar
 
-Menus e rotas administrativas seguem as permissões da sessão. Todo funcionário acessa a própria conta e sessões. Sem tela administrativa liberada, o acesso abre Minha conta e informa a ausência de módulos disponíveis.
+No terminal, a partir da raiz do repositório:
 
-A auditoria de acesso mantém a permissão security.audit.read. Ações, resultados e filtros são apresentados em português; responsável e alvo exibem nomes registrados no evento e seus IDs. O filtro por nome considera o nome histórico. Eventos anteriores à melhoria não possuem esses nomes e mostram Nome não registrado. Atualizar o backend e aplicar a migration de auditoria pelo fluxo normal do Flyway antes de usar os novos campos. Não houve validação no navegador nesta alteração.
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
 
-Cookies são HttpOnly e não são lidos pelo JavaScript. O cliente obtém CSRF antes das escritas, renova após autenticação e não repete mutações automaticamente. Senhas/desafios/tokens ficam somente em memória; links removem o token da URL após captura. Nenhum segredo é salvo em localStorage/sessionStorage. BroadcastChannel sinaliza mudança de sessão entre abas, sem transmitir credenciais.
+Abra `http://localhost:5173` ou o endereço indicado pelo Vite. Entre com uma conta cadastrada; para criar o primeiro administrador, consulte o [README do backend](../backend/README.md#primeiro-acesso).
 
-O aviso surge cinco minutos antes do prazo calculado pelo servidor. Polling atualiza permissões, mas não a inatividade. Atividade só é sinalizada com interação recente em aba visível, no máximo uma vez por minuto. O servidor sempre decide a validade.
+## Conexão com a API
 
-Formulários não prometem recuperação após recarregar a página; copie dados não salvos antes da expiração. A interface possui estilos para 320 px. Após autorização, os 9 testes do cliente de API e o build passaram; ainda não houve validação visual/E2E ou acessibilidade em navegador. Não foi executado lint.
+As chamadas usam `/api`, encaminhado pelo proxy em `vite.config.js` para `http://localhost:8080`. Se mudar a porta do backend, ajuste esse destino.
 
-Rascunhos não secretos da edição de funcionário e criação de convite sobrevivem em memória da aba à expiração, para retomar ao entrar com o mesmo usuário. Logout, troca de conta e reload descartam esses rascunhos. A mudança de sessão em outra aba limpa o CSRF local; a próxima escrita obtém o token atual, sem repetir automaticamente a operação.
-
-SMTP do Gmail está configurado; autenticação e entrega real ainda precisam ser confirmadas. “Envio solicitado” e “submetido ao SMTP” não significam entrega confirmada.
-
-# Formatação do projeto
-
-O projeto usa 4 espaços em Java e XML e 2 espaços em JavaScript, JSX, CSS,
-HTML, JSON e YAML. As regras estão em `.editorconfig` e `.prettierrc.json`
-na raiz do repositório.
-
-A partir da pasta `frontend`, execute `npm run format` para formatar o projeto
-ou `npm run format:check` para conferir a formatação.
-
-As migrações existentes do Flyway, os scripts do Maven Wrapper, os arquivos
-gerados e o arquivo de dependências `package-lock.json` ficam fora da formatação.
-As migrações são preservadas para manter seus checksums.
-
-
-## Clientes e informações do registro
-
-A rota `/customers` e o menu Clientes exigem `customers.read`. A busca usa paginação real do backend (25/50/100), pesquisa Nome/CPF-CNPJ/Contato e filtros de tipo/situação. O backend deve estar atualizado para `Page<Customer>` e para os contratos descritos em `backend/README.md`.
-
-Cadastro exige `customers.create`; edição e ativação/inativação exigem `customers.update`. A tela não exclui clientes. Endereços possuem inclusão/edição com essas permissões e exclusão separada com `customers.delete`. Edição mantém PF/PJ fixo. Endereço inicial opcional faz parte do POST único; complemento é opcional e requer a V6 aplicada pelo fluxo autorizado.
-
-Tabela existente é opcional. As opções ativas são consultadas somente com `prices.read`; sem permissão ou com erro, o vínculo atual é preservado e cadastro sem tabela continua disponível. A tabela atual inativa permanece identificada. Remover tabela e nascimento usa flags explícitas no PATCH; os metadados não são enviados. Rascunhos de Clientes/endereços ficam somente em memória por usuário/registro, descartados ao salvar/cancelar/logout/trocar conta/reload. Não há garantia de recuperação após reload.
-
-Consultar CEP é uma ação explícita pelo ViaCEP, com HTTPS público, sem credenciais ou CSRF do ERP, timeout de oito segundos, cancelamento e proteção contra respostas antigas/correções manuais. Correções preenchidas pedem confirmação antes de substituir; número e complemento permanecem manuais. Falha não impede preenchimento manual. A hospedagem futura precisa permitir `https://viacep.com.br` na política connect-src, se houver CSP.
-
-Detalhes de Clientes e Funcionários e a área do Cargo selecionado mostram Informações do registro com as datas da API. Cargo possui somente criação. Timestamp sem offset conserva o calendário/hora recebido; instante com offset usa o fuso do navegador. Data nula de atualização significa Sem atualização registrada. Isso não altera permissões de auditoria nem cria histórico/autoria.
-
-A entrega recebeu revisão direta, sem execução no navegador, testes automatizados, build ou lint. Resultados anteriores de autenticação não comprovam estes fluxos. Roteiro manual futuro: `docs/superpowers/plans/2026-10-29-customers-progress.md`, na raiz.
-
-Em conferência posterior solicitada pelo usuário, a tela em branco foi reproduzida no navegador: havia conflito de resolução entre CustomerForm.jsx e o auxiliar customerForm.js no Windows. O auxiliar agora é customerFormData.js e a importação do componente usa a extensão .jsx. Após a correção, a instância local exibiu a tela de login. Os fluxos autenticados de Clientes ainda não foram validados; não houve execução de testes automatizados, build ou lint.
-
-
-## Fornecedores — 29/10/2026
-
-Rota `/suppliers`, protegida por `suppliers.read`, com pesquisa por nome/documento/contato, situação e paginação real (25/50/100). Cadastro PJ com razão social, CNPJ e telefone obrigatórios; nome fantasia, e-mail, WhatsApp e prazo opcionais. Edição preserva documento legado inalterado e exige telefone cadastral. Prazo zero é exibido e a limpeza envia `removeAvgDeliveryDays=true`.
-
-Cadastro/edição/detalhes, ativação/inativação confirmada e endereços usam as permissões existentes. Não há exclusão definitiva de fornecedor na tela nem gestão de vínculos nesta etapa. Detalhes exibem datas reais via RecordMetadata, sem inferir datas de endereços.
-
-Endereço inicial opcional no POST; demais gerenciados depois, permitindo repetir tipos e preservando erros/rascunhos. País Brasil/BR/BRA habilita ViaCEP pelo hook já usado em Clientes; troca de país desmonta e cancela a consulta. Outros países mantêm preenchimento manual. Complemento é opcional. A consulta pública não envia cookies ou CSRF. Gravação e fechamento cancelam a assistência; respostas atrasadas não sobrescrevem edições.
-
-Formulários usam rascunhos em memória por usuário/modo/ID, confirmação de descarte, bloqueio de envio repetido e payload parcial sem PATCH quando nada mudou. Estados de carregamento, erro com nova tentativa, vazio e ausência por ID são distintos. A lista cancela requisições antigas, espera 400 ms para busca textual e ajusta página após redução do resultado.
-
-Arquivos específicos em `src/pages/Suppliers` e `src/services/suppliers.js`; estilos e componentes existentes reutilizados sem remodelar Clientes. Revisão estática apenas: sem testes, build, lint, servidor ou verificação visual. Roteiro futuro no plano/progresso de Fornecedores em `docs/superpowers/plans`, na raiz.
+Para os links de convite e recuperação, mantenha `erp.auth.public-base-url` no backend igual ao endereço do frontend. Não é necessário criar um arquivo `.env` para a configuração local atual.

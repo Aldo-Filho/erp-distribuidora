@@ -1,183 +1,47 @@
-# Para rodar o Projeto:
+# JamsHub — Backend
 
-- Clone o repositório e abra o projeto na sua IDE;
-- Certifique-se de ter o Java 21+ e PostgreSQL instalados;
-- Crie um banco de dados PostgreSQL para o projeto (nome = "erp");
-  Configure a conexão diretamente em src/main/resources/application.yaml;
-  Execute o projeto Spring Boot pela IDE no arquivo: ErpApplication.java;
-  Após iniciar o projeto, utilize Postman ou Insomnia para realizar as requisições;
+API do JamsHub, desenvolvida com Java 21, Spring Boot e PostgreSQL. Concentra as regras de cadastros, compras, vendas, estoque e controle de acesso.
 
-## O arquivo com as requisições para teste está localizado na raiz da pasta principal do projeto, com o nome:
+## Requisitos
 
-`testeRequisições`
+- JDK 21 ou superior.
+- PostgreSQL em execução.
 
-- Esse arquivo pode ser importado diretamente no Postman ou Insomnia para facilitar os testes da API.
+O Maven Wrapper está incluído no projeto.
 
-## Acesso local — configuração antes de executar
+## Como rodar
 
-Após autorização específica, a compilação e 17 testes de integração passaram em PostgreSQL isolado, com V1–V4 aplicadas e Hibernate validado. O banco de desenvolvimento não foi acessado. Não iniciar contra um banco existente sem revisar os checksums atuais e preparar backup. V1/V2 não foram reescritas por esta implementação; eventuais diferenças locais anteriores continuam existentes. Não usar Flyway repair para ocultá-las.
-
-Use Java 21 e o Spring Boot 4.1.0 existente. O BOM local gerencia Security 7.1.0 e Session 4.1.0. Os starters security, session-jdbc e mail foram declarados no pom e compilados na verificação, com JDK 25 gerando target Java 21.
-
-Por solicitação do usuário, a configuração local fica somente em src/main/resources/application.yaml, com valores diretos. Não é necessário ativar perfil nem cadastrar variáveis ERP_* no IntelliJ. Os arquivos application-local.yaml e application-production.yaml foram removidos.
-
-| Propriedade no YAML | Uso |
-| --- | --- |
-| spring.datasource.url | URL JDBC local jdbc:postgresql://localhost:5432/erp |
-| spring.datasource.username / password | Credenciais locais do PostgreSQL, restauradas da configuração anterior |
-| erp.auth.public-base-url | URL do frontend: http://localhost:5173 |
-| erp.auth.mail-from | Remetente configurado: aldinhuuu145@gmail.com |
-| spring.mail.host / port | Gmail SMTP: smtp.gmail.com:587 |
-| spring.mail.username / password | Autenticação SMTP quando necessária |
-| spring.mail.properties.mail.smtp.auth / starttls.enable | Ativados; STARTTLS obrigatório e verificação de identidade TLS habilitada |
-| erp.auth.login-per-ip-per-minute / recovery-per-ip-per-hour | Limites locais: 60/min e 30/h |
-| erp.auth.argon-concurrency | Máximo de operações caras de senha: 2 |
-
-O cookie permite HTTP no ambiente local por server.servlet.session.cookie.secure=false. A configuração de hospedagem/HTTPS será tratada na etapa de implantação; não há perfil de produção nesta entrega.
-
-O envio real foi configurado para o Gmail com a senha de app fornecida pelo usuário. O valor da senha não é reproduzido nesta documentação. Reiniciar o backend é necessário para carregar as propriedades novas. Ainda é necessário confirmar autenticação/entrega no provedor; a configuração, por si só, não comprova entrega.
-
-Enquanto erp.auth.public-base-url permanecer em http://localhost:5173, os links recebidos devem ser abertos no computador em que o frontend está rodando. A publicação para acesso por outros dispositivos continua na etapa futura.
-
-Flyway é o único criador do schema de sessões. A V3 interrompe em colisões de lower(btrim(email)); resolver as contas explicitamente, sem apagar/mesclar automaticamente. Confirmar o histórico Flyway antes da primeira inicialização autorizada. A V4 cria cinco novos cargos; não promove usuários/cargos fictícios nem assume IDs fixos.
-
-### Primeiro administrador
-
-O bootstrap interativo cria o primeiro administrador somente quando não houver administrador ativo. No application.yaml, erp.auth.bootstrap-enabled permanece false para o uso normal; erp.auth.bootstrap-role-id só é necessário ao criar a conta inicial.
-
-Execute os comandos abaixo no PowerShell, a partir da raiz do projeto. Use Java 21 ou superior e mantenha o PostgreSQL em execução, com a conexão configurada no application.yaml.
-
-1. Entre na pasta do backend e gere o JAR atualizado, sem executar os testes:
+1. Crie um banco PostgreSQL chamado `erp`.
+2. Em `src/main/resources/application.yaml`, ajuste `spring.datasource.url`, `username` e `password` para sua instalação.
+3. No PowerShell, a partir da raiz do repositório:
 
 ```powershell
-Set-Location .\backend
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+A API fica em `http://localhost:8080`. O Flyway aplica as migrations na inicialização; para uma instalação nova, utilize um banco vazio.
+
+Para convites e recuperação de senha, configure também `spring.mail`, `erp.auth.mail-from` e `erp.auth.public-base-url` (frontend local: `http://localhost:5173`). Use suas próprias credenciais.
+
+## Primeiro acesso
+
+Se já houver um administrador cadastrado, utilize essa conta. Em um banco novo, após a primeira inicialização, encerre a aplicação e consulte no PostgreSQL:
+
+```sql
+SELECT role_id FROM roles WHERE name = 'Administrador' AND active = true;
+```
+
+Na pasta `backend`, gere o JAR sem executar testes:
+
+```powershell
 .\mvnw.cmd -DskipTests package
 ```
 
-2. Se o banco ainda não tiver as tabelas e os cargos das migrations, inicie normalmente para o Flyway criá-los:
+Em um terminal interativo, execute o comando abaixo, substituindo `ID_DO_CARGO` pelo resultado da consulta:
 
 ```powershell
-java -jar .\target\erp-0.0.1-SNAPSHOT.jar --erp.auth.bootstrap-enabled=false
+java -jar .\target\erp-0.0.1-SNAPSHOT.jar --erp.auth.bootstrap-enabled=true --erp.auth.bootstrap-role-id=ID_DO_CARGO
 ```
 
-Após a inicialização, encerre com Ctrl+C antes de executar o bootstrap. Se as migrations já estiverem aplicadas, pule este passo.
-
-3. No pgAdmin, abra o Query Tool do banco configurado no YAML e consulte os cargos ativos com as três permissões exigidas:
-
-```sql
-SELECT r.role_id, r.name
-FROM roles r
-JOIN role_permissions rp ON rp.role_id = r.role_id
-JOIN permissions p ON p.permission_id = rp.permission_id
-WHERE r.active = true
-  AND p.permission_key IN (
-      'access.users.manage',
-      'access.roles.manage',
-      'security.settings.manage'
-  )
-GROUP BY r.role_id, r.name
-HAVING count(DISTINCT p.permission_key) = 3
-ORDER BY r.role_id;
-```
-
-Copie o role_id do cargo desejado. Se a consulta não retornar cargos, confira a aplicação da V4 antes de continuar. O bootstrap exige um cargo existente; não cria cargos nem concede permissões.
-
-4. De volta ao PowerShell, ainda na pasta backend, execute o bootstrap. **Substitua 21 pelo role_id retornado na consulta**; esse número é apenas um exemplo:
-
-```powershell
-java -jar .\target\erp-0.0.1-SNAPSHOT.jar --erp.auth.bootstrap-enabled=true --erp.auth.bootstrap-role-id=21
-```
-
-O terminal solicita nome, e-mail, senha de 15 a 128 caracteres e confirmação. A senha é digitada sem exibir caracteres, nem asteriscos; digite normalmente e pressione Enter. Não é necessário gerar o hash manualmente. Use um terminal interativo, pois o console de execução da IDE pode não oferecer a leitura protegida de senha exigida pelo bootstrap. O bootstrap recusa e-mails já cadastrados e não promove contas existentes.
-
-Ao mostrar Administrator created, a conta foi criada. O encerramento com Bootstrap finished. Disable bootstrap mode and restart. é intencional. Reiniciar normalmente, sem os argumentos de bootstrap; se o modo foi ativado no YAML, voltar bootstrap-enabled para false antes de reiniciar. Durante o bootstrap, as requisições HTTP ficam bloqueadas.
-
-5. Inicie o backend com o bootstrap desativado:
-
-```powershell
-java -jar .\target\erp-0.0.1-SNAPSHOT.jar --erp.auth.bootstrap-enabled=false
-```
-
-Entre no frontend com o e-mail e a senha informados. A conta e o hash da senha ficam no PostgreSQL. O bootstrap serve apenas para o primeiro administrador: se já houver um administrador ativo, ele interrompe sem criar outro usuário. Cadastros posteriores devem usar o fluxo de convites da aplicação.
-
-O usuário já confirmou a criação do administrador anteriormente. Se continuar usando aquele banco e a conta ainda existir, não repetir o bootstrap. A restauração deste procedimento não modifica contas no banco.
-
-### Auditoria de acesso
-
-A consulta /security/audit/search continua restrita à permissão security.audit.read. A tela mostra ações e resultados em português, responsável e alvo com nome e ID, e filtros por nome registrado do responsável, ID, período, ação e resultado.
-
-A V5__enrich-security-audit.sql acrescenta somente os campos de identificação histórica na auditoria. Ela não cria administradores nem altera credenciais; o primeiro administrador continua pelo bootstrap. A migration será aplicada pelo Flyway na próxima inicialização com o backend atualizado; não foi aplicada durante esta alteração.
-
-Novos eventos guardam os nomes no momento da ação, preservando-os após renomeações e exclusões. Eventos antigos continuam disponíveis com os IDs e a indicação Nome não registrado, pois os nomes históricos não foram armazenados. O filtro por nome considera o nome gravado no evento. Operações automáticas aparecem como Sistema; solicitações sem identidade comprovada aparecem como Não identificado.
-
-Aceite de convite e redefinição com token válido identificam o funcionário que comprovou acesso ao link. Solicitar uma recuperação pública não identifica automaticamente o solicitante como dono da conta; o funcionário correspondente, quando encontrado, é apenas o alvo. Conteúdo de e-mail, senhas e tokens não são expostos na auditoria.
-
-Revisão desta mudança feita por leitura direta. Testes, build, lint, inicialização e aplicação da V5 não foram executados. A suíte existente teve apenas a expectativa de versões atualizada para V1–V5; os resultados anteriores continuam referentes a V1–V4.
-
-### Contratos e limites
-
-O cliente local usa /api pelo proxy do Vite. Antes de qualquer escrita, GET /auth/csrf devolve token/headerName. Enviar o header e manter o cookie HttpOnly. Após login/logout, obter novo CSRF. Não repetir gravações automaticamente. Os contratos completos estão em docs/superpowers/plans/2026-10-23-authentication-and-access.md, relativo à raiz do repositório.
-
-401 indica ausência/expiração, 403 indica permissão/CSRF, 409 indica conflito (incluindo desafio de substituição) e 429 indica contenção com Retry-After. POST /user e escritas de catálogo /permission retornam 405 para autenticados; novos funcionários entram por convite.
-
-Política inicial: 60 min de inatividade, 720 min absolutos e 2 sessões. Faixas administrativas: 15–240, 60–1440 e 1–5; inatividade não ultrapassa o prazo absoluto. /auth/session e polling não renovam atividade; /auth/activity exige sessão/CSRF e só atualiza uma vez por minuto.
-
-O principal JDBC contém identidade/versão, sem entidades, senhas ou concessões permanentes. Revogações mantêm tombstones até limpeza técnica; a autorização exige admissão lógica válida. Argon2 ocorre fora da guarda; mutações de acesso e admissão são serializadas por security_settings.
-
-Ao autenticar, o contexto anônimo é invalidado e substituído por uma sessão com nova linha física no JDBC. A ampliação dos prazos revoga antes as sessões expiradas pelos limites anteriores; os novos limites não reativam acesso encerrado. Esses caminhos receberam revisão independente e testes de integração na rodada autorizada.
-
-Convites, recuperação e alteração administrativa normalizam e validam o e-mail no service, usando a regra @Email sobre o valor final. O PATCH mantém o bloqueio de usuário e as demais validações; senha administrativa continua recusada.
-
-Convites duram 24 h, recuperação 15 min e desafios 2 min. Tokens são hashes no banco; links usam fragmento e URL-base configurada. E-mail é enfileirado em memória após commit, com fila limitada e timeout; SUBMITTED significa aceitação pelo SMTP, não entrega na caixa. Falha mantém evento/estado para reenvio. Reiniciar durante o envio pode deixar PENDING; não há outbox durável ou garantia de entrega única.
-
-Em movimentos, saídas e novos recebimentos, operador vem da sessão. Campo legado é opcional; se presente, deve coincidir. Retry de recebimento exige purchases.receive, usa o ator histórico (mesmo inativo) e preserva quantidades/notas/requestId. Responsável comercial de pedidos/compras continua separado.
-
-products.read/suppliers.read incluem custos nos grafos retornados. Não há sigilo de custo/margem por cargo nesta entrega. Financeiro não tem permissões/telas fictícias. Auditoria usa 25 registros por página (máximo 100), sem edição/exclusão e sem retenção automática.
-
-Os testes autorizados anteriores exercitaram sessões JDBC, cookies/CSRF, concorrência pontual, ORM/Flyway V1–V4, convites/recuperação e SMTP de captura local. O relatório está em docs/superpowers/plans/2026-10-23-authentication-and-access-verification.md, na raiz. Isso não valida SMTP externo, teste de carga ou implantação. Não houve nova execução após a restauração do bootstrap.
-
-Para repetir somente com autorização: executar tools/run-auth-verification.ps1 a partir de backend. O executor cria banco novo auth_verify_ na porta 55433 e encerra os processos; não apaga bancos anteriores. O AuthenticationManager explícito impede a criação da conta padrão de desenvolvimento do Spring; credenciais do ERP continuam exclusivamente no fluxo AuthenticationService.
-
-A suíte mantém o bootstrap desativado e cria suas próprias contas no banco isolado, sem usar credenciais reais. A expectativa atual de migrations inclui V1–V5, ainda sem execução após a melhoria da auditoria.
-
-
-## Clientes — contrato atualizado em 29/10/2026
-
-`GET /customer/search` passou de array para `Page<Customer>`. Consumir `content`, `number`, `size`, `totalElements` e `totalPages`; não depender dos demais campos internos de serialização. `GET /customer/{id}` ausente mantém 204. Endereços e tabelas de preços continuam retornando listas em suas buscas.
-
-Paginação no banco: `page=0`, `size=25` por padrão; page entre 0 e 100000, size entre 1 e 100; limites inválidos retornam 400. Ordem fixa: `legalName` e `id`, ascendentes. Página além dos resultados retorna conteúdo vazio com total filtrado.
-
-Todos os filtros individuais foram mantidos: `personType`, `taxId`, `legalName`, `tradeName`, `municipalReg`, `stateReg`, `email`, `phone`, `whatsapp`, `priceTableId`, `active`. Combinam-se por AND. Nome/fantasia/email continuam parciais sem diferença de caixa; os demais mantêm igualdade. Curingas `%`/`_` fornecidos são literais.
-
-A busca agrupada usa `query` e `searchField=NAME|DOCUMENT|CONTACT` (padrão NAME). NAME procura nome OU fantasia; DOCUMENT compara parcialmente letras/dígitos sem pontuação, preservando zeros e letras; CONTACT procura email, acrescentando telefone/WhatsApp somente para consulta composta por dígitos e pontuação de telefone. Email com dígitos não vira busca numérica. Query ausente/branca não restringe; documento que se torne vazio e campo inválido retornam 400. O grupo combina-se com os filtros individuais por AND.
-
-Exemplo: `/customer/search?query=Mercado&searchField=NAME&active=true&page=0&size=25`.
-
-`PATCH /customer/{id}` aceita `removeBirthDate` Boolean opcional: true remove; omitido/null/false preserva. A combinação de true e `birthDate` preenchido é rejeitada antes dos setters; nascimento futuro continua inválido. `removePriceTable` mantém a mesma intenção explícita e não pode ser combinado com novo `priceTableId`.
-
-Complemento agora é opcional nos dois cadastros de endereço. No cadastro, ausente/vazio/branco vira null; no PATCH, omissão/null preserva e vazio/branco limpa. O POST com endereço inicial continua transacional. A nova `V6__allow-null-customer-address-complement.sql` apenas relaxa NOT NULL; V1–V5 não foram editadas e os dados existentes são preservados. A V6 foi criada, **não aplicada**. A próxima inicialização com Flyway poderá aplicá-la; iniciar contra o banco exige autorização e revisão do histórico/backup.
-
-A tela oferece ativação/inativação, mantendo o DELETE de cliente na API. Remover endereço é operação separada. Nenhum preço de pedido antigo é recalculado.
-
-Revisão desta entrega: leitura direta dos arquivos. Sem testes, build, lint, SQL, migrations ou inicialização. `backend/tools/backend-audit.cjs`, executor legado ignorado pelo Git, foi adaptado para consumir Page em Clientes e percorrer as páginas preservando filtros; os demais endpoints mantêm arrays. A adaptação recebeu revisão direta e não foi executada. Ela não valida as demais compatibilidades do executor antigo com autenticação/CSRF atuais. Nenhum resultado antigo de autenticação valida esta entrega. Roteiro manual e progresso: `docs/superpowers/plans/2026-10-29-customers-progress.md`, na raiz.
-
-
-## Fornecedores — contrato atualizado em 29/10/2026
-
-`GET /supplier/search` retorna `Page<Supplier>` em vez de array: consumir `content`, `number`, `size`, `totalElements` e `totalPages`. Paginação no banco com `page=0`, `size=25`; page entre 0 e 100000 e size entre 1 e 100, limites inválidos retornam 400. Ordenação fixa por `legalName`/`id` ascendentes. GET por ID ausente continua 204; buscas de endereços e vínculos continuam listas.
-
-Filtros individuais preservados e combinados por AND: `supplierAddressId`, `legalName`, `tradeName`, `taxId`, `email`, `phone`, `whatsapp`, `avgDeliveryDays`, `active`, `productId`, `brandId`, `categoryId`. Joins usam distinct para conteúdo e contagem. Nome/fantasia/e-mail são parciais sem caixa; demais mantêm igualdade. `%`, `_` e `!` são literais nas buscas parciais.
-
-`query` com `searchField=NAME|DOCUMENT|CONTACT` (padrão NAME) acrescenta um grupo AND: NAME procura razão social OU fantasia; DOCUMENT compara parcialmente letras/dígitos sem pontuação; CONTACT procura e-mail e acrescenta telefone/WhatsApp normalizados apenas quando toda a entrada tem formato de telefone. E-mail com números não vira busca de telefone. Query branca não filtra; documento sem letras/dígitos e enum inválido retornam 400.
-
-Exemplo: `/supplier/search?query=Distribuidora&searchField=NAME&active=true&page=0&size=25`.
-
-POST PJ exige `legalName`, `taxId` e `phone`; nome fantasia, e-mail, WhatsApp e prazo são opcionais. CNPJ novo/alterado remove apenas espaços, ponto, barra e hífen, converte para maiúsculas e exige 14 caracteres ASCII alfanuméricos. Não valida dígitos verificadores ou situação fiscal. Duplicidade compara sem diferença de caixa e exclui o próprio ID na edição; constraint existente permanece. Documentos históricos omitidos/null não são regravados ou normalizados em lote. Equivalências históricas com pontuação podem não ser detectadas pela comparação de unicidade; nenhum dado foi corrigido automaticamente.
-
-PATCH omitido/null preserva; telefone vazio é inválido. Qualquer campo cadastral informado exige telefone final preenchido, inclusive no legado. PATCH vazio ou exclusivamente de situação (com active e sem campos cadastrais/remoção true) permite manter legado sem telefone. `removeAvgDeliveryDays` é Boolean opcional: true limpa, omitido/null/false preserva; true com prazo informado é rejeitado. Prazo inteiro não negativo; zero permanece diferente de ausência. Textos opcionais vazios limpam.
-
-POST com primeiro endereço opcional continua transacional. País e campos de endereço existentes são obrigatórios quando fornecido; complemento opcional. Múltiplos endereços do mesmo tipo continuam permitidos, mantendo a proteção existente contra duplicatas. PATCH de endereço não transfere fornecedor. Não há migration nesta entrega. Nenhum vínculo ou regra de compra foi alterado; DELETE de fornecedor permanece na API, ausente da tela.
-
-Permissões existentes: `suppliers.read` consulta, `suppliers.create` cadastra fornecedor/endereço, `suppliers.update` edita fornecedor/situação/endereço e `suppliers.delete` exclui endereço na interface. A API continua sendo a autoridade de autorização.
-
-Revisão por leitura direta, sem testes, build, lint, SQL, migrations ou serviços. Após autorização específica, o executor ignorado `backend/tools/backend-audit.cjs` foi adaptado para Page em Fornecedores: checkList (incluindo cenários em tabela) percorre páginas preservando filtros e a consulta direta de rollback verifica content vazio e totais zerados. A adaptação recebeu somente revisão direta; o executor não foi executado e isso não comprova compatibilidade das demais verificações legadas com as regras e a autenticação atuais. Roteiro de validação futura e registro da entrega em `docs/superpowers/plans/2026-10-29-suppliers-progress.md`, relativo à raiz.
+Informe nome, e-mail e senha de 15 a 128 caracteres. A senha não aparece durante a digitação. Após `Administrator created`, o encerramento do bootstrap é esperado. Inicie novamente com `.\mvnw.cmd spring-boot:run`, mantendo `bootstrap-enabled: false` no YAML. Os demais funcionários entram por convite.

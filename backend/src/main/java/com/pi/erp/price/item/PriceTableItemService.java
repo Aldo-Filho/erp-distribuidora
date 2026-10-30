@@ -5,6 +5,8 @@ import com.pi.erp.price.PriceTable;
 import com.pi.erp.price.PriceTableRepository;
 import com.pi.erp.product.Product;
 import com.pi.erp.product.ProductRepository;
+import com.pi.erp.product.presentation.ProductPresentation;
+import com.pi.erp.product.presentation.ProductPresentationRepository;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,6 +32,9 @@ public class PriceTableItemService {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private ProductPresentationRepository productPresentationRepository;
+
     public List<PriceTableItem> search(PriceTableItemFilter filter) {
         Specification<PriceTableItem> spec = Specification.allOf();
 
@@ -44,6 +49,11 @@ public class PriceTableItemService {
             );
         }
 
+        if (filter.presentationId() != null) {
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("presentation").get("id"), filter.presentationId())
+            );
+        }
         return repository.findAll(spec);
     }
 
@@ -53,11 +63,20 @@ public class PriceTableItemService {
         PriceTable priceTable = findPriceTable(data.priceTableId());
         Product product = findProduct(data.productId());
 
-        if (repository.existsByPriceTableIdAndProductId(priceTable.getId(), product.getId())) {
+        var presentation = findPresentation(product, data.presentationId());
+        if (
+            repository.existsByIdentity(
+                priceTable.getId(),
+                product.getId(),
+                presentation == null ? null : presentation.getId(),
+                null
+            )
+        ) {
             throw new IllegalArgumentException("This product already exists in this price table.");
         }
 
         PriceTableItem priceTableItem = new PriceTableItem(data, priceTable, product);
+        priceTableItem.setPresentation(presentation);
         return repository.save(priceTableItem);
     }
 
@@ -73,9 +92,7 @@ public class PriceTableItemService {
         validatePrice(price);
 
         Long sourcePriceTableId = priceTableItem.getPriceTable().getId();
-        Long priceTableId = data.priceTableId() != null
-            ? data.priceTableId()
-            : sourcePriceTableId;
+        Long priceTableId = data.priceTableId() != null ? data.priceTableId() : sourcePriceTableId;
         PriceTable priceTable;
 
         if (sourcePriceTableId.equals(priceTableId)) {
@@ -93,13 +110,27 @@ public class PriceTableItemService {
         if (data.productId() != null) {
             product = findProduct(data.productId());
         }
-        if (repository.existsByPriceTableIdAndProductIdAndIdNot(priceTableId, product.getId(), id)) {
+        if (Boolean.TRUE.equals(data.removePresentation()) && data.presentationId() != null) {
+            throw new IllegalArgumentException(
+                "Cannot provide and remove a presentation at the same time."
+            );
+        }
+        Long presentationId = Boolean.TRUE.equals(data.removePresentation())
+            ? null
+            : data.presentationId() != null
+              ? data.presentationId()
+              : priceTableItem.getPresentation() == null
+                ? null
+                : priceTableItem.getPresentation().getId();
+        var presentation = findPresentation(product, presentationId);
+        if (repository.existsByIdentity(priceTableId, product.getId(), presentationId, id)) {
             throw new IllegalArgumentException("This product already exists in this price table.");
         }
 
         priceTableItem.setPriceTable(priceTable);
         priceTableItem.setProduct(product);
         priceTableItem.setPrice(price);
+        priceTableItem.setPresentation(presentation);
 
         return repository.save(priceTableItem);
     }
@@ -133,6 +164,24 @@ public class PriceTableItemService {
         return productRepository
             .findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
+    }
+
+    private ProductPresentation findPresentation(Product product, Long id) {
+        if (id == null) {
+            return null;
+        }
+        var presentation = productPresentationRepository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Product presentation not found."));
+        if (
+            !presentation.getProductId().equals(product.getId()) ||
+            presentation.isBasePresentation()
+        ) {
+            throw new IllegalArgumentException(
+                "Use the base price row for the base presentation, or select this product's packaging."
+            );
+        }
+        return presentation;
     }
 
     private void validatePrice(BigDecimal price) {

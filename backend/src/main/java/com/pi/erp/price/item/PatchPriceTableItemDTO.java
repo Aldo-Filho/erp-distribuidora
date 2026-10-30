@@ -5,5 +5,7 @@ import java.math.BigDecimal;
 public record PatchPriceTableItemDTO(
     Long priceTableId,
     Long productId,
-    BigDecimal price
+    BigDecimal price,
+    Long presentationId,
+    Boolean removePresentation
 ) {}

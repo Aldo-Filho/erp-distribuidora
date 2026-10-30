@@ -5,7 +5,9 @@ import com.pi.erp.purchase.receipt.PurchaseReceiptItem;
 import com.pi.erp.stock.StockItem;
 import com.pi.erp.stock.reservation.StockReservation;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.*;
 
 @Entity
@@ -35,16 +37,20 @@ public class StockMovement {
     @Column(name = "reason", length = 30)
     private StockMovementReason reason;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    @Column(name = "quantity", nullable = false, precision = 14, scale = 1)
+    private BigDecimal quantity;
 
-    @Column(name = "previous_balance", nullable = false)
-    private Integer previousBalance;
+    @Column(name = "previous_balance", nullable = false, precision = 14, scale = 1)
+    private BigDecimal previousBalance;
 
-    @Column(name = "new_balance", nullable = false)
-    private Integer newBalance;
+    @Column(name = "new_balance", nullable = false, precision = 14, scale = 1)
+    private BigDecimal newBalance;
 
     // Scalar origin IDs preserve the movement response contract.
+    // Present only on manual movements. Automatic movements keep this field null.
+    @Column(name = "request_id", unique = true, updatable = false)
+    private UUID requestId;
+
     @Column(name = "order_id")
     private Long orderId;
 
@@ -79,10 +85,11 @@ public class StockMovement {
     public StockMovement(
         RequestStockMovementDTO data,
         StockItem stockItem,
-        Integer previousBalance,
-        Integer newBalance,
+        BigDecimal previousBalance,
+        BigDecimal newBalance,
         String notes
     ) {
+        this.requestId = data.requestId();
         this.stockItem = stockItem;
         this.type = data.type();
         this.reason = data.reason();
@@ -95,8 +102,8 @@ public class StockMovement {
 
     public StockMovement(
         PurchaseReceiptItem receiptItem,
-        Integer previousBalance,
-        Integer newBalance
+        BigDecimal previousBalance,
+        BigDecimal newBalance
     ) {
         this.stockItem = receiptItem.getStockItem();
         this.type = StockMovementType.INBOUND;
@@ -113,8 +120,8 @@ public class StockMovement {
     public StockMovement(
         StockReservation reservation,
         Long operatorUserId,
-        Integer previousBalance,
-        Integer newBalance,
+        BigDecimal previousBalance,
+        BigDecimal newBalance,
         String notes
     ) {
         this.stockItem = reservation.getStockItem();

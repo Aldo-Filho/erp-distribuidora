@@ -6,5 +6,6 @@ import java.math.BigDecimal;
 public record RequestPriceTableItemDTO(
     @NotNull Long priceTableId,
     @NotNull Long productId,
-    @NotNull BigDecimal price
+    @NotNull BigDecimal price,
+    Long presentationId
 ) {}

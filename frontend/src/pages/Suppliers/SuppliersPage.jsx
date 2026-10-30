@@ -1,3 +1,8 @@
+import RowActions from "../../components/feedback/RowActions";
+import DocumentValue from "../../components/feedback/DocumentValue";
+import useConfirm from "../../components/feedback/useConfirm";
+import PageHeading from "../../components/layout/PageHeading";
+import FilterSelect from "../../components/feedback/FilterSelect";
 import { useEffect, useRef, useState } from "react";
 import { Eye, MapPin, Pencil, Plus, Power } from "lucide-react";
 import useAuth from "../../auth/useAuth";
@@ -8,6 +13,7 @@ import Modal from "../../components/feedback/Modal";
 import SupplierForm from "./SupplierForm.jsx";
 import SupplierDetailsModal from "./SupplierDetailsModal";
 import SupplierAddressModal from "./SupplierAddressModal";
+import SupplierCatalogLinksModal from "./SupplierCatalogLinksModal";
 import useSuppliers, { emptyFilters } from "./useSuppliers";
 
 function EditSupplier({ supplierId, onClose, onSaved }) {
@@ -52,6 +58,7 @@ function EditSupplier({ supplierId, onClose, onSaved }) {
 }
 
 export default function SuppliersPage() {
+  const confirm = useConfirm();
   const { has, session } = useAuth();
   const list = useSuppliers();
   const [flow, setFlow] = useState(null);
@@ -77,7 +84,12 @@ export default function SuppliersPage() {
   const changeActive = async (supplier) => {
     if (lock.current || !has("suppliers.update")) return;
     const action = supplier.active ? "Inativar" : "Ativar";
-    if (!window.confirm(`${action} o fornecedor ${supplier.legalName}?`))
+    if (
+      !(await confirm(`${action} o fornecedor ${supplier.legalName}?`, {
+        title: `${action} fornecedor`,
+        confirmLabel: action,
+      }))
+    )
       return;
     lock.current = true;
     setPending(supplier.id);
@@ -96,14 +108,17 @@ export default function SuppliersPage() {
       if (live.current) setPending(null);
     }
   };
-  const filtered = !!(
-    list.filters.query.trim() ||
-    list.filters.active !== ""
-  );
+  const filtered = !!(list.filters.query.trim() || list.filters.active !== "");
   return (
     <div className="customers-page">
       <div className="page-title">
-        <h1>Fornecedores</h1>
+        <PageHeading
+          title="Fornecedores"
+          total={list.data?.totalElements}
+          loading={list.loading}
+          singular={filtered ? "fornecedor encontrado" : "fornecedor cadastrado"}
+          plural={filtered ? "fornecedores encontrados" : "fornecedores cadastrados"}
+        />
         {has("suppliers.create") && (
           <button
             className="customer-icon-label"
@@ -118,14 +133,14 @@ export default function SuppliersPage() {
       <section className="panel customer-filters" aria-label="Filtros de fornecedores">
         <label>
           Pesquisar por
-          <select
+          <FilterSelect
             value={list.filters.searchField}
             onChange={(event) => changeFilter("searchField", event.target.value)}
           >
             <option value="NAME">Nome</option>
             <option value="DOCUMENT">CNPJ</option>
             <option value="CONTACT">Contato</option>
-          </select>
+          </FilterSelect>
         </label>
         <label className="customer-query">
           Busca
@@ -144,14 +159,14 @@ export default function SuppliersPage() {
         </label>
         <label>
           Situação
-          <select
+          <FilterSelect
             value={list.filters.active}
             onChange={(event) => changeFilter("active", event.target.value)}
           >
             <option value="">Todas</option>
             <option value="true">Ativos</option>
             <option value="false">Inativos</option>
-          </select>
+          </FilterSelect>
         </label>
         <button className="secondary" onClick={() => list.changeFilters({ ...emptyFilters })}>
           Limpar filtros
@@ -184,7 +199,9 @@ export default function SuppliersPage() {
               <thead>
                 <tr>
                   <th>Fornecedor</th>
-                  <th>CNPJ</th>
+                  <th>
+                    CNPJ
+                  </th>
                   <th>Contato</th>
                   <th>Situação</th>
                   <th>Ações</th>
@@ -198,7 +215,11 @@ export default function SuppliersPage() {
                       {supplier.tradeName && <small>{supplier.tradeName}</small>}
                     </td>
                     <td>
-                      {supplier.taxId}
+                      <DocumentValue
+                        value={supplier.taxId}
+                        scope={[supplier.id, list.page, list.size, list.filters]}
+                        label={`CNPJ de ${supplier.legalName}`}
+                      />
                     </td>
                     <td>
                       {supplier.phone || "Telefone não informado"}
@@ -211,7 +232,10 @@ export default function SuppliersPage() {
                       </span>
                     </td>
                     <td>
-                      <div className="row-actions customer-row-actions">
+                      <RowActions
+                        className="customer-row-actions"
+                        label={`Ações de ${supplier.legalName}`}
+                      >
                         <button
                           className="secondary icon-button"
                           aria-label={`Detalhes de ${supplier.legalName}`}
@@ -243,10 +267,8 @@ export default function SuppliersPage() {
                         </button>
                         {has("suppliers.update") && (
                           <button
-                            className="secondary icon-button"
-                            aria-label={
-                              `${supplier.active ? "Inativar" : "Ativar"} ${supplier.legalName}`
-                            }
+                            className="secondary icon-button row-status-action"
+                            aria-label={`${supplier.active ? "Inativar" : "Ativar"} ${supplier.legalName}`}
                             title={supplier.active ? "Inativar" : "Ativar"}
                             disabled={!!pending}
                             onClick={() => changeActive(supplier)}
@@ -254,7 +276,7 @@ export default function SuppliersPage() {
                             <Power size={17} />
                           </button>
                         )}
-                      </div>
+                      </RowActions>
                     </td>
                   </tr>
                 ))}
@@ -313,6 +335,7 @@ export default function SuppliersPage() {
           onClose={closeFlow}
           onEdit={(supplier) => setFlow({ kind: "edit", id: supplier.id, returnTo: supplier.id })}
           onAddresses={(id) => setFlow({ kind: "addresses", id, returnTo: id })}
+          onCatalogLinks={(id) => setFlow({ kind: "catalogLinks", id, returnTo: id })}
         />
       )}
       {flow?.kind === "addresses" && (
@@ -321,6 +344,9 @@ export default function SuppliersPage() {
           supplierId={flow.id}
           onClose={closeFlow}
         />
+      )}
+      {flow?.kind === "catalogLinks" && has("suppliers.read") && (
+        <SupplierCatalogLinksModal key={`links:${flow.id}`} supplierId={flow.id} onClose={closeFlow} />
       )}
     </div>
   );

@@ -1,14 +1,14 @@
 package com.pi.erp.product;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
+import java.util.Map;
 
 public record RequestProductDTO(
-    @NotBlank String name,
-    @NotNull Long brandId,
+    String name,
+    Long brandId,
     Long categoryId,
     @NotNull @PositiveOrZero BigDecimal cost,
     @NotNull @PositiveOrZero BigDecimal price,
@@ -20,13 +20,16 @@ public record RequestProductDTO(
     String size,
     Boolean active,
 
+    Long catalogId,
+    ProductUnit unit,
+    Map<ProductCharacteristic, String> attributes,
     @Valid InitialStockDTO stock
 ) {
     public record InitialStockDTO(
         @NotNull Long warehouseId,
-        @NotNull @PositiveOrZero Integer quantity,
-        @NotNull @PositiveOrZero Integer reservedQuantity,
-        @NotNull @PositiveOrZero Integer minQuantity,
-        @PositiveOrZero Integer maxQuantity
+        @NotNull @PositiveOrZero BigDecimal quantity,
+        @NotNull @PositiveOrZero BigDecimal reservedQuantity,
+        @NotNull @PositiveOrZero BigDecimal minQuantity,
+        @PositiveOrZero BigDecimal maxQuantity
     ) {}
 }

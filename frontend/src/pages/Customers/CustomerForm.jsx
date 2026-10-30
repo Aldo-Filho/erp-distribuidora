@@ -1,3 +1,4 @@
+import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
 import { removeDraft, useDraft } from "../../auth/drafts";
@@ -5,6 +6,7 @@ import { customers } from "../../services/customers";
 import { prices } from "../../services/prices";
 import Modal from "../../components/feedback/Modal";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
+import FilterSelect from "../../components/feedback/FilterSelect";
 import CustomerAddressFields from "./CustomerAddressFields";
 import { customerPayload, customerValues, validateCustomer } from "./customerFormData";
 
@@ -20,6 +22,7 @@ function priceLabel(table) {
 }
 
 export default function CustomerForm({ customer, onSaved, onClose }) {
+  const confirm = useConfirm();
   const { session, has } = useAuth();
   const key = `customer:${session.userId}:${customer?.id || "new"}`;
   const initial = useRef(customerValues(customer)).current;
@@ -61,11 +64,15 @@ export default function CustomerForm({ customer, onSaved, onClose }) {
   }, [canReadPrice, priceRevision]);
   const priceEnabled =
     canReadPrice && !!priceState.tables && !priceState.loading && !priceState.error;
-  const close = () => {
+  const close = async () => {
     if (locked.current) return;
     if (
       JSON.stringify(value) !== JSON.stringify(initial) &&
-      !window.confirm("Descartar as alterações deste formulário?")
+      !(await confirm("Descartar as alterações deste formulário?", {
+        title: "Descartar alterações",
+        confirmLabel: "Descartar",
+        destructive: true,
+      }))
     )
       return;
     removeDraft(key);
@@ -121,14 +128,14 @@ export default function CustomerForm({ customer, onSaved, onClose }) {
           <div className="form-grid">
             <label>
               Tipo de pessoa
-              <select
+              <FilterSelect
                 disabled={!!customer}
                 value={value.personType}
                 onChange={(event) => change("personType", event.target.value)}
               >
                 <option value="PF">Pessoa física</option>
                 <option value="PJ">Pessoa jurídica</option>
-              </select>
+              </FilterSelect>
             </label>
             <label>
               {value.personType === "PF" ? "CPF" : "CNPJ"}
@@ -208,7 +215,7 @@ export default function CustomerForm({ customer, onSaved, onClose }) {
             </label>
             <label className="span-all">
               Tabela de preços
-              <select
+              <FilterSelect
                 disabled={!priceEnabled}
                 value={value.priceTableId}
                 onChange={(event) => change("priceTableId", event.target.value)}
@@ -224,7 +231,7 @@ export default function CustomerForm({ customer, onSaved, onClose }) {
                     {priceLabel(table)}
                   </option>
                 ))}
-              </select>
+              </FilterSelect>
               {!canReadPrice && (
                 <small>
                   {customer?.priceTable

@@ -1,3 +1,5 @@
+import useConfirm from "../../components/feedback/useConfirm";
+import PageHeading from "../../components/layout/PageHeading";
 import { useCallback, useState } from "react";
 import { access } from "../../services/access";
 import useLoad from "../../components/feedback/useLoad";
@@ -37,6 +39,7 @@ const actions = {
 };
 
 export default function RolesPage() {
+  const confirm = useConfirm();
   const loader = useCallback(
     async () => ({ roles: await access.roles(), permissions: await access.permissions() }),
     [],
@@ -64,6 +67,14 @@ export default function RolesPage() {
     }
   };
   const groups = Object.groupBy(data?.permissions || [], (permission) => permission.module);
+  const hasGrantedPermission = (key) =>
+    (data?.permissions || []).some(
+      (permission) => permission.permissionKey === key && grants.includes(permission.id),
+    );
+  const missingPurchaseRead =
+    hasGrantedPermission("purchases.receive") && !hasGrantedPermission("purchases.read");
+  const missingStockRead =
+    hasGrantedPermission("stock.adjust") && !hasGrantedPermission("stock.read");
   const toggle = async (permission) => {
     setPending(true);
     setFailure("");
@@ -74,9 +85,10 @@ export default function RolesPage() {
       } else {
         if (
           permission.permissionKey === "access.roles.manage" &&
-          !window.confirm(
+          !(await confirm(
             "Esta permissão permite conceder acesso amplo ao sistema, inclusive poderes administrativos. Conceder?",
-          )
+            { title: "Conceder permissão", confirmLabel: "Conceder" },
+          ))
         )
           return;
         await access.grant(selected, permission.id);
@@ -91,7 +103,13 @@ export default function RolesPage() {
   return (
     <>
       <div className="page-title">
-        <h1>Cargos</h1>
+        <PageHeading
+          title="Cargos"
+          total={data?.roles.length}
+          loading={loading}
+          singular="cargo cadastrado"
+          plural="cargos cadastrados"
+        />
         <button
           disabled={pending}
           onClick={() => {
@@ -179,9 +197,14 @@ export default function RolesPage() {
                         disabled={pending}
                         onClick={async () => {
                           if (
-                            !window.confirm(
+                            !(await confirm(
                               "Excluir este cargo? Vínculos com usuários e permissões impedem a exclusão.",
-                            )
+                              {
+                                title: "Confirmar exclusão",
+                                confirmLabel: "Excluir",
+                                destructive: true,
+                              },
+                            ))
                           )
                             return;
                           setPending(true);
@@ -221,6 +244,20 @@ export default function RolesPage() {
                     fornecedores incluem custos. O acesso aos registros é geral dentro das funções
                     liberadas.
                   </p>
+                  {missingPurchaseRead && (
+                    <p className="product-warning" role="status">
+                      O cargo possui a permissão Receber compras, mas não Consultar compras. A tela
+                      de compras e a conferência de recebimentos exigem Consultar compras. Conceda
+                      também essa permissão para permitir o recebimento pela interface.
+                    </p>
+                  )}
+                  {missingStockRead && (
+                    <p className="product-warning" role="status">
+                      O cargo possui a permissão Movimentar / ajustar estoque, mas não Consultar
+                      estoque. A tela de estoque e a verificação do histórico exigem Consultar
+                      estoque. Conceda também essa permissão para utilizar o ajuste pela interface.
+                    </p>
+                  )}
                   {Object.entries(groups).map(([module, permissions]) => (
                     <fieldset className="permission-group" key={module}>
                       <legend>{modules[module] || module}</legend>

@@ -1,7 +1,7 @@
 package com.pi.erp.product.brand;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.pi.erp.product.Product;
+import com.pi.erp.product.catalog.ProductCatalog;
 import com.pi.erp.supplier.brand.SupplierBrand;
 import jakarta.persistence.*;
 import java.util.List;
@@ -27,7 +27,7 @@ public class Brand {
 
     @JsonIgnore
     @OneToMany(mappedBy = "brand")
-    private List<Product> products;
+    private List<ProductCatalog> catalogs;
 
     @JsonIgnore
     @OneToMany(mappedBy = "brand")

@@ -1,7 +1,15 @@
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
 
-export default function Modal({ title, onClose, busy = false, wide = false, children }) {
+export default function Modal({
+  title,
+  onClose,
+  busy = false,
+  wide = false,
+  initialFocusRef,
+  className = "",
+  children,
+}) {
   const dialog = useRef(null);
   const current = useRef({ onClose, busy });
   current.current = { onClose, busy };
@@ -22,7 +30,11 @@ export default function Modal({ title, onClose, busy = false, wide = false, chil
         ),
       ].filter((element) => element.getClientRects().length);
     if (topDialog() === dialog.current) {
-      (focusable().find((element) => element.tagName === "INPUT") || dialog.current).focus();
+      (
+        initialFocusRef?.current ||
+        focusable().find((element) => element.tagName === "INPUT") ||
+        dialog.current
+      ).focus({ preventScroll: true });
     }
     const keydown = (event) => {
       if (topDialog() !== dialog.current) return;
@@ -37,25 +49,25 @@ export default function Modal({ title, onClose, busy = false, wide = false, chil
         const last = elements.at(-1);
         if (!first) {
           event.preventDefault();
-          dialog.current.focus();
+          dialog.current.focus({ preventScroll: true });
         } else if (
           event.shiftKey &&
           (document.activeElement === first || document.activeElement === dialog.current)
         ) {
           event.preventDefault();
-          last.focus();
+          last.focus({ preventScroll: true });
         } else if (
           !event.shiftKey &&
           (document.activeElement === last || document.activeElement === dialog.current)
         ) {
           event.preventDefault();
-          first.focus();
+          first.focus({ preventScroll: true });
         }
       }
     };
     const contain = (event) => {
       if (topDialog() === dialog.current && !dialog.current.contains(event.target)) {
-        dialog.current.focus();
+        dialog.current.focus({ preventScroll: true });
       }
     };
     document.addEventListener("keydown", keydown);
@@ -65,9 +77,11 @@ export default function Modal({ title, onClose, busy = false, wide = false, chil
       document.removeEventListener("focusin", contain);
       document.body.style.overflow = overflow;
       const remaining = topDialog();
-      if (previous?.isConnected && (!remaining || remaining.contains(previous))) previous.focus();
+      if (previous?.isConnected && (!remaining || remaining.contains(previous))) {
+        previous.focus({ preventScroll: true });
+      }
     };
-  }, []);
+  }, [initialFocusRef]);
 
   return (
     <div className="modal-backdrop">
@@ -78,7 +92,9 @@ export default function Modal({ title, onClose, busy = false, wide = false, chil
         aria-modal="true"
         aria-labelledby={titleId}
         aria-busy={busy}
-        className={"dialog record-dialog" + (wide ? " dialog-wide" : "")}
+        className={
+          "dialog record-dialog" + (wide ? " dialog-wide" : "") + (className ? " " + className : "")
+        }
       >
         <div className="dialog-heading">
           <h2 id={titleId}>{title}</h2>

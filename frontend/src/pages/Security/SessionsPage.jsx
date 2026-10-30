@@ -1,3 +1,6 @@
+import useConfirm from "../../components/feedback/useConfirm";
+import PageHeading from "../../components/layout/PageHeading";
+import FilterSelect from "../../components/feedback/FilterSelect";
 import { useCallback, useState } from "react";
 import useAuth from "../../auth/useAuth";
 import { access } from "../../services/access";
@@ -7,6 +10,7 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 import Pagination from "../../components/feedback/Pagination";
 
 export default function SessionsPage() {
+  const confirm = useConfirm();
   const { session, has, refresh } = useAuth();
   const [userId, setUserId] = useState("");
   const [page, setPage] = useState(0);
@@ -14,21 +18,32 @@ export default function SessionsPage() {
   const [failure, setFailure] = useState("");
   const manage = has("security.sessions.manage");
   const loader = useCallback(
-    async () => ({
-      sessions: await security.sessions(userId, page),
-      users: manage ? await access.users() : [],
-    }),
+    async () => {
+      const response = await security.sessions(userId, page);
+      return {
+        sessions: userId ? response.content : response,
+        totalElements: userId ? response.totalElements : response.length,
+        totalPages: userId ? response.totalPages : 0,
+        users: manage ? await access.users() : [],
+      };
+    },
     [userId, page, manage],
   );
   const { data, loading, error, reload } = useLoad(loader);
-  const sessions = userId ? data?.sessions.content : data?.sessions;
+  const sessions = data?.sessions;
   return (
     <>
       <div className="page-title">
-        <h1>Sessões</h1>
+        <PageHeading
+          title="Sessões"
+          total={data?.totalElements}
+          loading={loading}
+          singular="sessão encontrada"
+          plural="sessões encontradas"
+        />
         <div className="row-actions">
           {manage && (
-            <select
+            <FilterSelect
               aria-label="Funcionário"
               value={userId}
               onChange={(event) => {
@@ -42,7 +57,7 @@ export default function SessionsPage() {
                   {user.name}
                 </option>
               ))}
-            </select>
+            </FilterSelect>
           )}
           <button className="secondary" onClick={reload}>
             Atualizar
@@ -79,11 +94,16 @@ export default function SessionsPage() {
                         disabled={pending}
                         onClick={async () => {
                           if (
-                            !window.confirm(
+                            !(await confirm(
                               entry.id === session.publicSessionId
                                 ? "Encerrar esta sessão? Você precisará entrar novamente."
                                 : "Encerrar a sessão selecionada?",
-                            )
+                              {
+                                title: "Encerrar sessão",
+                                confirmLabel: "Encerrar sessão",
+                                destructive: true,
+                              },
+                            ))
                           )
                             return;
                           setPending(true);
@@ -110,7 +130,7 @@ export default function SessionsPage() {
           </div>
         )}
         {userId && (
-          <Pagination page={page} totalPages={data?.sessions.totalPages} change={setPage} />
+          <Pagination page={page} totalPages={data?.totalPages} change={setPage} />
         )}
       </section>
     </>

@@ -1,11 +1,13 @@
 package com.pi.erp.supplier;
 
 import com.pi.erp.exception.ResourceNotFoundException;
+import com.pi.erp.product.catalog.ProductCatalogService;
 import com.pi.erp.supplier.address.RequestSupplierAddressDTO;
 import com.pi.erp.supplier.address.SupplierAddressService;
 import com.pi.erp.supplier.brand.SupplierBrandRepository;
 import com.pi.erp.supplier.category.SupplierCategoryRepository;
 import com.pi.erp.supplier.product.ProductSupplierRepository;
+import com.pi.erp.supplier.product.ProductSupplierService;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.validation.Validator;
@@ -34,6 +36,12 @@ public class SupplierService {
 
     @Autowired
     private ProductSupplierRepository productSupplierRepository;
+
+    @Autowired
+    private ProductSupplierService productSupplierService;
+
+    @Autowired
+    private ProductCatalogService productCatalogService;
 
     @Autowired
     private Validator validator;
@@ -239,7 +247,11 @@ public class SupplierService {
 
         supplierBrandRepository.deleteAllBySupplierId(id);
         supplierCategoryRepository.deleteAllBySupplierId(id);
-        productSupplierRepository.deleteAllBySupplierId(id);
+        var links = productSupplierRepository.findBySupplierIdOrderByIdAsc(id);
+        productCatalogService.lockProducts(links.stream().map(link -> link.getProduct()).toList());
+        for (var link : links) {
+            productSupplierService.delete(link.getId());
+        }
         repository.delete(supplier);
         repository.flush();
     }

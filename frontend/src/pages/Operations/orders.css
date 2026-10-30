@@ -1,0 +1,225 @@
+.orders-page > .orders-list .table-scroll tbody tr {
+  height: 64px;
+}
+.orders-page > .orders-list .table-scroll td {
+  padding-block: 8px;
+}
+.order-customer-name {
+  display: block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.order-status.order-status-pending {
+  background: #fff5e8;
+  color: #8a5a1f;
+}
+.order-status.order-status-confirmed,
+.order-status.order-status-invoiced {
+  background: #eaf7f1;
+  color: #146557;
+}
+.order-status.order-status-canceled {
+  background: #fff3f2;
+  color: #a03534;
+}
+.order-customer-control {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.order-customer-control input {
+  flex: 1;
+  min-width: 0;
+}
+.order-customer-control button {
+  flex-shrink: 0;
+}
+.order-dialog .order-actions {
+  margin-top: 22px;
+}
+.order-dialog .order-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.order-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 12px;
+}
+.order-section-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.order-section-heading > span {
+  font-size: 12px;
+  color: #61747e;
+}
+.order-item-form > .customer-form-fields {
+  display: grid;
+  gap: 16px;
+}
+.order-item-form > .customer-form-fields > p {
+  margin: 0;
+}
+.order-item-form > .customer-form-fields > button {
+  justify-self: start;
+}
+.order-consult-actions,
+.order-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+.order-secondary-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.order-flow-hint {
+  margin-top: 16px;
+}
+.order-cancel-action {
+  color: #a03534;
+}
+.order-empty-items {
+  padding: 24px;
+  text-align: center;
+}
+.order-empty-items .customer-icon-label {
+  justify-content: center;
+}
+.order-empty-items > p {
+  margin-top: 0;
+}
+.record-dialog.order-details-dialog {
+  display: block;
+}
+.order-details-dialog > .dialog-heading,
+.order-details-dialog > .order-footer-actions {
+  flex-shrink: 0;
+}
+.order-details-content {
+  min-height: 0;
+  overflow: visible;
+}
+.order-details-content:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+  border-radius: 8px;
+}
+.order-details-content > .table-panel .table-scroll tbody tr {
+  height: 64px;
+}
+.order-details-content > .table-panel .table-scroll td {
+  padding-block: 8px;
+}
+.order-details-content > .record-metadata {
+  margin-top: 18px;
+  padding-top: 12px;
+}
+.order-details-dialog > .order-footer-actions {
+  margin-top: 14px;
+}
+.order-product-picker {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.order-product-picker > .text-button {
+  justify-self: start;
+}
+.order-product-picker .party-picker-results {
+  flex: none;
+}
+.order-product-picker .customer-list-footer {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.order-selected-product {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f5f9f9;
+}
+.order-selected-product > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.order-selected-product small {
+  color: #61747e;
+}
+.order-selected-product > button {
+  flex-shrink: 0;
+}
+.order-item-options {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.order-item-options > summary,
+.order-stock-summary summary {
+  cursor: pointer;
+  color: #087b77;
+  font-size: 13px;
+}
+.order-item-options-content {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+.order-item-options-content p,
+.order-stock-summary p {
+  margin: 6px 0;
+}
+.order-item-total {
+  padding: 16px;
+  border-radius: 10px;
+  background: #eef7f5;
+}
+.order-item-total .customer-details {
+  margin: 12px 0;
+}
+.order-item-total .customer-details > div:last-child {
+  font-weight: 700;
+  color: #087b77;
+}
+.order-stock-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+}
+.order-item-form > .actions {
+  padding: 14px 0 0;
+  background: white;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 480px) {
+  .order-customer-control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .order-selected-product {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .order-item-form > .actions {
+    flex-wrap: wrap;
+  }
+}

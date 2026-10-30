@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useAuth from "../../auth/useAuth";
 import { auth } from "../../services/auth";
-import { navigation } from "../../routes/navigation";
+import { canAccessEntry, navigation } from "../../routes/navigation";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 
 export default function AccountPage() {
@@ -12,7 +12,7 @@ export default function AccountPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const available = navigation.some(
-    (entry) => entry.permission && session.permissionKeys.includes(entry.permission),
+    (entry) => (entry.permission || entry.anyPermissions) && canAccessEntry(entry, session),
   );
   return (
     <>

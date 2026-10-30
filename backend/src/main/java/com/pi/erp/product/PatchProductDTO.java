@@ -2,6 +2,7 @@ package com.pi.erp.product;
 
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
+import java.util.Map;
 
 public record PatchProductDTO(
     String name,
@@ -16,5 +17,12 @@ public record PatchProductDTO(
     @PositiveOrZero BigDecimal dimensionZ,
     String size,
     Boolean active,
-    Boolean removeCategory
+    Boolean removeCategory,
+    ProductUnit unit,
+    Long catalogId,
+    Map<ProductCharacteristic, String> attributes,
+    Boolean removeWeightKg,
+    Boolean removeDimensionX,
+    Boolean removeDimensionY,
+    Boolean removeDimensionZ
 ) {}

@@ -1,3 +1,4 @@
+import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
 import { removeDraft, useDraft } from "../../auth/drafts";
@@ -8,6 +9,7 @@ import SupplierAddressFields from "./SupplierAddressFields";
 import { supplierPayload, supplierValues, validateSupplier } from "./supplierFormData";
 
 export default function SupplierForm({ supplier, onSaved, onClose }) {
+  const confirm = useConfirm();
   const { session, has } = useAuth();
   const key = `supplier:${session.userId}:${supplier?.id || "new"}`;
   const initial = useRef(supplierValues(supplier)).current;
@@ -23,11 +25,15 @@ export default function SupplierForm({ supplier, onSaved, onClose }) {
       live.current = false;
     };
   }, []);
-  const close = () => {
+  const close = async () => {
     if (locked.current) return;
     if (
       JSON.stringify(value) !== JSON.stringify(initial) &&
-      !window.confirm("Descartar as alterações deste formulário?")
+      !(await confirm("Descartar as alterações deste formulário?", {
+        title: "Descartar alterações",
+        confirmLabel: "Descartar",
+        destructive: true,
+      }))
     )
       return;
     removeDraft(key);
@@ -49,8 +55,10 @@ export default function SupplierForm({ supplier, onSaved, onClose }) {
       setError(failure);
       return;
     }
-    if ((!supplier || value.taxId !== supplier.taxId) &&
-      !/^[A-Z0-9]{14}$/.test(value.taxId.replace(/[\s./-]/g, "").toUpperCase())) {
+    if (
+      (!supplier || value.taxId !== supplier.taxId) &&
+      !/^[A-Z0-9]{14}$/.test(value.taxId.replace(/[\s./-]/g, "").toUpperCase())
+    ) {
       setError("Informe um CNPJ com 14 letras ou números.");
       return;
     }
@@ -91,14 +99,24 @@ export default function SupplierForm({ supplier, onSaved, onClose }) {
             ].map(([field, label, type, required]) => (
               <label key={field}>
                 {label}
-                <input type={type} required={required} value={value[field]}
-                  onChange={(event) => change(field, event.target.value)} />
+                <input
+                  type={type}
+                  required={required}
+                  value={value[field]}
+                  onChange={(event) => change(field, event.target.value)}
+                />
               </label>
             ))}
             <label>
               Prazo médio em dias (opcional)
-              <input type="number" min="0" max="2147483647" step="1" value={value.avgDeliveryDays}
-                onChange={(event) => change("avgDeliveryDays", event.target.value)} />
+              <input
+                type="number"
+                min="0"
+                max="2147483647"
+                step="1"
+                value={value.avgDeliveryDays}
+                onChange={(event) => change("avgDeliveryDays", event.target.value)}
+              />
             </label>
             {supplier && !supplier.phone?.trim() && (
               <p className="span-all">Informe o telefone para salvar a edição deste cadastro.</p>

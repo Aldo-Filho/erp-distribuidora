@@ -1,0 +1,117 @@
+.operation-choices {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+.operation-choices button {
+  text-align: left;
+  white-space: normal;
+}
+.operation-choices .operation-price-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.operation-choice-price {
+  color: #087b77;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.record-dialog.party-picker-dialog {
+  height: auto;
+}
+.party-picker-dialog > .dialog-heading {
+  flex-shrink: 0;
+}
+.party-picker-dialog > .text-button {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-bottom: 12px;
+}
+.party-picker-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 16px;
+}
+.party-picker-content > label,
+.party-picker-content > .product-toolbar,
+.party-picker-content > h3,
+.party-picker-content > .customer-list-footer {
+  flex-shrink: 0;
+  margin: 0;
+}
+.party-picker-content > h3 {
+  font-size: 14px;
+}
+.party-picker-content > .customer-list-footer {
+  padding: 14px 0 0;
+}
+.party-picker-results {
+  flex: none;
+  min-height: 0;
+  overflow: visible;
+}
+.party-picker-results:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+  border-radius: 8px;
+}
+.party-picker-results .operation-choices {
+  margin: 0;
+}
+.operation-toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: end;
+  margin-bottom: 22px;
+}
+.operation-toolbar label {
+  min-width: 180px;
+}
+.operation-summary {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.operation-summary p {
+  margin: 0;
+}
+.operation-form {
+  display: grid;
+  gap: 16px;
+}
+.operation-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.operation-form fieldset > .form-grid {
+  margin-bottom: 16px;
+}
+.operation-form .actions {
+  margin-top: 16px;
+}
+.operation-documents .table-scroll td {
+  max-width: 300px;
+}
+.operation-documents .table-scroll td small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.operation-receipt-line {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.operation-receipt-line input {
+  max-width: 200px;
+}

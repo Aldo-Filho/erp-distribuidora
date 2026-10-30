@@ -2,6 +2,7 @@ package com.pi.erp.exception;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -148,6 +149,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseErrorDTO> handleDataIntegrity(
         DataIntegrityViolationException exception
     ) {
+        Throwable cause = exception;
+        while (cause != null) {
+            if (
+                cause instanceof ConstraintViolationException violation &&
+                    "23505".equals(violation.getSQLState()) &&
+                    "uk_warehouse_name_normalized".equals(violation.getConstraintName())
+            ) {
+                return handleIllegalArgument(
+                    new IllegalArgumentException("This warehouse name already exists.")
+                );
+            }
+            cause = cause.getCause();
+        }
+
         ResponseErrorDTO error = new ResponseErrorDTO(
             HttpStatus.CONFLICT.value(),
             "Conflict",

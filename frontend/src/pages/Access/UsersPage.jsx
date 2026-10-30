@@ -1,3 +1,7 @@
+import RowActions from "../../components/feedback/RowActions";
+import FilterSelect from "../../components/feedback/FilterSelect";
+import useConfirm from "../../components/feedback/useConfirm";
+import PageHeading from "../../components/layout/PageHeading";
 import { useCallback, useState } from "react";
 import { access } from "../../services/access";
 import { useDraft } from "../../auth/drafts";
@@ -6,6 +10,7 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 import UserDetailsModal from "./UserDetailsModal";
 
 export default function UsersPage() {
+  const confirm = useConfirm();
   const loader = useCallback(
     async () => ({ users: await access.users(), roles: await access.roles() }),
     [],
@@ -33,14 +38,16 @@ export default function UsersPage() {
   return (
     <>
       {detailsId && (
-        <UserDetailsModal
-          key={detailsId}
-          userId={detailsId}
-          onClose={() => setDetailsId(null)}
-        />
+        <UserDetailsModal key={detailsId} userId={detailsId} onClose={() => setDetailsId(null)} />
       )}
       <div className="page-title">
-        <h1>Funcionários</h1>
+        <PageHeading
+          title="Funcionários"
+          total={data?.users.length}
+          loading={loading}
+          singular="funcionário cadastrado"
+          plural="funcionários cadastrados"
+        />
         <input
           className="search"
           aria-label="Buscar funcionário"
@@ -92,7 +99,7 @@ export default function UsersPage() {
             </label>
             <label>
               Cargo
-              <select
+              <FilterSelect
                 required
                 value={editing.roleId}
                 onChange={(event) => setEditing({ ...editing, roleId: event.target.value })}
@@ -103,7 +110,7 @@ export default function UsersPage() {
                     {!role.active ? " (inativo)" : ""}
                   </option>
                 ))}
-              </select>
+              </FilterSelect>
             </label>
             <label className="check">
               <input
@@ -165,7 +172,7 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td>
-                        <div className="row-actions">
+                        <RowActions label={`Ações de ${user.name}`}>
                           <button
                             className="secondary"
                             disabled={pending}
@@ -206,12 +213,17 @@ export default function UsersPage() {
                           <button
                             className="danger-link"
                             disabled={pending}
-                            onClick={() => {
+                            onClick={async () => {
                               if (
-                                window.confirm(
+                                await confirm(
                                   "Excluir " +
                                     user.name +
                                     "? Registros históricos podem impedir a exclusão.",
+                                  {
+                                    title: "Confirmar exclusão",
+                                    confirmLabel: "Excluir",
+                                    destructive: true,
+                                  },
                                 )
                               )
                                 run(() => access.deleteUser(user.id));
@@ -219,7 +231,7 @@ export default function UsersPage() {
                           >
                             Excluir
                           </button>
-                        </div>
+                        </RowActions>
                       </td>
                     </tr>
                   ))}

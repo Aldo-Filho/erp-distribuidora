@@ -72,6 +72,16 @@ public class WarehouseAddressService {
     }
 
     public WarehouseAddress register(RequestWarehouseAddressDTO data) {
+        data = new RequestWarehouseAddressDTO(
+            data.warehouseId(),
+            normalizeText(data.state()),
+            normalizeText(data.city()),
+            normalizeText(data.street()),
+            normalizeText(data.neighborhood()),
+            normalizeText(data.number()),
+            normalizeText(data.complement()),
+            normalizeText(data.zipCode())
+        );
         Warehouse warehouse = findWarehouse(data.warehouseId());
 
         if (repository.existsByWarehouseId(data.warehouseId())) {
@@ -94,6 +104,16 @@ public class WarehouseAddressService {
     }
 
     public WarehouseAddress update(Long id, PatchWarehouseAddressDTO data) {
+        data = new PatchWarehouseAddressDTO(
+            data.warehouseId(),
+            normalizeText(data.state()),
+            normalizeText(data.city()),
+            normalizeText(data.street()),
+            normalizeText(data.neighborhood()),
+            normalizeText(data.number()),
+            normalizeText(data.complement()),
+            normalizeText(data.zipCode())
+        );
         WarehouseAddress address = repository
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Warehouse address not found."));
@@ -175,6 +195,10 @@ public class WarehouseAddressService {
         warehouse.setWarehouseAddress(null);
 
         repository.delete(address);
+    }
+
+    private String normalizeText(String value) {
+        return value == null ? null : value.trim();
     }
 
     private Warehouse findWarehouse(Long warehouseId) {

@@ -51,7 +51,7 @@ export default function LoginPage() {
     }
   };
   return (
-    <AuthLayout title="Entrar">
+    <AuthLayout title="Entrar" showLogo={false} showReturn={false}>
       {expired && (
         <p className="notice">
           Entre novamente para continuar. Dados não salvos podem precisar ser preenchidos de novo.

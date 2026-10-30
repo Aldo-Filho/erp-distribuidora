@@ -1,0 +1,116 @@
+.purchases-page > .table-panel .table-scroll tbody tr {
+  height: 64px;
+}
+.purchases-page > .table-panel .table-scroll td {
+  padding-block: 8px;
+}
+.purchase-supplier-name {
+  display: block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.purchase-status.purchase-status-draft,
+.purchase-status.purchase-status-partially_received {
+  background: #fff5e8;
+  color: #8a5a1f;
+}
+.purchase-status.purchase-status-sent {
+  background: #edf4f6;
+  color: #315767;
+}
+.purchase-status.purchase-status-confirmed,
+.purchase-status.purchase-status-received {
+  background: #eaf7f1;
+  color: #146557;
+}
+.purchase-status.purchase-status-canceled {
+  background: #fff3f2;
+  color: #a03534;
+}
+.purchase-supplier-control {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.purchase-supplier-control input {
+  flex: 1;
+  min-width: 0;
+}
+.purchase-supplier-control button {
+  flex-shrink: 0;
+}
+.purchase-dialog .purchase-actions {
+  margin-top: 22px;
+}
+.purchase-dialog .purchase-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.purchase-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 12px;
+}
+.purchase-section-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.purchase-section-heading > span {
+  font-size: 12px;
+  color: #61747e;
+}
+.purchase-receipt-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.purchase-receipt-card > .customer-details {
+  margin: 14px 0;
+}
+.purchase-receipt-card > .field-hint {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+.purchase-item-form > .customer-form-fields,
+.purchase-receipt-form > .customer-form-fields {
+  display: grid;
+  gap: 16px;
+}
+.purchase-item-form > .customer-form-fields > p,
+.purchase-receipt-form > .customer-form-fields > p {
+  margin: 0;
+}
+.purchase-item-form > .customer-form-fields > button {
+  justify-self: start;
+}
+.purchase-receipt-line,
+.purchase-receipt-attempt {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.purchase-receipt-line {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.purchase-receipt-line input {
+  max-width: 240px;
+  width: 100%;
+}
+@media (max-width: 480px) {
+  .purchase-supplier-control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .purchase-receipt-card {
+    padding: 12px;
+  }
+}

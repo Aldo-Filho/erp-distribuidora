@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public record PatchPurchaseItemDTO(
     Long productId,
     Long warehouseId,
-    Integer quantity,
-    BigDecimal unitCost
+    BigDecimal quantity,
+    BigDecimal unitCost,
+    Long supplierOptionId
 ) {}

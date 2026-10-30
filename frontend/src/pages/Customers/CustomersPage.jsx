@@ -1,3 +1,8 @@
+import RowActions from "../../components/feedback/RowActions";
+import DocumentValue from "../../components/feedback/DocumentValue";
+import useConfirm from "../../components/feedback/useConfirm";
+import PageHeading from "../../components/layout/PageHeading";
+import FilterSelect from "../../components/feedback/FilterSelect";
 import { useEffect, useRef, useState } from "react";
 import { Eye, MapPin, Pencil, Plus, Power } from "lucide-react";
 import useAuth from "../../auth/useAuth";
@@ -52,6 +57,7 @@ function EditCustomer({ customerId, onClose, onSaved }) {
 }
 
 export default function CustomersPage() {
+  const confirm = useConfirm();
   const { has, session } = useAuth();
   const list = useCustomers();
   const [flow, setFlow] = useState(null);
@@ -77,7 +83,14 @@ export default function CustomersPage() {
   const changeActive = async (customer) => {
     if (lock.current || !has("customers.update")) return;
     if (
-      !window.confirm(`${customer.active ? "Inativar" : "Ativar"} o cliente ${customer.legalName}?`)
+      !(await confirm(
+        `${customer.active ? "Inativar" : "Ativar"} o cliente ${customer.legalName}?`,
+        {
+          title: customer.active ? "Inativar cliente" : "Ativar cliente",
+          confirmLabel: customer.active ? "Inativar" : "Ativar",
+          destructive: customer.active,
+        },
+      ))
     )
       return;
     lock.current = true;
@@ -105,7 +118,13 @@ export default function CustomersPage() {
   return (
     <div className="customers-page">
       <div className="page-title">
-        <h1>Clientes</h1>
+        <PageHeading
+          title="Clientes"
+          total={list.data?.totalElements}
+          loading={list.loading}
+          singular={filtered ? "cliente encontrado" : "cliente cadastrado"}
+          plural={filtered ? "clientes encontrados" : "clientes cadastrados"}
+        />
         {has("customers.create") && (
           <button
             className="customer-icon-label"
@@ -120,14 +139,14 @@ export default function CustomersPage() {
       <section className="panel customer-filters" aria-label="Filtros de clientes">
         <label>
           Pesquisar por
-          <select
+          <FilterSelect
             value={list.filters.searchField}
             onChange={(event) => changeFilter("searchField", event.target.value)}
           >
             <option value="NAME">Nome</option>
             <option value="DOCUMENT">CPF/CNPJ</option>
             <option value="CONTACT">Contato</option>
-          </select>
+          </FilterSelect>
         </label>
         <label className="customer-query">
           Busca
@@ -146,25 +165,25 @@ export default function CustomersPage() {
         </label>
         <label>
           Tipo
-          <select
+          <FilterSelect
             value={list.filters.personType}
             onChange={(event) => changeFilter("personType", event.target.value)}
           >
             <option value="">Todos</option>
             <option value="PF">Pessoa física</option>
             <option value="PJ">Pessoa jurídica</option>
-          </select>
+          </FilterSelect>
         </label>
         <label>
           Situação
-          <select
+          <FilterSelect
             value={list.filters.active}
             onChange={(event) => changeFilter("active", event.target.value)}
           >
             <option value="">Todas</option>
             <option value="true">Ativos</option>
             <option value="false">Inativos</option>
-          </select>
+          </FilterSelect>
         </label>
         <button className="secondary" onClick={() => list.changeFilters({ ...emptyFilters })}>
           Limpar filtros
@@ -197,7 +216,9 @@ export default function CustomersPage() {
               <thead>
                 <tr>
                   <th>Cliente</th>
-                  <th>CPF/CNPJ</th>
+                  <th>
+                    CPF/CNPJ
+                  </th>
                   <th>Contato</th>
                   <th>Situação</th>
                   <th>Ações</th>
@@ -211,7 +232,11 @@ export default function CustomersPage() {
                       {customer.tradeName && <small>{customer.tradeName}</small>}
                     </td>
                     <td>
-                      {customer.taxId}
+                      <DocumentValue
+                        value={customer.taxId}
+                        scope={[customer.id, list.page, list.size, list.filters]}
+                        label={`CPF/CNPJ de ${customer.legalName}`}
+                      />
                       <small>{customer.personType}</small>
                     </td>
                     <td>
@@ -225,7 +250,10 @@ export default function CustomersPage() {
                       </span>
                     </td>
                     <td>
-                      <div className="row-actions customer-row-actions">
+                      <RowActions
+                        className="customer-row-actions"
+                        label={`Ações de ${customer.legalName}`}
+                      >
                         <button
                           className="secondary icon-button"
                           aria-label={`Detalhes de ${customer.legalName}`}
@@ -257,7 +285,7 @@ export default function CustomersPage() {
                         </button>
                         {has("customers.update") && (
                           <button
-                            className="secondary icon-button"
+                            className="secondary icon-button row-status-action"
                             aria-label={`${customer.active ? "Inativar" : "Ativar"} ${customer.legalName}`}
                             title={customer.active ? "Inativar" : "Ativar"}
                             disabled={!!pending}
@@ -266,7 +294,7 @@ export default function CustomersPage() {
                             <Power size={17} />
                           </button>
                         )}
-                      </div>
+                      </RowActions>
                     </td>
                   </tr>
                 ))}

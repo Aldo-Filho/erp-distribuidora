@@ -39,7 +39,8 @@ public class StockMovementController {
     public ResponseEntity<StockMovement> register(
         @RequestBody @Valid RequestStockMovementDTO data
     ) {
-        StockMovement stockMovement = service.register(data);
-        return ResponseEntity.status(HttpStatus.CREATED).body(stockMovement);
+        StockMovementService.MovementRegistration registration = service.register(data);
+        HttpStatus status = registration.created() ? HttpStatus.CREATED : HttpStatus.OK;
+        return ResponseEntity.status(status).body(registration.movement());
     }
 }

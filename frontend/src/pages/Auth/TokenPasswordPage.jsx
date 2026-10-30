@@ -32,7 +32,7 @@ export default function TokenPasswordPage({ invitation = false }) {
     };
   }, []);
   return (
-    <AuthLayout title={invitation ? "Definir senha" : "Redefinir senha"}>
+    <AuthLayout title={invitation ? "Definir senha" : "Redefinir senha"} showLogo={invitation}>
       {done ? (
         <p className="success" role="status">
           Senha definida. <Link to="/login">Entre na sua conta.</Link>

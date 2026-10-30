@@ -1,3 +1,4 @@
+import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
 import { removeDraft, useDraft } from "../../auth/drafts";
@@ -12,6 +13,7 @@ import SupplierAddressFields, {
 import { validateAddress } from "./supplierFormData";
 
 function AddressEditor({ supplierId, address, types, onSaved, onCancel, onBusy }) {
+  const confirm = useConfirm();
   const { session, has } = useAuth();
   const canWrite = has(address ? "suppliers.update" : "suppliers.create");
   const key = `supplier-address:${session.userId}:${supplierId}:${address?.id || "new"}`;
@@ -34,11 +36,15 @@ function AddressEditor({ supplierId, address, types, onSaved, onCancel, onBusy }
       live.current = false;
     };
   }, []);
-  const close = () => {
+  const close = async () => {
     if (lock.current) return;
     if (
       JSON.stringify(value) !== JSON.stringify(initial) &&
-      !window.confirm("Descartar as alterações do endereço?")
+      !(await confirm("Descartar as alterações do endereço?", {
+        title: "Descartar alterações",
+        confirmLabel: "Descartar",
+        destructive: true,
+      }))
     )
       return;
     removeDraft(key);
@@ -106,6 +112,7 @@ function AddressEditor({ supplierId, address, types, onSaved, onCancel, onBusy }
 }
 
 export default function SupplierAddressModal({ supplierId, onClose }) {
+  const confirm = useConfirm();
   const { has } = useAuth();
   const [state, setState] = useState({ loading: true });
   const [revision, setRevision] = useState(0);
@@ -153,7 +160,11 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
       lock.current ||
       busy ||
       !has("suppliers.delete") ||
-      !window.confirm(`Excluir o endereço ${addressTypes[address.addressType].toLowerCase()}?`)
+      !(await confirm(`Excluir o endereço ${addressTypes[address.addressType].toLowerCase()}?`, {
+        title: "Confirmar exclusão",
+        confirmLabel: "Excluir",
+        destructive: true,
+      }))
     )
       return;
     lock.current = true;
@@ -209,7 +220,8 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
                     {address.complement ? ` · ${address.complement}` : ""}
                     <br />
                     {address.neighborhood} · {address.city}/{address.state}
-                    {" · "}{address.country} · CEP {address.zipCode}
+                    {" · "}
+                    {address.country} · CEP {address.zipCode}
                   </p>
                   <div className="row-actions">
                     {has("suppliers.update") && (

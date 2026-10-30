@@ -1,7 +1,10 @@
 package com.pi.erp.order;
 
 import jakarta.validation.Valid;
-import java.util.List;
+import java.math.BigDecimal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -25,8 +29,17 @@ public class OrderController {
     private OrderService service;
 
     @GetMapping("/search")
-    public ResponseEntity<List<Order>> search(OrderFilter filter) {
-        return ResponseEntity.ok(service.search(filter));
+    public ResponseEntity<Page<Order>> search(
+        OrderFilter filter,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        if (page < 0 || page > 100000 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("Invalid order pagination limits.");
+        }
+        return ResponseEntity.ok(
+            service.search(filter, PageRequest.of(page, size, Sort.by("id").ascending()))
+        );
     }
 
     @GetMapping("/{id}")
@@ -37,19 +50,23 @@ public class OrderController {
             .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
-    @PostMapping
-    public ResponseEntity<Order> register(
-        @RequestBody @Valid RequestOrderDTO data
+    @GetMapping("/{id}/price")
+    public ResponseEntity<BigDecimal> resolvePrice(
+        @PathVariable Long id,
+        @RequestParam Long productId,
+        @RequestParam(required = false) Long presentationId
     ) {
+        return ResponseEntity.ok(service.resolvePrice(id, productId, presentationId));
+    }
+
+    @PostMapping
+    public ResponseEntity<Order> register(@RequestBody @Valid RequestOrderDTO data) {
         Order order = service.register(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Order> update(
-        @PathVariable Long id,
-        @RequestBody PatchOrderDTO data
-    ) {
+    public ResponseEntity<Order> update(@PathVariable Long id, @RequestBody PatchOrderDTO data) {
         Order order = service.update(id, data);
         return ResponseEntity.ok(order);
     }

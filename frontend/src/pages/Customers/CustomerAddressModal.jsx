@@ -1,3 +1,4 @@
+import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
 import { removeDraft, useDraft } from "../../auth/drafts";
@@ -12,6 +13,7 @@ import CustomerAddressFields, {
 import { validateAddress } from "./customerFormData";
 
 function AddressEditor({ customerId, address, types, onSaved, onCancel, onBusy }) {
+  const confirm = useConfirm();
   const { session } = useAuth();
   const key = `customer-address:${session.userId}:${customerId}:${address?.id || "new"}`;
   const initial = useRef(
@@ -33,11 +35,15 @@ function AddressEditor({ customerId, address, types, onSaved, onCancel, onBusy }
       live.current = false;
     };
   }, []);
-  const close = () => {
+  const close = async () => {
     if (lock.current) return;
     if (
       JSON.stringify(value) !== JSON.stringify(initial) &&
-      !window.confirm("Descartar as alterações do endereço?")
+      !(await confirm("Descartar as alterações do endereço?", {
+        title: "Descartar alterações",
+        confirmLabel: "Descartar",
+        destructive: true,
+      }))
     )
       return;
     removeDraft(key);
@@ -105,6 +111,7 @@ function AddressEditor({ customerId, address, types, onSaved, onCancel, onBusy }
 }
 
 export default function CustomerAddressModal({ customerId, onClose }) {
+  const confirm = useConfirm();
   const { has } = useAuth();
   const [state, setState] = useState({ loading: true });
   const [revision, setRevision] = useState(0);
@@ -157,7 +164,11 @@ export default function CustomerAddressModal({ customerId, onClose }) {
       lock.current ||
       busy ||
       !has("customers.delete") ||
-      !window.confirm(`Excluir o endereço ${addressTypes[address.addressType].toLowerCase()}?`)
+      !(await confirm(`Excluir o endereço ${addressTypes[address.addressType].toLowerCase()}?`, {
+        title: "Confirmar exclusão",
+        confirmLabel: "Excluir",
+        destructive: true,
+      }))
     )
       return;
     lock.current = true;

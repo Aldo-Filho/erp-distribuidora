@@ -2,13 +2,12 @@ package com.pi.erp.purchase.item;
 
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.product.Product;
-import com.pi.erp.product.ProductRepository;
+import com.pi.erp.product.catalog.ProductCatalogService;
 import com.pi.erp.purchase.Purchase;
 import com.pi.erp.purchase.PurchaseRepository;
 import com.pi.erp.purchase.PurchaseStatus;
 import com.pi.erp.stock.StockItemRepository;
-import com.pi.erp.supplier.product.ProductSupplier;
-import com.pi.erp.supplier.product.ProductSupplierRepository;
+import com.pi.erp.supplier.product.option.ProductSupplierOptionService;
 import com.pi.erp.warehouse.Warehouse;
 import com.pi.erp.warehouse.WarehouseRepository;
 import jakarta.persistence.EntityManager;
@@ -31,10 +30,10 @@ public class PurchaseItemService {
     private PurchaseRepository purchaseRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductSupplierOptionService productSupplierOptionService;
 
     @Autowired
-    private ProductSupplierRepository productSupplierRepository;
+    private ProductCatalogService productCatalogService;
 
     @Autowired
     private WarehouseRepository warehouseRepository;
@@ -70,17 +69,30 @@ public class PurchaseItemService {
     public PurchaseItem register(RequestPurchaseItemDTO data) {
         Purchase purchase = findPurchase(data.purchaseId());
         Product product = findProduct(data.productId());
-        ProductSupplier productSupplier = findProductSupplier(purchase, product);
+        var option = productSupplierOptionService.findForPurchase(
+            purchase.getSupplier().getId(),
+            product.getId(),
+            data.supplierOptionId()
+        );
         Warehouse warehouse = findWarehouse(data.warehouseId());
-        BigDecimal unitCost = data.unitCost() != null ? data.unitCost() : productSupplier.getCost();
+        BigDecimal unitCost = data.unitCost() != null ? data.unitCost() : option.getCost();
         validateValues(data.quantity(), unitCost);
         validateStock(product, warehouse);
 
-        if (repository.existsByPurchaseIdAndProductId(purchase.getId(), product.getId())) {
+        if (
+            repository.existsByIdentity(
+                purchase.getId(),
+                product.getId(),
+                warehouse.getId(),
+                option.getId(),
+                null
+            )
+        ) {
             throw new IllegalArgumentException("This product already exists in this purchase.");
         }
 
         PurchaseItem purchaseItem = new PurchaseItem(data, purchase, product, warehouse, unitCost);
+        purchaseItem.captureSnapshot(option);
         PurchaseItem savedPurchaseItem = repository.save(purchaseItem);
         repository.flush();
         recalculateTotal(purchase);
@@ -94,31 +106,68 @@ public class PurchaseItemService {
         PurchaseItem purchaseItem = findPurchaseItem(id, purchaseId);
         Product product = purchaseItem.getProduct();
         Warehouse warehouse = purchaseItem.getWarehouse();
-        BigDecimal unitCost = data.unitCost() != null ? data.unitCost() : purchaseItem.getUnitCost();
+        BigDecimal unitCost =
+            data.unitCost() != null ? data.unitCost() : purchaseItem.getUnitCost();
 
-        if (data.productId() != null && !data.productId().equals(product.getId())) {
+        boolean productChange =
+            data.productId() != null && !data.productId().equals(product.getId());
+        if (productChange) {
             product = findProduct(data.productId());
-            ProductSupplier productSupplier = findProductSupplier(purchase, product);
+        } else {
+            product = findProduct(product.getId());
+        }
+        boolean optionChange = productChange || data.supplierOptionId() != null;
+        var option = purchaseItem.getSupplierOption();
+        if (optionChange) {
+            option = productSupplierOptionService.findForPurchase(
+                purchase.getSupplier().getId(),
+                product.getId(),
+                data.supplierOptionId()
+            );
             if (data.unitCost() == null) {
-                unitCost = productSupplier.getCost();
+                unitCost = option.getCost();
             }
+        } else if (option != null) {
+            productSupplierOptionService.findForPurchase(
+                purchase.getSupplier().getId(),
+                product.getId(),
+                option.getId()
+            );
+        } else {
+            throw new IllegalArgumentException(
+                "Select a confirmed supplier option for this legacy draft item."
+            );
         }
         if (data.warehouseId() != null) {
             warehouse = findWarehouse(data.warehouseId());
         }
-
-        Integer quantity = data.quantity() != null ? data.quantity() : purchaseItem.getQuantity();
+        BigDecimal quantity =
+            data.quantity() != null ? data.quantity() : purchaseItem.getQuantity();
         validateValues(quantity, unitCost);
         validateStock(product, warehouse);
-
-        if (repository.existsByPurchaseIdAndProductIdAndIdNot(purchaseId, product.getId(), id)) {
-            throw new IllegalArgumentException("This product already exists in this purchase.");
+        if (
+            repository.existsByIdentity(
+                purchaseId,
+                product.getId(),
+                warehouse.getId(),
+                option.getId(),
+                id
+            )
+        ) {
+            throw new IllegalArgumentException(
+                "This supplier option already exists in this purchase and warehouse."
+            );
         }
 
         purchaseItem.setProduct(product);
         purchaseItem.setWarehouse(warehouse);
         purchaseItem.setQuantity(quantity);
         purchaseItem.setUnitCost(unitCost);
+        if (optionChange) {
+            purchaseItem.captureSnapshot(option);
+        } else {
+            purchaseItem.updateBaseQuantity();
+        }
         PurchaseItem savedPurchaseItem = repository.save(purchaseItem);
         repository.flush();
         recalculateTotal(purchase);
@@ -136,7 +185,8 @@ public class PurchaseItemService {
     }
 
     private Long findPurchaseId(Long id) {
-        return repository.findPurchaseIdByItemId(id)
+        return repository
+            .findPurchaseIdByItemId(id)
             .orElseThrow(() -> new ResourceNotFoundException("Purchase item not found."));
     }
 
@@ -144,7 +194,8 @@ public class PurchaseItemService {
         if (purchaseId == null) {
             throw new IllegalArgumentException("Purchase ID is required.");
         }
-        Purchase purchase = purchaseRepository.findByIdForUpdate(purchaseId)
+        Purchase purchase = purchaseRepository
+            .findByIdForUpdate(purchaseId)
             .orElseThrow(() -> new ResourceNotFoundException("Purchase not found."));
 
         entityManager.refresh(purchase);
@@ -155,12 +206,20 @@ public class PurchaseItemService {
     }
 
     private PurchaseItem findPurchaseItem(Long id, Long purchaseId) {
-        PurchaseItem purchaseItem = repository.findByIdAndPurchaseIdForUpdate(id, purchaseId)
-            .orElseThrow(() -> new IllegalArgumentException("Purchase item changed. Retry the operation."));
+        PurchaseItem purchaseItem = repository
+            .findByIdAndPurchaseIdForUpdate(id, purchaseId)
+            .orElseThrow(() ->
+                new IllegalArgumentException("Purchase item changed. Retry the operation.")
+            );
 
         entityManager.refresh(purchaseItem);
-        if (purchaseItem.getReceivedQuantity() == null || purchaseItem.getReceivedQuantity() != 0) {
-            throw new IllegalArgumentException("Cannot edit a purchase item with received quantities.");
+        if (
+            purchaseItem.getReceivedQuantity() == null ||
+            purchaseItem.getReceivedQuantity().signum() != 0
+        ) {
+            throw new IllegalArgumentException(
+                "Cannot edit a purchase item with received quantities."
+            );
         }
         return purchaseItem;
     }
@@ -169,8 +228,7 @@ public class PurchaseItemService {
         if (productId == null) {
             throw new IllegalArgumentException("Product ID is required.");
         }
-        Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
+        Product product = productCatalogService.lockProduct(productId);
 
         entityManager.refresh(product);
         if (!product.isActive()) {
@@ -179,30 +237,23 @@ public class PurchaseItemService {
         return product;
     }
 
-    private ProductSupplier findProductSupplier(Purchase purchase, Product product) {
-        ProductSupplier productSupplier = productSupplierRepository
-            .findBySupplierIdAndProductId(purchase.getSupplier().getId(), product.getId())
-            .orElseThrow(() -> new IllegalArgumentException("Product is not linked to the supplier."));
-
-        entityManager.refresh(productSupplier);
-        if (!productSupplier.isActive()) {
-            throw new IllegalArgumentException("Product supplier link must be active.");
-        }
-        return productSupplier;
-    }
-
     private Warehouse findWarehouse(Long warehouseId) {
         if (warehouseId == null) {
             throw new IllegalArgumentException("Warehouse ID is required.");
         }
-        return warehouseRepository.findById(warehouseId)
+        return warehouseRepository
+            .findById(warehouseId)
             .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
     }
 
     private void validateStock(Product product, Warehouse warehouse) {
-        if (warehouse == null
-            || !stockItemRepository.existsByWarehouseIdAndProductId(warehouse.getId(), product.getId())) {
-            throw new IllegalArgumentException("Product has no stock item in the selected warehouse.");
+        if (
+            warehouse == null ||
+            !stockItemRepository.existsByWarehouseIdAndProductId(warehouse.getId(), product.getId())
+        ) {
+            throw new IllegalArgumentException(
+                "Product has no stock item in the selected warehouse."
+            );
         }
     }
 
@@ -213,17 +264,23 @@ public class PurchaseItemService {
         purchaseRepository.save(purchase);
     }
 
-    private void validateValues(Integer quantity, BigDecimal unitCost) {
-        if (quantity == null || quantity <= 0) {
+    private void validateValues(BigDecimal quantity, BigDecimal unitCost) {
+        if (quantity == null || quantity.signum() <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than zero.");
         }
         validateAmount(unitCost);
     }
 
     private void validateAmount(BigDecimal amount) {
-        if (amount == null || amount.signum() < 0 || amount.compareTo(MAX_AMOUNT) > 0
-            || amount.stripTrailingZeros().scale() > 2) {
-            throw new IllegalArgumentException("Amount must be non-negative, at most 9999999999.99 and in cents.");
+        if (
+            amount == null ||
+            amount.signum() < 0 ||
+            amount.compareTo(MAX_AMOUNT) > 0 ||
+            amount.stripTrailingZeros().scale() > 2
+        ) {
+            throw new IllegalArgumentException(
+                "Amount must be non-negative, at most 9999999999.99 and in cents."
+            );
         }
     }
 }

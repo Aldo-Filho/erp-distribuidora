@@ -1,3 +1,5 @@
+import FilterSelect from "../../components/feedback/FilterSelect";
+import PageHeading from "../../components/layout/PageHeading";
 import { useCallback, useState } from "react";
 import { security } from "../../services/security";
 import useLoad from "../../components/feedback/useLoad";
@@ -28,7 +30,13 @@ export default function SecurityAuditPage() {
   return (
     <>
       <div className="page-title">
-        <h1>Auditoria de acesso</h1>
+        <PageHeading
+          title="Auditoria de acesso"
+          total={data?.totalElements}
+          loading={loading}
+          singular="evento encontrado"
+          plural="eventos encontrados"
+        />
       </div>
       <ErrorAlert message={error} retry={reload} />
       <section className="panel">
@@ -68,7 +76,7 @@ export default function SecurityAuditPage() {
           </label>
           <label>
             Ação
-            <select value={fields.action} onChange={change("action")}>
+            <FilterSelect value={fields.action} onChange={change("action")}>
               <option value="">Todas</option>
               {Object.entries(auditActions)
                 .sort(([, first], [, second]) => first.localeCompare(second, "pt-BR"))
@@ -77,18 +85,18 @@ export default function SecurityAuditPage() {
                     {label}
                   </option>
                 ))}
-            </select>
+            </FilterSelect>
           </label>
           <label>
             Resultado
-            <select value={fields.outcome} onChange={change("outcome")}>
+            <FilterSelect value={fields.outcome} onChange={change("outcome")}>
               <option value="">Todos</option>
               {Object.entries(auditOutcomes).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </FilterSelect>
           </label>
           <button className="align-end">Filtrar</button>
         </form>

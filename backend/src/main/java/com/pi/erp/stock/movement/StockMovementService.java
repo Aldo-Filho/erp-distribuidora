@@ -4,6 +4,8 @@ import com.pi.erp.auth.CurrentUser;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.order.OrderStatus;
 import com.pi.erp.order.item.OrderItem;
+import com.pi.erp.product.ProductQuantity;
+import com.pi.erp.product.catalog.ProductCatalogService;
 import com.pi.erp.purchase.PurchaseStatus;
 import com.pi.erp.purchase.item.PurchaseItem;
 import com.pi.erp.purchase.receipt.PurchaseReceiptItem;
@@ -13,7 +15,9 @@ import com.pi.erp.stock.reservation.StockReservation;
 import com.pi.erp.stock.reservation.StockReservationRepository;
 import com.pi.erp.stock.reservation.StockReservationStatus;
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -33,11 +37,17 @@ public class StockMovementService {
     private StockReservationRepository stockReservationRepository;
 
     @Autowired
+    private ProductCatalogService productCatalogService;
+
+    @Autowired
     private EntityManager entityManager;
 
     public List<StockMovement> search(StockMovementFilter filter) {
-        if (filter.occurredFrom() != null && filter.occurredTo() != null
-            && filter.occurredFrom().isAfter(filter.occurredTo())) {
+        if (
+            filter.occurredFrom() != null &&
+                filter.occurredTo() != null &&
+                filter.occurredFrom().isAfter(filter.occurredTo())
+        ) {
             throw new IllegalArgumentException("Start date cannot be after end date.");
         }
 
@@ -59,19 +69,13 @@ public class StockMovementService {
             );
         }
         if (filter.type() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("type"), filter.type())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("type"), filter.type()));
         }
         if (filter.reason() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("reason"), filter.reason())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("reason"), filter.reason()));
         }
         if (filter.orderId() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("orderId"), filter.orderId())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("orderId"), filter.orderId()));
         }
         if (filter.purchaseId() != null) {
             spec = spec.and((root, query, cb) ->
@@ -79,9 +83,7 @@ public class StockMovementService {
             );
         }
         if (filter.userId() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("userId"), filter.userId())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("userId"), filter.userId()));
         }
         if (filter.occurredFrom() != null) {
             spec = spec.and((root, query, cb) ->
@@ -98,24 +100,59 @@ public class StockMovementService {
     }
 
     @Transactional
-    public StockMovement register(RequestStockMovementDTO data) {
+    public MovementRegistration register(RequestStockMovementDTO data) {
         CurrentUser.require("stock.adjust");
         Long operatorUserId = CurrentUser.operator(data.userId());
-        validateMovement(data.type(), data.reason(), data.quantity());
-        validateUser(operatorUserId);
+        if (data.requestId() == null) {
+            throw new IllegalArgumentException("Request ID is required.");
+        }
+
+        // Coordinate the UUID across stock items and application instances until commit.
+        // Hash collisions only serialize unrelated requests; equality uses the full UUID.
+        repository.lockRequest(
+            data.requestId().getMostSignificantBits() ^ data.requestId().getLeastSignificantBits()
+        );
+        String notes = data.notes() == null || data.notes().isBlank()
+            ? null
+            : data.notes().trim();
+
+        StockMovement previous = repository.findByRequestId(data.requestId()).orElse(null);
+        if (previous != null) {
+            if (
+                !previous.getStockItem().getId().equals(data.stockItemId()) ||
+                    previous.getType() != data.type() ||
+                    previous.getReason() != data.reason() ||
+                    (data.quantity() == null || previous.getQuantity().compareTo(data.quantity()) != 0) ||
+                    !previous.getUserId().equals(operatorUserId) ||
+                    !Objects.equals(previous.getNotes(), notes)
+            ) {
+                throw new IllegalArgumentException(
+                    "Request ID already belongs to a different stock movement."
+                );
+            }
+            return new MovementRegistration(previous, false);
+        }
 
         StockItem stockItem = findStockItem(data.stockItemId());
-        Integer previousBalance = stockItem.getQuantity();
-        Integer newBalance = calculateNewBalance(stockItem, data.type(), data.quantity());
-        String notes = data.notes();
-
-        if (notes != null) {
-            notes = notes.isBlank() ? null : notes.trim();
+        validateMovement(data.type(), data.reason(), data.quantity());
+        validateUser(operatorUserId);
+        if (data.type() == StockMovementType.ADJUSTMENT) {
+            ProductQuantity.requireSignedBase(data.quantity(), stockItem.getProduct().getUnit());
+        } else {
+            ProductQuantity.requireBase(data.quantity(), stockItem.getProduct().getUnit(), false);
         }
+        BigDecimal previousBalance = stockItem.getQuantity();
+        BigDecimal newBalance = calculateNewBalance(stockItem, data.type(), data.quantity());
 
         StockMovement stockMovement = new StockMovement(
             new RequestStockMovementDTO(
-                data.stockItemId(), data.type(), data.reason(), data.quantity(), operatorUserId, data.notes()
+                data.requestId(),
+                data.stockItemId(),
+                data.type(),
+                data.reason(),
+                data.quantity(),
+                operatorUserId,
+                data.notes()
             ),
             stockItem,
             previousBalance,
@@ -126,8 +163,10 @@ public class StockMovementService {
         stockItem.setQuantity(newBalance);
         stockItemRepository.save(stockItem);
 
-        return repository.save(stockMovement);
+        return new MovementRegistration(repository.save(stockMovement), true);
     }
+
+    public record MovementRegistration(StockMovement movement, boolean created) {}
 
     // Called only by the coordinator with the order and all stock items already locked.
     @Transactional(propagation = Propagation.MANDATORY)
@@ -136,22 +175,33 @@ public class StockMovementService {
         Long operatorUserId,
         String notes
     ) {
-        if (reservation == null || reservation.getId() == null
-            || !entityManager.contains(reservation)
-            || reservation.getStatus() != StockReservationStatus.ACTIVE) {
-            throw new IllegalArgumentException("An active persisted stock reservation is required.");
+        if (
+            reservation == null ||
+                reservation.getId() == null ||
+                !entityManager.contains(reservation) ||
+                reservation.getStatus() != StockReservationStatus.ACTIVE
+        ) {
+            throw new IllegalArgumentException(
+                "An active persisted stock reservation is required."
+            );
         }
 
         OrderItem orderItem = reservation.getOrderItem();
         StockItem stockItem = reservation.getStockItem();
-        Integer quantity = reservation.getQuantity();
+        BigDecimal quantity = reservation.getQuantity();
 
-        if (orderItem.getOrder().getStatus() != OrderStatus.CONFIRMED
-            || quantity == null || quantity <= 0 || !quantity.equals(orderItem.getQuantity())
-            || !stockItem.getProduct().getId().equals(orderItem.getProduct().getId())
-            || orderItem.getWarehouse() == null
-            || !stockItem.getWarehouse().getId().equals(orderItem.getWarehouse().getId())) {
-            throw new IllegalArgumentException("Reservation does not match a confirmed order item.");
+        if (
+            orderItem.getOrder().getStatus() != OrderStatus.CONFIRMED ||
+                quantity == null ||
+                quantity.signum() <= 0 ||
+                quantity.compareTo(orderItem.getBaseQuantity()) != 0 ||
+                !stockItem.getProduct().getId().equals(orderItem.getProduct().getId()) ||
+                orderItem.getWarehouse() == null ||
+                !stockItem.getWarehouse().getId().equals(orderItem.getWarehouse().getId())
+        ) {
+            throw new IllegalArgumentException(
+                "Reservation does not match a confirmed order item."
+            );
         }
 
         validateUser(operatorUserId);
@@ -162,21 +212,27 @@ public class StockMovementService {
         }
 
         validateStockBalance(stockItem);
-        Integer previousBalance = stockItem.getQuantity();
-        long newBalance = previousBalance.longValue() - quantity.longValue();
-        long reservedQuantity = stockItem.getReservedQuantity().longValue() - quantity.longValue();
+        BigDecimal previousBalance = stockItem.getQuantity();
+        BigDecimal newBalance = previousBalance.subtract(quantity);
+        BigDecimal reservedQuantity = stockItem.getReservedQuantity().subtract(quantity);
 
-        if (reservedQuantity < 0 || newBalance < reservedQuantity) {
-            throw new IllegalArgumentException("Stock reservation cannot be consumed from this balance.");
+        if (reservedQuantity.signum() < 0 || newBalance.compareTo(reservedQuantity) < 0) {
+            throw new IllegalArgumentException(
+                "Stock reservation cannot be consumed from this balance."
+            );
         }
 
         String movementNotes = notes == null || notes.isBlank() ? null : notes.trim();
         StockMovement stockMovement = new StockMovement(
-            reservation, operatorUserId, previousBalance, (int) newBalance, movementNotes
+            reservation,
+            operatorUserId,
+            previousBalance,
+            newBalance,
+            movementNotes
         );
 
-        stockItem.setQuantity((int) newBalance);
-        stockItem.setReservedQuantity((int) reservedQuantity);
+        stockItem.setQuantity(newBalance);
+        stockItem.setReservedQuantity(reservedQuantity);
         reservation.setStatus(StockReservationStatus.CONSUMED);
         stockItemRepository.save(stockItem);
         stockReservationRepository.save(reservation);
@@ -187,26 +243,41 @@ public class StockMovementService {
     // Called only by the receipt coordinator with purchase, items and stocks already locked.
     @Transactional(propagation = Propagation.MANDATORY)
     public StockMovement registerPurchase(PurchaseReceiptItem receiptItem) {
-        if (receiptItem == null || receiptItem.getId() == null
-            || !entityManager.contains(receiptItem) || receiptItem.getReceipt() == null
-            || receiptItem.getReceipt().getId() == null) {
+        if (
+            receiptItem == null ||
+                receiptItem.getId() == null ||
+                !entityManager.contains(receiptItem) ||
+                receiptItem.getReceipt() == null ||
+                receiptItem.getReceipt().getId() == null
+        ) {
             throw new IllegalArgumentException("A persisted purchase receipt item is required.");
         }
 
         PurchaseItem purchaseItem = receiptItem.getPurchaseItem();
         StockItem stockItem = receiptItem.getStockItem();
-        Integer quantity = receiptItem.getQuantity();
+        BigDecimal quantity = receiptItem.getQuantity();
         PurchaseStatus status = receiptItem.getReceipt().getPurchase().getStatus();
 
-        if ((status != PurchaseStatus.CONFIRMED && status != PurchaseStatus.PARTIALLY_RECEIVED)
-            || !purchaseItem.getPurchase().getId().equals(receiptItem.getReceipt().getPurchase().getId())
-            || quantity == null || quantity <= 0
-            || purchaseItem.getReceivedQuantity() == null || purchaseItem.getReceivedQuantity() < 0
-            || purchaseItem.getQuantity() == null
-            || quantity > purchaseItem.getQuantity() - purchaseItem.getReceivedQuantity()
-            || !stockItem.getProduct().getId().equals(purchaseItem.getProduct().getId())
-            || !stockItem.getWarehouse().getId().equals(purchaseItem.getWarehouse().getId())) {
-            throw new IllegalArgumentException("Receipt does not match an outstanding purchase item.");
+        if (
+            (status != PurchaseStatus.CONFIRMED && status != PurchaseStatus.PARTIALLY_RECEIVED) ||
+                !purchaseItem
+                    .getPurchase()
+                    .getId()
+                    .equals(receiptItem.getReceipt().getPurchase().getId()) ||
+                quantity == null ||
+                quantity.signum() <= 0 ||
+                purchaseItem.getReceivedQuantity() == null ||
+                purchaseItem.getReceivedQuantity().signum() < 0 ||
+                purchaseItem.getBaseQuantity() == null ||
+                quantity.compareTo(
+                    purchaseItem.getBaseQuantity().subtract(purchaseItem.getReceivedQuantity())
+                ) > 0 ||
+                !stockItem.getProduct().getId().equals(purchaseItem.getProduct().getId()) ||
+                !stockItem.getWarehouse().getId().equals(purchaseItem.getWarehouse().getId())
+        ) {
+            throw new IllegalArgumentException(
+                "Receipt does not match an outstanding purchase item."
+            );
         }
 
         validateUser(receiptItem.getReceipt().getOperator().getId());
@@ -215,8 +286,8 @@ public class StockMovementService {
             throw new IllegalArgumentException("Receipt item already has a purchase movement.");
         }
 
-        Integer previousBalance = stockItem.getQuantity();
-        Integer newBalance = calculateNewBalance(stockItem, StockMovementType.INBOUND, quantity);
+        BigDecimal previousBalance = stockItem.getQuantity();
+        BigDecimal newBalance = calculateNewBalance(stockItem, StockMovementType.INBOUND, quantity);
         StockMovement stockMovement = new StockMovement(receiptItem, previousBalance, newBalance);
         stockItem.setQuantity(newBalance);
         stockItemRepository.save(stockItem);
@@ -228,11 +299,19 @@ public class StockMovementService {
             throw new IllegalArgumentException("Stock item ID is required.");
         }
 
+        StockItem observed = stockItemRepository
+            .findById(stockItemId)
+            .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
+        Long originalProductId = observed.getProduct().getId();
+        productCatalogService.lockProduct(originalProductId);
         StockItem stockItem = stockItemRepository
             .findByIdForUpdate(stockItemId)
             .orElseThrow(() -> new ResourceNotFoundException("Stock item not found."));
 
         entityManager.refresh(stockItem);
+        if (!stockItem.getProduct().getId().equals(originalProductId)) {
+            throw new IllegalArgumentException("Stock item changed. Retry the operation.");
+        }
         return stockItem;
     }
 
@@ -253,7 +332,7 @@ public class StockMovementService {
     private void validateMovement(
         StockMovementType type,
         StockMovementReason reason,
-        Integer quantity
+        BigDecimal quantity
     ) {
         if (type == null) {
             throw new IllegalArgumentException("Movement type is required.");
@@ -265,65 +344,79 @@ public class StockMovementService {
             throw new IllegalArgumentException("Quantity is required.");
         }
         if (type == StockMovementType.ADJUSTMENT) {
-            if (quantity == 0) {
+            if (quantity.signum() == 0) {
                 throw new IllegalArgumentException("Adjustment quantity cannot be zero.");
             }
             if (reason != StockMovementReason.MANUAL_ADJUSTMENT) {
-                throw new IllegalArgumentException("Adjustment requires a manual adjustment reason.");
+                throw new IllegalArgumentException(
+                    "Adjustment requires a manual adjustment reason."
+                );
             }
         } else {
-            if (quantity <= 0) {
-                throw new IllegalArgumentException("Inbound and outbound quantities must be positive.");
+            if (quantity.signum() <= 0) {
+                throw new IllegalArgumentException(
+                    "Inbound and outbound quantities must be positive."
+                );
             }
-            if (reason != StockMovementReason.RETURN
-                && reason != StockMovementReason.MANUAL_ADJUSTMENT
-                && (type != StockMovementType.OUTBOUND || reason != StockMovementReason.LOSS)) {
+            if (
+                reason != StockMovementReason.RETURN &&
+                    reason != StockMovementReason.MANUAL_ADJUSTMENT &&
+                    (type != StockMovementType.OUTBOUND || reason != StockMovementReason.LOSS)
+            ) {
                 throw new IllegalArgumentException("Movement reason is not allowed for this type.");
             }
         }
     }
 
-    private Integer calculateNewBalance(
+    private BigDecimal calculateNewBalance(
         StockItem stockItem,
         StockMovementType type,
-        Integer quantity
+        BigDecimal quantity
     ) {
         stockReservationRepository.flush();
         validateStockBalance(stockItem);
-        Integer previousBalance = stockItem.getQuantity();
-        Integer reservedQuantity = stockItem.getReservedQuantity();
+        BigDecimal previousBalance = stockItem.getQuantity();
+        BigDecimal reservedQuantity = stockItem.getReservedQuantity();
 
-        long newBalance = previousBalance.longValue();
+        BigDecimal newBalance = previousBalance;
 
         if (type == StockMovementType.OUTBOUND) {
-            newBalance -= quantity.longValue();
+            newBalance = newBalance.subtract(quantity);
         } else {
-            newBalance += quantity.longValue();
+            newBalance = newBalance.add(quantity);
         }
 
-        if (newBalance < 0) {
+        if (newBalance.signum() < 0) {
             throw new IllegalArgumentException("New balance cannot be negative.");
         }
-        if (newBalance > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("New balance exceeds the supported quantity.");
-        }
-        if (newBalance < reservedQuantity) {
-            throw new IllegalArgumentException("New balance cannot be less than reserved quantity.");
+        ProductQuantity.requireBase(newBalance, stockItem.getProduct().getUnit(), true);
+        if (newBalance.compareTo(reservedQuantity) < 0) {
+            throw new IllegalArgumentException(
+                "New balance cannot be less than reserved quantity."
+            );
         }
 
-        return (int) newBalance;
+        return newBalance;
     }
 
     private void validateStockBalance(StockItem stockItem) {
-        Integer quantity = stockItem.getQuantity();
-        Integer reservedQuantity = stockItem.getReservedQuantity();
+        BigDecimal quantity = stockItem.getQuantity();
+        BigDecimal reservedQuantity = stockItem.getReservedQuantity();
 
-        if (quantity == null || reservedQuantity == null || quantity < 0
-            || reservedQuantity < 0 || reservedQuantity > quantity) {
+        if (
+            quantity == null ||
+                reservedQuantity == null ||
+                quantity.signum() < 0 ||
+                reservedQuantity.signum() < 0 ||
+                reservedQuantity.compareTo(quantity) > 0
+        ) {
             throw new IllegalArgumentException("Stock item has inconsistent balances.");
         }
-        if (reservedQuantity.longValue()
-            != stockReservationRepository.sumActiveQuantityByStockItemId(stockItem.getId())) {
+        if (
+            reservedQuantity.compareTo(
+                stockReservationRepository.sumActiveQuantityByStockItemId(stockItem.getId())
+            ) != 0
+        ) {
             throw new IllegalArgumentException("Stock item has inconsistent reservations.");
         }
     }

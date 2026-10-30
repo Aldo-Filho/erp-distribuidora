@@ -2,18 +2,13 @@ package com.pi.erp.price.item;
 
 import com.pi.erp.price.PriceTable;
 import com.pi.erp.product.Product;
+import com.pi.erp.product.presentation.ProductPresentation;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import lombok.*;
 
 @Entity
-@Table(
-    name = "price_table_items",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_price_table_item",
-        columnNames = { "price_table_id", "product_id" }
-    )
-)
+@Table(name = "price_table_items")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -34,6 +29,10 @@ public class PriceTableItem {
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "presentation_id")
+    private ProductPresentation presentation;
 
     @Column(name = "price", nullable = false, precision = 12, scale = 2)
     private BigDecimal price;

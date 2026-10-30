@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import useAuth from "../auth/useAuth";
 import ErrorAlert from "../components/feedback/ErrorAlert";
 
-export default function ProtectedRoute({ permission }) {
+export default function ProtectedRoute({ permission, anyPermissions }) {
   const { session, loading, error, refresh, has } = useAuth();
   const location = useLocation();
   if (loading)
@@ -18,7 +18,7 @@ export default function ProtectedRoute({ permission }) {
       </div>
     );
   if (!session) return <Navigate to="/login" state={{ returnTo: location.pathname }} replace />;
-  if (permission && !has(permission))
+  if ((permission && !has(permission)) || (anyPermissions && !anyPermissions.some(has)))
     return (
       <section className="panel">
         <h1>Acesso negado</h1>

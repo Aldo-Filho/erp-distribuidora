@@ -7,6 +7,7 @@ public record RequestPurchaseItemDTO(
     @NotNull Long purchaseId,
     @NotNull Long productId,
     @NotNull Long warehouseId,
-    @NotNull Integer quantity,
-    BigDecimal unitCost
+    @NotNull BigDecimal quantity,
+    BigDecimal unitCost,
+    Long supplierOptionId
 ) {}

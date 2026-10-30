@@ -14,12 +14,22 @@ import SecurityAuditPage from "../pages/Security/SecurityAuditPage";
 import AccountPage from "../pages/Account/AccountPage";
 import SuppliersPage from "../pages/Suppliers/SuppliersPage";
 import CustomersPage from "../pages/Customers/CustomersPage";
+import ProductsPage from "../pages/Products/ProductsPage";
+import StockPage from "../pages/Operations/StockPage";
+import WarehousesPage from "../pages/Operations/WarehousesPage";
+import OrdersPage from "../pages/Operations/OrdersPage";
+import PurchasesPage from "../pages/Operations/PurchasesPage";
 import useAuth from "../auth/useAuth";
 import { firstRoute } from "./navigation";
 
 function Home() {
   const { session } = useAuth();
   return <Navigate to={firstRoute(session)} replace />;
+}
+
+function ProductsEntry() {
+  const { has } = useAuth();
+  return has("products.read") ? <ProductsPage /> : <StockPage />;
 }
 
 export default function AppRoutes() {
@@ -34,6 +44,21 @@ export default function AppRoutes() {
           <Route index element={<Home />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/security/sessions" element={<SessionsPage />} />
+          <Route element={<ProtectedRoute permission="stock.read" />}>
+            <Route path="/stock" element={<Navigate to="/products" replace />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="warehouses.read" />}>
+            <Route path="/warehouses" element={<WarehousesPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="orders.read" />}>
+            <Route path="/orders" element={<OrdersPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="purchases.read" />}>
+            <Route path="/purchases" element={<PurchasesPage />} />
+          </Route>
+          <Route element={<ProtectedRoute anyPermissions={["products.read", "stock.read"]} />}>
+            <Route path="/products" element={<ProductsEntry />} />
+          </Route>
           <Route element={<ProtectedRoute permission="suppliers.read" />}>
             <Route path="/suppliers" element={<SuppliersPage />} />
           </Route>

@@ -1,3 +1,4 @@
+import useConfirm from "../../components/feedback/useConfirm";
 import { useCallback, useEffect, useState } from "react";
 import { security } from "../../services/security";
 import useAuth from "../../auth/useAuth";
@@ -5,6 +6,7 @@ import useLoad from "../../components/feedback/useLoad";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 
 export default function SecuritySettingsPage() {
+  const confirm = useConfirm();
   const loader = useCallback(security.settings, []);
   const { data, loading, error, reload } = useLoad(loader);
   const { refresh } = useAuth();
@@ -51,7 +53,7 @@ export default function SecuritySettingsPage() {
                 return;
               }
               if (
-                !window.confirm(
+                !(await confirm(
                   "Aplicar " +
                     values.idleMinutes +
                     " min de inatividade, " +
@@ -59,7 +61,8 @@ export default function SecuritySettingsPage() {
                     " min de duração e " +
                     values.maxSessions +
                     " sessão(ões)? Sessões fora dos novos prazos serão encerradas. Excedentes serão revogados pela menor atividade, preservando esta sessão quando possível. Aumentar os limites não recupera sessões encerradas.",
-                )
+                  { title: "Aplicar política de acesso", confirmLabel: "Aplicar política" },
+                ))
               )
                 return;
               setPending(true);

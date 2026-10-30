@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pi.erp.purchase.item.PurchaseItem;
 import com.pi.erp.stock.StockItem;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import lombok.*;
 
 @Entity
@@ -40,14 +41,14 @@ public class PurchaseReceiptItem {
     @JoinColumn(name = "stock_item_id", nullable = false)
     private StockItem stockItem;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    @Column(name = "quantity", nullable = false, precision = 14, scale = 1)
+    private BigDecimal quantity;
 
     public PurchaseReceiptItem(
         PurchaseReceipt receipt,
         PurchaseItem purchaseItem,
         StockItem stockItem,
-        Integer quantity
+        BigDecimal quantity
     ) {
         this.receipt = receipt;
         this.purchaseItem = purchaseItem;

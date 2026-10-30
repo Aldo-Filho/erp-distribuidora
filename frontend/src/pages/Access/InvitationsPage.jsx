@@ -1,3 +1,7 @@
+import RowActions from "../../components/feedback/RowActions";
+import FilterSelect from "../../components/feedback/FilterSelect";
+import useConfirm from "../../components/feedback/useConfirm";
+import PageHeading from "../../components/layout/PageHeading";
 import { useCallback, useState } from "react";
 import { access } from "../../services/access";
 import { useDraft } from "../../auth/drafts";
@@ -6,6 +10,7 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 import Pagination from "../../components/feedback/Pagination";
 
 export default function InvitationsPage() {
+  const confirm = useConfirm();
   const [page, setPage] = useState(0);
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
@@ -39,7 +44,13 @@ export default function InvitationsPage() {
   return (
     <>
       <div className="page-title">
-        <h1>Convites</h1>
+        <PageHeading
+          title="Convites"
+          total={data?.invitations.totalElements}
+          loading={loading}
+          singular={search ? "convite encontrado" : "convite registrado"}
+          plural={search ? "convites encontrados" : "convites registrados"}
+        />
       </div>
       <ErrorAlert message={failure || error} retry={error ? reload : undefined} />
       {notice && (
@@ -77,7 +88,11 @@ export default function InvitationsPage() {
           </label>
           <label>
             Cargo
-            <select value={roleId} onChange={(event) => setRoleId(event.target.value)} required>
+            <FilterSelect
+              value={roleId}
+              onChange={(event) => setRoleId(event.target.value)}
+              required
+            >
               <option value="">Selecionar cargo</option>
               {data?.roles
                 .filter((role) => role.active)
@@ -86,7 +101,7 @@ export default function InvitationsPage() {
                     {role.name}
                   </option>
                 ))}
-            </select>
+            </FilterSelect>
           </label>
           <div className="actions align-end">
             <button disabled={pending || !data}>
@@ -153,7 +168,7 @@ export default function InvitationsPage() {
                         <small>{delivery}</small>
                       </td>
                       <td>
-                        <div className="row-actions">
+                        <RowActions label={`Ações do convite de ${invitation.email}`}>
                           <button
                             className="secondary"
                             disabled={pending || !!closed}
@@ -169,14 +184,20 @@ export default function InvitationsPage() {
                           <button
                             className="danger-link"
                             disabled={pending || !!closed}
-                            onClick={() => {
-                              if (window.confirm("Cancelar o convite de " + invitation.email + "?"))
+                            onClick={async () => {
+                              if (
+                                await confirm("Cancelar o convite de " + invitation.email + "?", {
+                                  title: "Cancelar convite",
+                                  confirmLabel: "Cancelar convite",
+                                  destructive: true,
+                                })
+                              )
                                 run(() => access.cancelInvite(invitation.id));
                             }}
                           >
                             Cancelar
                           </button>
-                        </div>
+                        </RowActions>
                       </td>
                     </tr>
                   );

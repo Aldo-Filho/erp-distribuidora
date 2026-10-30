@@ -5,5 +5,6 @@ public record ProductFilter(
     String sku,
     Long brandId,
     Long categoryId,
-    Boolean active
+    Boolean active,
+    Long catalogId
 ) {}

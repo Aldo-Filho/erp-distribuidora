@@ -80,7 +80,8 @@ class AuthenticationAccessIntegrationTests {
         @Override
         public void initialize(ConfigurableApplicationContext context) {
             String url = context.getEnvironment().getProperty("spring.datasource.url", "");
-            if (!url.matches("jdbc:postgresql://127\\.0\\.0\\.1:55433/auth_verify_[0-9]+")) {
+            if (!url.matches("jdbc:postgresql://127\\.0\\.0\\.1:55433/auth_verify_[0-9]+")
+                && !"jdbc:postgresql://127.0.0.1:55435/jamshub_test".equals(url)) {
                 throw new IllegalStateException(
                     "Authentication tests require a dedicated auth_verify database on port 55433."
                 );

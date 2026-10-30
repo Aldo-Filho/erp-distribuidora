@@ -5,9 +5,11 @@ import com.pi.erp.order.Order;
 import com.pi.erp.order.OrderStatus;
 import com.pi.erp.order.item.OrderItem;
 import com.pi.erp.order.item.OrderItemRepository;
+import com.pi.erp.product.ProductQuantity;
 import com.pi.erp.stock.StockItem;
 import com.pi.erp.stock.StockItemRepository;
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,18 +54,19 @@ public class StockReservationService {
         }
 
         Map<Long, Long> stockItemIds = new HashMap<>();
-        Map<Long, Long> quantities = new TreeMap<>();
+        Map<Long, BigDecimal> quantities = new TreeMap<>();
 
         for (OrderItem orderItem : orderItems) {
             validateOrderItem(orderItem);
             Long stockItemId = stockItemRepository
                 .findIdByWarehouseIdAndProductId(
-                    orderItem.getWarehouse().getId(), orderItem.getProduct().getId()
+                    orderItem.getWarehouse().getId(),
+                    orderItem.getProduct().getId()
                 )
                 .orElseThrow(() -> new ResourceNotFoundException("Order stock item not found."));
 
             stockItemIds.put(orderItem.getId(), stockItemId);
-            quantities.merge(stockItemId, orderItem.getQuantity().longValue(), Long::sum);
+            quantities.merge(stockItemId, orderItem.getBaseQuantity(), BigDecimal::add);
         }
 
         Map<Long, StockItem> stockItems = lockStockItems(quantities.keySet());
@@ -71,20 +74,22 @@ public class StockReservationService {
         for (OrderItem orderItem : orderItems) {
             validateOrigin(orderItem, stockItems.get(stockItemIds.get(orderItem.getId())));
         }
-        for (Map.Entry<Long, Long> entry : quantities.entrySet()) {
+        for (Map.Entry<Long, BigDecimal> entry : quantities.entrySet()) {
             StockItem stockItem = stockItems.get(entry.getKey());
-            long availableQuantity = stockItem.getQuantity().longValue()
-                - stockItem.getReservedQuantity().longValue();
+            BigDecimal availableQuantity = stockItem
+                .getQuantity()
+                .subtract(stockItem.getReservedQuantity());
 
-            if (entry.getValue() > availableQuantity) {
+            if (entry.getValue().compareTo(availableQuantity) > 0) {
                 throw new IllegalArgumentException("Insufficient available stock for the order.");
             }
         }
 
-        for (Map.Entry<Long, Long> entry : quantities.entrySet()) {
+        for (Map.Entry<Long, BigDecimal> entry : quantities.entrySet()) {
             StockItem stockItem = stockItems.get(entry.getKey());
-            long reservedQuantity = stockItem.getReservedQuantity().longValue() + entry.getValue();
-            stockItem.setReservedQuantity((int) reservedQuantity);
+            BigDecimal reservedQuantity = stockItem.getReservedQuantity().add(entry.getValue());
+            ProductQuantity.requireBase(reservedQuantity, stockItem.getProduct().getUnit(), true);
+            stockItem.setReservedQuantity(reservedQuantity);
             stockItemRepository.save(stockItem);
         }
         for (OrderItem orderItem : orderItems) {
@@ -97,7 +102,9 @@ public class StockReservationService {
     public void release(Order order) {
         if (order.getStatus() == OrderStatus.PENDING) {
             if (!repository.findByOrderId(order.getId()).isEmpty()) {
-                throw new IllegalArgumentException("Pending order has unexpected stock reservations.");
+                throw new IllegalArgumentException(
+                    "Pending order has unexpected stock reservations."
+                );
             }
             return;
         }
@@ -106,14 +113,15 @@ public class StockReservationService {
 
         for (StockReservation reservation : reservations) {
             StockItem stockItem = reservation.getStockItem();
-            long reservedQuantity = stockItem.getReservedQuantity().longValue()
-                - reservation.getQuantity().longValue();
+            BigDecimal reservedQuantity = stockItem
+                .getReservedQuantity()
+                .subtract(reservation.getQuantity());
 
-            if (reservedQuantity < 0) {
+            if (reservedQuantity.signum() < 0) {
                 throw new IllegalArgumentException("Stock item has inconsistent reservations.");
             }
 
-            stockItem.setReservedQuantity((int) reservedQuantity);
+            stockItem.setReservedQuantity(reservedQuantity);
             reservation.setStatus(StockReservationStatus.RELEASED);
             stockItemRepository.save(stockItem);
             repository.save(reservation);
@@ -145,9 +153,12 @@ public class StockReservationService {
             orderItemIds.add(orderItem.getId());
         }
         for (StockReservation reservation : reservations) {
-            if (reservation.getStatus() != StockReservationStatus.ACTIVE
-                || !orderItemIds.remove(reservation.getOrderItem().getId())
-                || !reservation.getOrderItem().getQuantity().equals(reservation.getQuantity())) {
+            if (
+                reservation.getStatus() != StockReservationStatus.ACTIVE ||
+                !orderItemIds.remove(reservation.getOrderItem().getId()) ||
+                reservation.getOrderItem().getBaseQuantity().compareTo(reservation.getQuantity()) !=
+                    0
+            ) {
                 throw new IllegalArgumentException("Order has inconsistent stock reservations.");
             }
             stockItemIds.add(reservation.getStockItem().getId());
@@ -156,12 +167,16 @@ public class StockReservationService {
         Map<Long, StockItem> stockItems = lockStockItems(stockItemIds);
 
         for (StockReservation reservation : reservations) {
-            validateOrigin(reservation.getOrderItem(), stockItems.get(reservation.getStockItem().getId()));
+            validateOrigin(
+                reservation.getOrderItem(),
+                stockItems.get(reservation.getStockItem().getId())
+            );
         }
 
         reservations.sort(
-            Comparator.comparing((StockReservation reservation) -> reservation.getStockItem().getId())
-                .thenComparing(StockReservation::getId)
+            Comparator.comparing((StockReservation reservation) ->
+                reservation.getStockItem().getId()
+            ).thenComparing(StockReservation::getId)
         );
         return reservations;
     }
@@ -184,29 +199,46 @@ public class StockReservationService {
     }
 
     private void validateBalance(StockItem stockItem) {
-        Integer quantity = stockItem.getQuantity();
-        Integer reservedQuantity = stockItem.getReservedQuantity();
+        BigDecimal quantity = stockItem.getQuantity();
+        BigDecimal reservedQuantity = stockItem.getReservedQuantity();
 
-        if (quantity == null || reservedQuantity == null || quantity < 0
-            || reservedQuantity < 0 || reservedQuantity > quantity) {
+        if (
+            quantity == null ||
+            reservedQuantity == null ||
+            quantity.signum() < 0 ||
+            reservedQuantity.signum() < 0 ||
+            reservedQuantity.compareTo(quantity) > 0
+        ) {
             throw new IllegalArgumentException("Stock item has inconsistent balances.");
         }
-        if (reservedQuantity.longValue() != repository.sumActiveQuantityByStockItemId(stockItem.getId())) {
+        if (
+            reservedQuantity.compareTo(
+                repository.sumActiveQuantityByStockItemId(stockItem.getId())
+            ) != 0
+        ) {
             throw new IllegalArgumentException("Stock item has inconsistent reservations.");
         }
     }
 
     private void validateOrderItem(OrderItem orderItem) {
-        if (orderItem.getWarehouse() == null || orderItem.getProduct() == null
-            || orderItem.getQuantity() == null || orderItem.getQuantity() <= 0) {
+        if (
+            orderItem.getWarehouse() == null ||
+            orderItem.getProduct() == null ||
+            orderItem.getBaseQuantity() == null ||
+            orderItem.getBaseQuantity().signum() <= 0
+        ) {
             throw new IllegalArgumentException("Order item has invalid stock data.");
         }
     }
 
     private void validateOrigin(OrderItem orderItem, StockItem stockItem) {
-        if (!stockItem.getWarehouse().getId().equals(orderItem.getWarehouse().getId())
-            || !stockItem.getProduct().getId().equals(orderItem.getProduct().getId())) {
-            throw new IllegalArgumentException("Stock item no longer matches the order item origin.");
+        if (
+            !stockItem.getWarehouse().getId().equals(orderItem.getWarehouse().getId()) ||
+            !stockItem.getProduct().getId().equals(orderItem.getProduct().getId())
+        ) {
+            throw new IllegalArgumentException(
+                "Stock item no longer matches the order item origin."
+            );
         }
     }
 }

@@ -1,7 +1,9 @@
 package com.pi.erp.supplier.product;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pi.erp.product.Product;
 import com.pi.erp.supplier.Supplier;
+import com.pi.erp.supplier.product.option.ProductSupplierOption;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import lombok.*;
@@ -35,14 +37,10 @@ public class ProductSupplier {
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
 
-    @Column(name = "cost", nullable = false)
-    private BigDecimal cost;
-
-    @Column(name = "avg_delivery_days")
-    private Integer avgDeliveryDays;
-
-    @Column(name = "supplier_product_code", length = 50)
-    private String supplierProductCode;
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "legacy_option_id")
+    private ProductSupplierOption legacyOption;
 
     @Column(name = "preferred", nullable = false)
     private boolean preferred = false;
@@ -53,10 +51,23 @@ public class ProductSupplier {
     public ProductSupplier(RequestProductSupplierDTO data, Product product, Supplier supplier) {
         this.product = product;
         this.supplier = supplier;
-        this.cost = data.cost();
-        this.avgDeliveryDays = data.avgDeliveryDays();
-        this.supplierProductCode = data.supplierProductCode();
         this.preferred = Boolean.TRUE.equals(data.preferred());
         this.active = data.active() == null || data.active();
+    }
+
+    public Long getLegacyOptionId() {
+        return legacyOption == null ? null : legacyOption.getId();
+    }
+
+    public BigDecimal getCost() {
+        return legacyOption == null ? null : legacyOption.getCost();
+    }
+
+    public Integer getAvgDeliveryDays() {
+        return legacyOption == null ? null : legacyOption.getAvgDeliveryDays();
+    }
+
+    public String getSupplierProductCode() {
+        return legacyOption == null ? null : legacyOption.getSupplierProductCode();
     }
 }

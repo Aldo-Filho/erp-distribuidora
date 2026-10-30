@@ -1,8 +1,9 @@
 package com.pi.erp.warehouse;
 
 import com.pi.erp.exception.ResourceNotFoundException;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +14,7 @@ public class WarehouseService {
     @Autowired
     private WarehouseRepository repository;
 
-    public List<Warehouse> search(WarehouseFilter filter) {
+    public Page<Warehouse> search(WarehouseFilter filter, Pageable pageable) {
         Specification<Warehouse> spec = Specification.allOf();
 
         if (filter.name() != null && !filter.name().isBlank()) {
@@ -22,7 +23,7 @@ public class WarehouseService {
             );
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     public Warehouse register(RequestWarehouseDTO data) {
@@ -31,6 +32,7 @@ public class WarehouseService {
         }
 
         Warehouse warehouse = new Warehouse(data);
+        warehouse.setName(data.name().trim());
         return repository.save(warehouse);
     }
 
@@ -39,8 +41,24 @@ public class WarehouseService {
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found."));
 
-        if (data.description() != null) {
-            warehouse.setDescription(data.description().isBlank() ? null : data.description());
+        String name = null;
+        if (data.name() != null) {
+            name = data.name().trim();
+            if (name.isEmpty()) {
+                throw new IllegalArgumentException("Warehouse name is required.");
+            }
+            if (repository.existsByNormalizedNameAndIdNot(name, id)) {
+                throw new IllegalArgumentException("This warehouse name already exists.");
+            }
+        }
+
+        String description = data.description() == null ? null : data.description().trim();
+
+        if (name != null) {
+            warehouse.setName(name);
+        }
+        if (description != null) {
+            warehouse.setDescription(description.isEmpty() ? null : description);
         }
 
         return repository.save(warehouse);

@@ -6,8 +6,10 @@ public record PatchOrderItemDTO(
     Long orderId,
     Long productId,
     Long warehouseId,
-    Integer quantity,
+    BigDecimal quantity,
     BigDecimal unitPrice,
     BigDecimal discount,
-    DiscountType discountType
+    DiscountType discountType,
+    Long presentationId,
+    Boolean removePresentation
 ) {}

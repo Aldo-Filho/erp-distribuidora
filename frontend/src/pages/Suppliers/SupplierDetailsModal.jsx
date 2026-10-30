@@ -6,7 +6,13 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 import RecordMetadata from "../../components/record/RecordMetadata";
 import { addressTypes } from "./SupplierAddressFields";
 
-export default function SupplierDetailsModal({ supplierId, onClose, onEdit, onAddresses }) {
+export default function SupplierDetailsModal({
+  supplierId,
+  onClose,
+  onEdit,
+  onAddresses,
+  onCatalogLinks,
+}) {
   const { has } = useAuth();
   const [state, setState] = useState({ loading: true });
   const [addressState, setAddressState] = useState({ loading: true });
@@ -103,6 +109,11 @@ export default function SupplierDetailsModal({ supplierId, onClose, onEdit, onAd
           </section>
           <RecordMetadata record={supplier} />
           <div className="actions">
+            {onCatalogLinks && has("suppliers.read") && (
+              <button type="button" className="secondary" onClick={() => onCatalogLinks(supplier.id)}>
+                Marcas e categorias
+              </button>
+            )}
             <button type="button" className="secondary" onClick={() => onAddresses(supplier.id)}>
               Endereços
             </button>

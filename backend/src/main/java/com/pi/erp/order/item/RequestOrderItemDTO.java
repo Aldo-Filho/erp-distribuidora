@@ -7,8 +7,9 @@ public record RequestOrderItemDTO(
     @NotNull Long orderId,
     @NotNull Long productId,
     @NotNull Long warehouseId,
-    @NotNull Integer quantity,
+    @NotNull BigDecimal quantity,
     BigDecimal unitPrice,
     BigDecimal discount,
-    DiscountType discountType
+    DiscountType discountType,
+    Long presentationId
 ) {}

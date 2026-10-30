@@ -1,5 +1,6 @@
 import usePostalCode from "./usePostalCode";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
+import FilterSelect from "../../components/feedback/FilterSelect";
 
 export const addressTypes = { MAIN: "Principal", BILLING: "Cobrança", SHIPPING: "Entrega" };
 export const emptyAddress = {
@@ -27,8 +28,9 @@ export default function CustomerAddressFields({
       <div className="form-grid">
         <label>
           Tipo
-          <select
+          <FilterSelect
             autoFocus
+            disabled={disabled}
             value={value.addressType}
             onChange={(event) => postal.change({ ...value, addressType: event.target.value })}
           >
@@ -37,7 +39,7 @@ export default function CustomerAddressFields({
                 {addressTypes[type]}
               </option>
             ))}
-          </select>
+          </FilterSelect>
         </label>
         <label>
           CEP

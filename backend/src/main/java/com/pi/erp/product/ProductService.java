@@ -1,14 +1,16 @@
 package com.pi.erp.product;
 
-import com.pi.erp.auth.CurrentUser;
-import com.pi.erp.exception.ResourceNotFoundException;
-import com.pi.erp.product.brand.Brand;
-import com.pi.erp.product.brand.BrandRepository;
-import com.pi.erp.product.category.Category;
-import com.pi.erp.product.category.CategoryRepository;
-import com.pi.erp.stock.RequestStockItemDTO;
-import com.pi.erp.stock.StockItemService;
+import com.pi.erp.product.catalog.PatchProductCatalogDTO;
+import com.pi.erp.product.catalog.ProductCatalogRepository;
+import com.pi.erp.product.catalog.ProductCatalogService;
+import com.pi.erp.product.catalog.ProductCatalogType;
+import com.pi.erp.product.catalog.RequestCatalogItemDTO;
+import com.pi.erp.product.catalog.RequestProductCatalogDTO;
+import com.pi.erp.product.presentation.ProductPresentationRepository;
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -21,169 +23,211 @@ public class ProductService {
     private ProductRepository repository;
 
     @Autowired
-    private BrandRepository brandRepository;
+    private ProductCatalogService productCatalogService;
 
     @Autowired
-    private CategoryRepository categoryRepository;
+    private ProductCatalogRepository productCatalogRepository;
 
     @Autowired
-    private StockItemService stockItemService;
-
-    @Autowired
-    private SkuGenerator skuGenerator;
+    private ProductPresentationRepository productPresentationRepository;
 
     public List<Product> search(ProductFilter filter) {
         Specification<Product> spec = Specification.allOf();
 
         if (filter.name() != null && !filter.name().isBlank()) {
             spec = spec.and((root, query, cb) ->
-                cb.like(cb.lower(root.get("name")), "%" + filter.name().toLowerCase() + "%")
+                cb.like(
+                    cb.lower(root.get("catalog").get("name")),
+                    "%" + filter.name().toLowerCase() + "%"
+                )
             );
         }
         if (filter.sku() != null && !filter.sku().isBlank()) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("sku"), filter.sku())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("sku"), filter.sku()));
         }
         if (filter.categoryId() != null) {
             spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("category").get("id"), filter.categoryId())
+                cb.equal(root.get("catalog").get("category").get("id"), filter.categoryId())
             );
         }
         if (filter.brandId() != null) {
             spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("brand").get("id"), filter.brandId())
+                cb.equal(root.get("catalog").get("brand").get("id"), filter.brandId())
             );
         }
         if (filter.active() != null) {
             spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("active"), filter.active())
+                cb.equal(
+                    cb.and(
+                        cb.isTrue(root.get("active")),
+                        cb.isTrue(root.get("catalog").get("active"))
+                    ),
+                    filter.active()
+                )
             );
         }
 
+        if (filter.catalogId() != null) {
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("catalog").get("id"), filter.catalogId())
+            );
+        }
         return repository.findAll(spec);
     }
 
     @Transactional
     public Product register(RequestProductDTO data) {
-        if (data.stock() != null) {
-            CurrentUser.require("stock.configure");
+        var item = new RequestCatalogItemDTO(
+            data.cost(),
+            data.price(),
+            data.weightKg(),
+            data.color(),
+            data.dimensionX(),
+            data.dimensionY(),
+            data.dimensionZ(),
+            data.size(),
+            data.catalogId() == null ? null : data.active(),
+            data.attributes(),
+            data.stock()
+        );
+        if (data.catalogId() != null) {
+            if (
+                data.name() != null ||
+                data.brandId() != null ||
+                data.categoryId() != null ||
+                data.unit() != null
+            ) {
+                throw new IllegalArgumentException(
+                    "Use the catalog endpoint to edit shared variant data."
+                );
+            }
+            return productCatalogService.registerItem(data.catalogId(), item);
         }
-        Brand brand = findBrand(data.brandId());
-        Category category = findCategory(data.categoryId());
-
-        long number = repository.nextSkuNumber();
-        String sku = skuGenerator.generate(number);
-
-        Product product = new Product(data, brand, category, sku);
-        Product savedProduct = repository.save(product);
-
-        if (data.stock() != null) {
-            RequestProductDTO.InitialStockDTO stock = data.stock();
-            RequestStockItemDTO stockData = new RequestStockItemDTO(
-                stock.warehouseId(),
-                savedProduct.getId(),
-                stock.quantity(),
-                stock.reservedQuantity(),
-                stock.minQuantity(),
-                stock.maxQuantity()
-            );
-            stockItemService.register(stockData);
-        }
-
-        return savedProduct;
+        var catalog = productCatalogService.register(
+            new RequestProductCatalogDTO(
+                data.name(),
+                data.brandId(),
+                data.categoryId(),
+                data.unit(),
+                ProductCatalogType.SIMPLE,
+                Set.of(),
+                data.active(),
+                List.of(item)
+            )
+        );
+        return repository.findByCatalogIdOrderByIdAsc(catalog.getId()).getFirst();
     }
 
+    @Transactional
     public Product update(Long id, PatchProductDTO data) {
-        Product product = repository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
-
-        if (Boolean.TRUE.equals(data.removeCategory()) && data.categoryId() != null) {
+        Product product = productCatalogService.lockProduct(id);
+        if (data.catalogId() != null && !data.catalogId().equals(product.getCatalogId())) {
+            throw new IllegalArgumentException("Cannot move an item to another catalog.");
+        }
+        boolean simple = product.getCatalog().getType() == ProductCatalogType.SIMPLE;
+        boolean shared =
+            data.name() != null ||
+            data.brandId() != null ||
+            data.categoryId() != null ||
+            data.unit() != null ||
+            Boolean.TRUE.equals(data.removeCategory());
+        if (!simple && shared) {
             throw new IllegalArgumentException(
-                "Cannot provide a category and request its removal at the same time."
+                "Use the catalog endpoint to edit shared variant data."
             );
         }
-
-        if (data.name() != null && data.name().isBlank()) {
-            throw new IllegalArgumentException("Product name is required.");
+        if (simple && (shared || data.active() != null)) {
+            productCatalogService.update(
+                product.getCatalogId(),
+                new PatchProductCatalogDTO(
+                    data.name(),
+                    data.brandId(),
+                    data.categoryId(),
+                    data.unit(),
+                    null,
+                    data.active(),
+                    data.removeCategory()
+                )
+            );
         }
-
-        Brand brand = product.getBrand();
-        Category category = product.getCategory();
-
-        if (data.brandId() != null) {
-            brand = findBrand(data.brandId());
+        if (!simple && (data.color() != null || data.size() != null)) {
+            throw new IllegalArgumentException("Use variant attributes for color and size.");
         }
-        if (Boolean.TRUE.equals(data.removeCategory())) {
-            category = null;
-        } else if (data.categoryId() != null) {
-            category = findCategory(data.categoryId());
-        }
-
-        product.setBrand(brand);
-        product.setCategory(category);
-
-        if (data.name() != null) {
-            product.setName(data.name());
+        if (data.attributes() != null) {
+            String key = productCatalogService.variantKey(product.getCatalog(), data.attributes());
+            if (
+                repository.existsByCatalogIdAndVariantKeyAndIdNot(product.getCatalogId(), key, id)
+            ) {
+                throw new IllegalArgumentException(
+                    "This variant combination already exists in the catalog."
+                );
+            }
+            product.setVariantKey(key);
+            product.setAttributes(new HashMap<>(data.attributes()));
         }
         if (data.cost() != null) {
+            ProductCatalogService.validateMoney(data.cost());
             product.setCost(data.cost());
         }
         if (data.price() != null) {
+            ProductCatalogService.validateMoney(data.price());
             product.setPrice(data.price());
         }
-        if (data.weightKg() != null) {
-            product.setWeightKg(data.weightKg());
-        }
+        product.setWeightKg(
+            optionalNumber(product.getWeightKg(), data.weightKg(), data.removeWeightKg())
+        );
+        product.setDimensionX(
+            optionalNumber(product.getDimensionX(), data.dimensionX(), data.removeDimensionX())
+        );
+        product.setDimensionY(
+            optionalNumber(product.getDimensionY(), data.dimensionY(), data.removeDimensionY())
+        );
+        product.setDimensionZ(
+            optionalNumber(product.getDimensionZ(), data.dimensionZ(), data.removeDimensionZ())
+        );
         if (data.color() != null) {
             product.setColor(data.color().isBlank() ? null : data.color());
-        }
-        if (data.dimensionX() != null) {
-            product.setDimensionX(data.dimensionX());
-        }
-        if (data.dimensionY() != null) {
-            product.setDimensionY(data.dimensionY());
-        }
-        if (data.dimensionZ() != null) {
-            product.setDimensionZ(data.dimensionZ());
         }
         if (data.size() != null) {
             product.setSize(data.size().isBlank() ? null : data.size());
         }
-        if (data.active() != null) {
+        if (!simple && data.active() != null) {
+            if (data.active() && !product.getCatalog().isActive()) {
+                throw new IllegalArgumentException(
+                    "Activate the catalog before activating this variant."
+                );
+            }
             product.setActive(data.active());
         }
-
         return repository.save(product);
     }
 
     @Transactional
     public void delete(Long id) {
-        Product product = repository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
-
+        Product product = productCatalogService.lockProduct(id);
+        var catalog = product.getCatalog();
+        if (
+            catalog.getType() == ProductCatalogType.VARIANT &&
+            repository.countByCatalogId(catalog.getId()) <= 1
+        ) {
+            throw new IllegalArgumentException("Cannot delete the last variant of a catalog.");
+        }
+        // FK constraints deliberately protect stock, prices, supplier links and commercial history.
+        // Unused base presentations are server-owned and can be removed with the unused SKU.
+        productPresentationRepository.deleteUnusedByProductId(id);
         repository.delete(product);
+        repository.flush();
+        if (catalog.getType() == ProductCatalogType.SIMPLE) {
+            productCatalogRepository.delete(catalog);
+        }
     }
 
-    private Brand findBrand(Long brandId) {
-        if (brandId == null) {
-            throw new IllegalArgumentException("Brand ID is required.");
+    private BigDecimal optionalNumber(BigDecimal current, BigDecimal value, Boolean remove) {
+        if (Boolean.TRUE.equals(remove) && value != null) {
+            throw new IllegalArgumentException(
+                "Cannot provide and remove an optional number at the same time."
+            );
         }
-
-        return brandRepository
-            .findById(brandId)
-            .orElseThrow(() -> new ResourceNotFoundException("Brand not found."));
-    }
-
-    private Category findCategory(Long categoryId) {
-        if (categoryId == null) {
-            return null;
-        }
-
-        return categoryRepository
-            .findById(categoryId)
-            .orElseThrow(() -> new ResourceNotFoundException("Category not found."));
+        return Boolean.TRUE.equals(remove) ? null : value != null ? value : current;
     }
 }

@@ -3,6 +3,7 @@ package com.pi.erp.stock.reservation;
 import com.pi.erp.order.item.OrderItem;
 import com.pi.erp.stock.StockItem;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.*;
 
@@ -35,8 +36,8 @@ public class StockReservation {
     @JoinColumn(name = "stock_item_id", nullable = false)
     private StockItem stockItem;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    @Column(name = "quantity", nullable = false, precision = 14, scale = 1)
+    private BigDecimal quantity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -61,7 +62,7 @@ public class StockReservation {
     public StockReservation(OrderItem orderItem, StockItem stockItem) {
         this.orderItem = orderItem;
         this.stockItem = stockItem;
-        this.quantity = orderItem.getQuantity();
+        this.quantity = orderItem.getBaseQuantity();
         this.status = StockReservationStatus.ACTIVE;
     }
 }

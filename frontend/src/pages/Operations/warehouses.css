@@ -1,0 +1,7 @@
+.warehouses-page .warehouse-description {
+  display: block;
+  max-width: min(50vw, 540px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

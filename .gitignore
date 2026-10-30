@@ -1,0 +1,109 @@
+# =============================================================================
+# JamsHub / erp-distribuidora — .gitignore da RAIZ do repositório
+# Backend: Java 21 / Spring Boot / Maven / PostgreSQL
+# Frontend: React / Vite / Tailwind / npm
+# Complementa backend/.gitignore e frontend/.gitignore.
+# =============================================================================
+
+# Sistema operacional / arquivos de máquina
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+
+# IDEs e editores (configurações pessoais)
+**/.idea/
+**/.vscode/*
+!**/.vscode/extensions.json
+**/.fleet/
+**/.history/
+**/.settings/
+**/.metadata/
+**/.classpath
+**/.project
+**/.factorypath
+**/.apt_generated/
+**/.sts4-cache/
+**/.springBeans
+*.iml
+*.ipr
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Java / Maven: arquivos compilados e artefatos gerados
+**/target/
+**/build/
+**/out/
+**/*.class
+**/*.hprof
+**/hs_err_pid*
+**/replay_pid*
+**/.mvn/timing.properties
+
+# Node / npm / Vite: dependências, builds e caches
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+**/.cache/
+**/.npm/
+**/.pnpm-store/
+**/.eslintcache
+**/.stylelintcache
+**/*.tsbuildinfo
+
+# Saídas de testes e relatórios gerados (NÃO os testes-fonte)
+**/coverage/
+**/.nyc_output/
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/junit-reports/
+**/surefire-reports/
+
+# Logs, arquivos temporários e backups locais
+**/logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*.swo
+*~
+
+# Ambiente local: não versionar valores particulares/segredos
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+!**/.env.template
+**/*.local
+
+# Bancos e dumps locais (nunca substituir migrations Flyway)
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.backup
+*.sql.gz
+
+# NÃO IGNORAR: backend/pom.xml, backend/mvnw*, backend/.mvn/wrapper/*.properties,
+# backend/src/main/resources/db/migration/*.sql, frontend/package*.json,
+# frontend/src/, frontend/public/, AGENTS.md, docs/, testes e scripts-fonte.
+# .gitignore controla o que o Git rastreia; não define o conteúdo de um deploy.

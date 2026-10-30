@@ -1,7 +1,9 @@
 package com.pi.erp.warehouse;
 
 import jakarta.validation.Valid;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/warehouse")
@@ -21,9 +24,29 @@ public class WarehouseController {
     @Autowired
     private WarehouseService service;
 
+    @Autowired
+    private WarehouseRepository repository;
+
     @GetMapping("/search")
-    public ResponseEntity<List<Warehouse>> search(WarehouseFilter filter) {
-        return ResponseEntity.ok(service.search(filter));
+    public ResponseEntity<Page<Warehouse>> search(
+        WarehouseFilter filter,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        if (page < 0 || page > 100000 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("Invalid warehouse pagination limits.");
+        }
+        return ResponseEntity.ok(
+            service.search(filter, PageRequest.of(page, size, Sort.by("name").ascending().and(Sort.by("id"))))
+        );
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Warehouse> findOne(@PathVariable Long id) {
+        return repository
+            .findById(id)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @PostMapping

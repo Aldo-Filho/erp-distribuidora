@@ -1,7 +1,9 @@
+import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import { lookupPostalCode } from "../../services/postalCode";
 
 export default function usePostalCode(value, onChange, disabled = false) {
+  const confirm = useConfirm();
   const request = useRef(null);
   const sequence = useRef(0);
   const latest = useRef(value);
@@ -49,9 +51,13 @@ export default function usePostalCode(value, onChange, disabled = false) {
       );
       if (
         replacements &&
-        !window.confirm("Substituir os campos de endereço preenchidos pelos dados deste CEP?")
+        !(await confirm("Substituir os campos de endereço preenchidos pelos dados deste CEP?", {
+          title: "Atualizar endereço",
+          confirmLabel: "Substituir",
+        }))
       )
         return;
+      if (sequence.current !== id || latest.current !== snapshot || !enabled.current) return;
       const next = { ...snapshot };
       for (const [field, text] of Object.entries(found)) {
         if (text) next[field] = text;

@@ -200,8 +200,17 @@ public class SecurityConfig {
         }
         String module = switch (root) {
             case "customer", "customerAddress" -> "customers";
-            case "supplier", "supplierAddress", "productSupplier" -> "suppliers";
-            case "product", "brand", "category" -> "products";
+            case
+                "supplier",
+                "supplierAddress",
+                "productSupplier",
+                "productSupplierOption" -> "suppliers";
+            case
+                "product",
+                "productCatalog",
+                "productPresentation",
+                "brand",
+                "category" -> "products";
             case "warehouse", "warehouseAddress" -> "warehouses";
             case "stockItem", "stockMovement" -> "stock";
             case "price-table", "priceTableItem" -> "prices";
@@ -221,6 +230,7 @@ public class SecurityConfig {
             action = "adjust";
         } else if (
             root.equals("productSupplier") ||
+            root.equals("productSupplierOption") ||
             path.matches("/supplier/[^/]+/(brands|categories)(/[^/]+)?")
         ) {
             action = "update";

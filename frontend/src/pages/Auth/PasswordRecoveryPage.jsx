@@ -9,7 +9,7 @@ export default function PasswordRecoveryPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   return (
-    <AuthLayout title="Recuperar acesso">
+    <AuthLayout title="Recuperar acesso" showLogo={false}>
       {sent ? (
         <p className="success" role="status">
           Se houver uma conta ativa para este e-mail, enviaremos as instruções. Confira também o

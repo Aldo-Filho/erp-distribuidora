@@ -21,4 +21,20 @@ public interface WarehouseRepository
     boolean existsByNormalizedName(
         @Param("name") String name
     );
+
+    @Query(
+        value = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM warehouses
+                WHERE lower(btrim(name)) = lower(btrim(cast(:name AS text)))
+                  AND warehouse_id <> :id
+            )
+            """,
+        nativeQuery = true
+    )
+    boolean existsByNormalizedNameAndIdNot(
+        @Param("name") String name,
+        @Param("id") Long id
+    );
 }

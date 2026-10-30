@@ -5,6 +5,7 @@ import Modal from "../../components/feedback/Modal";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import RecordMetadata from "../../components/record/RecordMetadata";
 import { addressTypes } from "./CustomerAddressFields";
+import "./customerDetails.css";
 
 export default function CustomerDetailsModal({ customerId, onClose, onEdit, onAddresses }) {
   const { has } = useAuth();
@@ -48,7 +49,7 @@ export default function CustomerDetailsModal({ customerId, onClose, onEdit, onAd
   }, [customerId, addressRevision]);
   const customer = state.customer;
   return (
-    <Modal title="Detalhes do cliente" onClose={onClose} wide>
+    <Modal title="Detalhes do cliente" onClose={onClose} wide className="customer-details-dialog">
       <ErrorAlert message={state.error} retry={() => setRevision((number) => number + 1)} />
       {state.loading ? (
         <p role="status">Carregando cliente…</p>
@@ -64,8 +65,9 @@ export default function CustomerDetailsModal({ customerId, onClose, onEdit, onAd
             {[
               ["Tipo", customer.personType === "PF" ? "Pessoa física" : "Pessoa jurídica"],
               [customer.personType === "PF" ? "CPF" : "CNPJ", customer.taxId],
-              ["Nome fantasia", customer.tradeName],
-              ["Nascimento", customer.birthDate?.split("-").reverse().join("/")],
+              ...(customer.personType === "PJ"
+                ? [["Nome fantasia", customer.tradeName]]
+                : [["Nascimento", customer.birthDate?.split("-").reverse().join("/")]]),
               ["Inscrição estadual", customer.stateReg],
               ["Inscrição municipal", customer.municipalReg],
               ["Telefone", customer.phone],
@@ -88,17 +90,20 @@ export default function CustomerDetailsModal({ customerId, onClose, onEdit, onAd
             {addressState.loading ? (
               <p role="status">Carregando endereços…</p>
             ) : addressState.addresses?.length ? (
-              addressState.addresses.map((address) => (
-                <div className="customer-address-card" key={address.id}>
-                  <strong>{addressTypes[address.addressType]}</strong>
-                  <p>
-                    {address.street}, {address.number}
-                    {address.complement ? ` · ${address.complement}` : ""}
-                    <br />
-                    {address.neighborhood} · {address.city}/{address.state} · CEP {address.zipCode}
-                  </p>
-                </div>
-              ))
+              <div className="customer-details-address-grid">
+                {addressState.addresses.map((address) => (
+                  <div className="customer-details-address-card" key={address.id}>
+                    <strong>{addressTypes[address.addressType]}</strong>
+                    <p>
+                      {address.street}, {address.number}
+                      {address.complement ? ` · ${address.complement}` : ""}
+                      <br />
+                      {address.neighborhood} · {address.city}/{address.state} · CEP{" "}
+                      {address.zipCode}
+                    </p>
+                  </div>
+                ))}
+              </div>
             ) : (
               !addressState.error && <p>Nenhum endereço cadastrado.</p>
             )}

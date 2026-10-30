@@ -10,15 +10,23 @@ import {
   ScrollText,
   KeyRound,
   LogOut,
-  Menu,
-  X,
+  ChevronLeft,
+  ChevronRight,
+  Package,
+  Warehouse,
+  ShoppingCart,
+  ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
 import useAuth from "../../auth/useAuth";
-import { navigation } from "../../routes/navigation";
+import { canAccessEntry, navigation } from "../../routes/navigation";
 import ErrorAlert from "../feedback/ErrorAlert";
 
 const icons = {
+  warehouses: Warehouse,
+  orders: ShoppingCart,
+  purchases: ClipboardList,
+  products: Package,
   suppliers: Truck,
   customers: ContactRound,
   users: Users,
@@ -31,43 +39,57 @@ const icons = {
 };
 
 export default function AppLayout() {
-  const { session, has, logout, error } = useAuth();
-  const [open, setOpen] = useState(false);
+  const { session, logout, error } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
   const [failure, setFailure] = useState("");
   return (
-    <div className="app-shell">
-      <aside className={"sidebar " + (open ? "is-open" : "")}>
-        <div className="brand">
-          <span className="brand-mark">ED</span>
-          <span>
-            ERP<small>Distribuidora</small>
+    <div className={"app-shell" + (collapsed ? " is-collapsed" : "")}>
+      <aside id="main-sidebar" className="sidebar">
+        <div className="brand" aria-label="JamsHub — Gestão para distribuidoras">
+          <span className="brand-mark">
+            <Package size={20} aria-hidden="true" />
           </span>
-          <button
-            className="icon-button mobile-only"
-            aria-label="Fechar menu"
-            onClick={() => setOpen(false)}
-          >
-            <X size={20} />
-          </button>
+          <span className="sidebar-label">
+            JamsHub
+          </span>
         </div>
         <nav aria-label="Navegação principal">
           {navigation
-            .filter((entry) => !entry.permission || has(entry.permission))
+            .filter((entry) => canAccessEntry(entry, session))
             .map((entry) => {
               const Icon = icons[entry.icon];
               return (
-                <NavLink to={entry.path} key={entry.path} onClick={() => setOpen(false)}>
+                <NavLink
+                  to={entry.path}
+                  key={entry.path}
+                  aria-label={entry.label}
+                  title={entry.label}
+                >
                   <Icon size={18} />
-                  {entry.label}
+                  <span className="sidebar-label">{entry.label}</span>
                 </NavLink>
               );
             })}
         </nav>
+        <button
+          className="sidebar-toggle"
+          aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+          title={collapsed ? "Expandir menu" : "Recolher menu"}
+          aria-expanded={!collapsed}
+          aria-controls="main-sidebar"
+          onClick={() => setCollapsed((current) => !current)}
+        >
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
         <div className="sidebar-footer">
-          <strong>{session.name}</strong>
-          <small>{session.roleName}</small>
+          <div className="sidebar-user">
+            <strong>{session.name}</strong>
+            <small>{session.roleName}</small>
+          </div>
           <button
             className="logout-button"
+            aria-label="Sair"
+            title="Sair"
             onClick={async () => {
               try {
                 await logout();
@@ -76,25 +98,11 @@ export default function AppLayout() {
               }
             }}
           >
-            <LogOut size={16} /> Sair
+            <LogOut size={18} /> <span className="sidebar-label">Sair</span>
           </button>
         </div>
       </aside>
-      {open && (
-        <button className="nav-overlay" aria-label="Fechar menu" onClick={() => setOpen(false)} />
-      )}
       <div className="workspace">
-        <header className="topbar">
-          <button
-            className="icon-button mobile-only"
-            aria-label="Abrir menu"
-            onClick={() => setOpen(true)}
-          >
-            <Menu size={22} />
-          </button>
-          <span>ERP Distribuidora</span>
-          <span className="environment">Local</span>
-        </header>
         <main>
           <ErrorAlert message={failure || error} />
           <Outlet />

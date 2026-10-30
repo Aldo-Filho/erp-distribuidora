@@ -8,16 +8,25 @@ import com.pi.erp.order.item.DiscountType;
 import com.pi.erp.order.item.OrderItem;
 import com.pi.erp.order.item.OrderItemRepository;
 import com.pi.erp.product.Product;
+import com.pi.erp.product.ProductQuantity;
+import com.pi.erp.product.ProductRepository;
+import com.pi.erp.product.catalog.ProductCatalogService;
+import com.pi.erp.product.presentation.ProductPresentationService;
+import com.pi.erp.product.price.ProductPriceService;
 import com.pi.erp.stock.StockItemRepository;
 import com.pi.erp.stock.reservation.StockReservationService;
 import com.pi.erp.user.User;
 import com.pi.erp.user.UserRepository;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,9 +53,21 @@ public class OrderService {
     private StockReservationService stockReservationService;
 
     @Autowired
+    private ProductCatalogService productCatalogService;
+
+    @Autowired
+    private ProductPresentationService productPresentationService;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private ProductPriceService productPriceService;
+
+    @Autowired
     private EntityManager entityManager;
 
-    public List<Order> search(OrderFilter filter) {
+    public Page<Order> search(OrderFilter filter, Pageable pageable) {
         Specification<Order> spec = Specification.allOf();
 
         if (filter.paymentMethod() != null) {
@@ -55,9 +76,7 @@ public class OrderService {
             );
         }
         if (filter.status() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("status"), filter.status())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), filter.status()));
         }
         if (filter.customerId() != null) {
             spec = spec.and((root, query, cb) ->
@@ -70,7 +89,28 @@ public class OrderService {
             );
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal resolvePrice(Long id, Long productId, Long presentationId) {
+        Order order = repository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found."));
+        validateEditableOrder(order);
+        Product product = productRepository
+            .findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found."));
+        if (!product.isActive()) {
+            throw new IllegalArgumentException("Product must be active.");
+        }
+        var presentation = productPresentationService.findForProduct(productId, presentationId);
+        return productPriceService.resolve(
+            order.getCustomer().getId(),
+            product,
+            presentation,
+            LocalDate.now()
+        );
     }
 
     @Transactional
@@ -99,9 +139,8 @@ public class OrderService {
             CurrentUser.require("orders.cancel");
         }
 
-        boolean hasCommercialChanges = data.customerId() != null
-            || data.paymentMethod() != null
-            || data.userId() != null;
+        boolean hasCommercialChanges =
+            data.customerId() != null || data.paymentMethod() != null || data.userId() != null;
 
         if (hasCommercialChanges) {
             validateEditableOrder(order);
@@ -129,8 +168,6 @@ public class OrderService {
 
         if (data.userId() != null) {
             user = findUser(data.userId());
-        } else if (order.getStatus() != status && status == OrderStatus.CONFIRMED && user != null) {
-            validateActiveUser(user);
         }
 
         if (order.getStatus() != status) {
@@ -215,8 +252,10 @@ public class OrderService {
                 "Use the commercial dispatch operation to complete an order."
             );
         }
-        if (currentStatus == OrderStatus.PENDING
-            && (status == OrderStatus.CONFIRMED || status == OrderStatus.CANCELED)) {
+        if (
+            currentStatus == OrderStatus.PENDING &&
+                (status == OrderStatus.CONFIRMED || status == OrderStatus.CANCELED)
+        ) {
             return;
         }
         if (currentStatus == OrderStatus.CONFIRMED && status == OrderStatus.CANCELED) {
@@ -247,10 +286,15 @@ public class OrderService {
         List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
 
         if (orderItems.isEmpty()) {
-            throw new IllegalArgumentException("An order must have at least one item to be confirmed.");
+            throw new IllegalArgumentException(
+                "An order must have at least one item to be confirmed."
+            );
         }
 
-        Set<Long> productIds = new HashSet<>();
+        Set<String> productIds = new HashSet<>();
+        productCatalogService.lockProducts(orderItems.stream().map(OrderItem::getProduct).toList());
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (OrderItem orderItem : orderItems) {
             Product product = orderItem.getProduct();
@@ -259,29 +303,85 @@ public class OrderService {
             if (!product.isActive()) {
                 throw new IllegalArgumentException("All order products must be active.");
             }
-            if (!productIds.add(product.getId())) {
-                throw new IllegalArgumentException("An order cannot contain duplicate products.");
-            }
             if (orderItem.getWarehouse() == null) {
                 throw new IllegalArgumentException("All order items must have a warehouse.");
             }
-            if (!stockItemRepository.existsByWarehouseIdAndProductId(
-                orderItem.getWarehouse().getId(), product.getId()
-            )) {
+            if (
+                !stockItemRepository.existsByWarehouseIdAndProductId(
+                    orderItem.getWarehouse().getId(),
+                    product.getId()
+                )
+            ) {
                 throw new IllegalArgumentException(
                     "An order product has no stock item in its selected warehouse."
                 );
             }
 
+            if (
+                !productIds.add(
+                    product.getId() +
+                        ":" +
+                        orderItem.getWarehouse().getId() +
+                        ":" +
+                        (orderItem.getPresentation() == null
+                            ? "base"
+                            : orderItem.getPresentation().getId())
+                )
+            ) {
+                throw new IllegalArgumentException("An order cannot contain duplicate products.");
+            }
+
+            if (orderItem.getPresentation() != null) {
+                productPresentationService.findForProduct(
+                    product.getId(),
+                    orderItem.getPresentation().getId()
+                );
+            }
             validateOrderItem(orderItem);
+            BigDecimal gross = orderItem
+                .getUnitPrice()
+                .multiply(orderItem.getQuantity())
+                .setScale(2, RoundingMode.HALF_UP);
+            BigDecimal discount =
+                orderItem.getDiscountType() == DiscountType.PERCENTAGE
+                    ? gross
+                    .multiply(orderItem.getDiscount())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
+                    : orderItem.getDiscount();
+            totalAmount = totalAmount.add(gross.subtract(discount));
+        }
+        ProductCatalogService.validateMoney(totalAmount);
+        if (order.getTotalAmount() == null || totalAmount.compareTo(order.getTotalAmount()) != 0) {
+            throw new IllegalArgumentException(
+                "Order total is inconsistent with its contracted items."
+            );
         }
     }
 
     private void validateOrderItem(OrderItem orderItem) {
-        if (orderItem.getQuantity() == null || orderItem.getQuantity() <= 0) {
+        if (orderItem.getQuantity() == null || orderItem.getQuantity().signum() <= 0) {
             throw new IllegalArgumentException("Order item quantity must be greater than zero.");
         }
 
+        ProductQuantity.requireBase(BigDecimal.ONE, orderItem.getProduct().getUnit(), false);
+        var unit =
+            orderItem.getUnitSnapshot() != null
+                ? orderItem.getUnitSnapshot()
+                : orderItem.getProduct().getUnit();
+        BigDecimal expectedBase = ProductQuantity.toBase(
+            orderItem.getQuantity(),
+            orderItem.getBaseFactorSnapshot(),
+            unit,
+            orderItem.getPresentation() == null || orderItem.getPresentation().isBasePresentation()
+        );
+        if (
+            orderItem.getBaseQuantity() == null ||
+                expectedBase.compareTo(orderItem.getBaseQuantity()) != 0
+        ) {
+            throw new IllegalArgumentException(
+                "Order item base quantity is inconsistent with its contract."
+            );
+        }
         BigDecimal unitPrice = orderItem.getUnitPrice();
         BigDecimal discount = orderItem.getDiscount();
         DiscountType discountType = orderItem.getDiscountType();
@@ -295,8 +395,12 @@ public class OrderService {
         if (discountType == null) {
             throw new IllegalArgumentException("Order item discount type is required.");
         }
+        ProductCatalogService.validateMoney(unitPrice);
+        ProductCatalogService.validateMoney(discount);
 
-        BigDecimal grossAmount = unitPrice.multiply(BigDecimal.valueOf(orderItem.getQuantity()));
+        BigDecimal grossAmount = unitPrice
+            .multiply(orderItem.getQuantity())
+            .setScale(2, RoundingMode.HALF_UP);
 
         if (discountType == DiscountType.PERCENTAGE) {
             if (discount.compareTo(BigDecimal.valueOf(100)) > 0) {

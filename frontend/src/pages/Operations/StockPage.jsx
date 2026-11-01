@@ -1,3 +1,5 @@
+import useListReturn from "../../hooks/useListReturn";
+import { validId } from "../../routes/navigation";
 import { useEffect, useState } from "react";
 import { Eye, Plus, Settings, ArrowDownToLine, History } from "lucide-react";
 import useAuth from "../../auth/useAuth";
@@ -26,9 +28,18 @@ export function available(stock) {
 }
 export default function StockPage() {
   const { has } = useAuth();
-  const [product, setProduct] = useState(null);
+  const origin = useListReturn({ modulePath: "/products" });
+  const [product, setProduct] = useState(() =>
+    validId(origin.restored?.filters?.productId)
+      ? { id: Number(origin.restored.filters.productId) }
+      : null,
+  );
   const [picker, setPicker] = useState(false);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(() =>
+    Number.isSafeInteger(origin.restored?.page) && origin.restored.page >= 0
+      ? origin.restored.page
+      : 0,
+  );
   const [flow, setFlow] = useState(null);
   const [notice, setNotice] = useState("");
   const state = useProductResource(
@@ -41,7 +52,7 @@ export default function StockPage() {
   );
   const loading = Boolean(
     state.loading ||
-      (state.data && (state.data.productId !== (product?.id || null) || state.data.page !== page)),
+    (state.data && (state.data.productId !== (product?.id || null) || state.data.page !== page)),
   );
   useEffect(() => {
     if (loading || state.error || !state.data) return;
@@ -49,6 +60,12 @@ export default function StockPage() {
     if (page > lastPage) setPage(lastPage);
   }, [loading, state.error, state.data, page]);
   const records = loading || state.error ? null : state.data?.records?.content;
+  const listReturn = useListReturn({
+    modulePath: "/products",
+    listState: { filters: { productId: product?.id || "" }, page, size: 20 },
+    ready: Boolean(records),
+  });
+  const productLabel = product ? (product.sku ? skuName(product) : `SKU #${product.id}`) : "";
   const saved = () => {
     setFlow(null);
     setNotice("Estoque atualizado.");
@@ -72,7 +89,7 @@ export default function StockPage() {
             type="button"
             className="secondary customer-icon-label"
             onClick={() =>
-              setFlow({ type: "history", filter: product ? { productId: product.id } : {} })
+              listReturn.open(`/stock/history${product ? `?productId=${product.id}` : ""}`)
             }
           >
             <History size={17} /> Histórico
@@ -90,8 +107,8 @@ export default function StockPage() {
           <div className="stock-product-control">
             <input
               readOnly
-              value={product ? skuName(product) : ""}
-              title={product ? skuName(product) : undefined}
+              value={productLabel}
+              title={productLabel || undefined}
               placeholder="Todos os produtos"
             />
             <button
@@ -104,7 +121,14 @@ export default function StockPage() {
             </button>
           </div>
         </label>
-        <button type="button" className="secondary" onClick={() => { setPage(0); setProduct(null); }}>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => {
+            setPage(0);
+            setProduct(null);
+          }}
+        >
           Limpar filtros
         </button>
       </section>

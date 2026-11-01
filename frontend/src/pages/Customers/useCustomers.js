@@ -3,11 +3,22 @@ import { customers } from "../../services/customers";
 
 export const emptyFilters = { query: "", searchField: "NAME", personType: "", active: "" };
 
-export default function useCustomers() {
-  const [filters, setFilters] = useState(emptyFilters);
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(25);
+export default function useCustomers(origin) {
+  const [filters, setFilters] = useState(() => {
+    const restored = { ...emptyFilters };
+    for (const key of Object.keys(restored))
+      if (typeof origin?.filters?.[key] === "string") restored[key] = origin.filters[key];
+    if (!["", "true", "false"].includes(restored.active)) restored.active = "";
+    if (!["NAME", "DOCUMENT", "CONTACT"].includes(restored.searchField))
+      restored.searchField = "NAME";
+    if (!["", "PF", "PJ"].includes(restored.personType)) restored.personType = "";
+    return restored;
+  });
+  const [query, setQuery] = useState(filters.query);
+  const [page, setPage] = useState(() =>
+    Number.isSafeInteger(origin?.page) && origin.page >= 0 ? origin.page : 0,
+  );
+  const [size, setSize] = useState(() => ([25, 50, 100].includes(origin?.size) ? origin.size : 25));
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState({ loading: true });
   const generation = useRef(0);

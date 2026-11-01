@@ -1,3 +1,5 @@
+import EmbeddedContent from "../../components/layout/EmbeddedContent";
+import useDirtyUnload from "../../hooks/useDirtyUnload";
 import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
@@ -8,13 +10,15 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 import SupplierAddressFields from "./SupplierAddressFields";
 import { supplierPayload, supplierValues, validateSupplier } from "./supplierFormData";
 
-export default function SupplierForm({ supplier, onSaved, onClose }) {
+export default function SupplierForm({ supplier, onSaved, onClose, embedded = false, closeRef }) {
+  const Container = embedded ? EmbeddedContent : Modal;
   const confirm = useConfirm();
   const { session, has } = useAuth();
   const key = `supplier:${session.userId}:${supplier?.id || "new"}`;
   const initial = useRef(supplierValues(supplier)).current;
   const [value, setValue] = useDraft(key, initial);
   const [saving, setSaving] = useState(false);
+  useDirtyUnload(saving || JSON.stringify(value) !== JSON.stringify(initial));
   const locked = useRef(false);
   const live = useRef(true);
   const [error, setError] = useState("");
@@ -39,6 +43,12 @@ export default function SupplierForm({ supplier, onSaved, onClose }) {
     removeDraft(key);
     onClose();
   };
+  useEffect(() => {
+    if (closeRef) closeRef.current = close;
+    return () => {
+      if (closeRef) closeRef.current = null;
+    };
+  });
   const change = (field, next) => setValue((previous) => ({ ...previous, [field]: next }));
   const submit = async (event) => {
     event.preventDefault();
@@ -79,7 +89,8 @@ export default function SupplierForm({ supplier, onSaved, onClose }) {
     }
   };
   return (
-    <Modal
+    <Container
+      hideTitle={embedded}
       title={supplier ? "Editar fornecedor" : "Novo fornecedor"}
       onClose={close}
       busy={saving}
@@ -159,6 +170,6 @@ export default function SupplierForm({ supplier, onSaved, onClose }) {
           </button>
         </div>
       </form>
-    </Modal>
+    </Container>
   );
 }

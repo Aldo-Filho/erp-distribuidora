@@ -1,3 +1,5 @@
+import EmbeddedContent from "../../components/layout/EmbeddedContent";
+import useDirtyUnload from "../../hooks/useDirtyUnload";
 import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
@@ -12,7 +14,15 @@ import SupplierAddressFields, {
 } from "./SupplierAddressFields";
 import { validateAddress } from "./supplierFormData";
 
-function AddressEditor({ supplierId, address, types, onSaved, onCancel, onBusy }) {
+function AddressEditor({
+  supplierId,
+  address,
+  types,
+  onSaved,
+  onCancel,
+  onBusy,
+  hideHeading = false,
+}) {
   const confirm = useConfirm();
   const { session, has } = useAuth();
   const canWrite = has(address ? "suppliers.update" : "suppliers.create");
@@ -28,6 +38,7 @@ function AddressEditor({ supplierId, address, types, onSaved, onCancel, onBusy }
   const [value, setValue] = useDraft(key, initial);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  useDirtyUnload(saving || JSON.stringify(value) !== JSON.stringify(initial));
   const lock = useRef(false);
   const live = useRef(true);
   useEffect(() => {
@@ -98,7 +109,7 @@ function AddressEditor({ supplierId, address, types, onSaved, onCancel, onBusy }
   };
   return (
     <form onSubmit={submit} className="customer-form">
-      <h3>{address ? "Editar endereço" : "Novo endereço"}</h3>
+      {!hideHeading && <h3>{address ? "Editar endereço" : "Novo endereço"}</h3>}
       <ErrorAlert message={error} />
       <SupplierAddressFields value={value} onChange={setValue} disabled={saving || !canWrite} />
       <div className="actions">
@@ -111,7 +122,14 @@ function AddressEditor({ supplierId, address, types, onSaved, onCancel, onBusy }
   );
 }
 
-export default function SupplierAddressModal({ supplierId, onClose }) {
+export default function SupplierAddressModal({
+  supplierId,
+  onClose,
+  embedded = false,
+  onChanged = () => {},
+}) {
+  const Container = embedded ? EmbeddedContent : Modal;
+  const EditorContainer = embedded ? Modal : EmbeddedContent;
   const confirm = useConfirm();
   const { has } = useAuth();
   const [state, setState] = useState({ loading: true });
@@ -174,6 +192,7 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
       await suppliers.deleteAddress(address.id);
       if (live.current) {
         setNotice("Endereço excluído.");
+        onChanged();
         setRevision((number) => number + 1);
       }
     } catch (issue) {
@@ -184,7 +203,7 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
     }
   };
   return (
-    <Modal
+    <Container
       title="Endereços do fornecedor"
       wide
       busy={busy}
@@ -205,12 +224,12 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
           {notice}
         </p>
       )}
-      {state.supplier && <h3>{state.supplier.legalName}</h3>}
+      {!embedded && state.supplier && <h3>{state.supplier.legalName}</h3>}
       {state.loading && <p role="status">Carregando endereços…</p>}
       {!state.loading && !state.error && !state.supplier && <p>Fornecedor não encontrado.</p>}
       {state.supplier && (
         <>
-          {!editing && (
+          {(!editing || embedded) && (
             <>
               {state.addresses?.map((address) => (
                 <div className="customer-address-card" key={address.id}>
@@ -227,7 +246,7 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
                     {has("suppliers.update") && (
                       <button
                         className="secondary"
-                        disabled={busy || state.loading || !!state.error}
+                        disabled={!!editing || busy || state.loading || !!state.error}
                         onClick={() => {
                           setNotice("");
                           setEditing({ address });
@@ -239,7 +258,7 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
                     {has("suppliers.delete") && (
                       <button
                         className="danger-link"
-                        disabled={busy || state.loading || !!state.error}
+                        disabled={!!editing || busy || state.loading || !!state.error}
                         onClick={() => remove(address)}
                       >
                         Excluir endereço
@@ -254,7 +273,9 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
               {has("suppliers.create") && (
                 <div className="actions">
                   <button
-                    disabled={busy || state.loading || !!state.error || !available.length}
+                    disabled={
+                      !!editing || busy || state.loading || !!state.error || !available.length
+                    }
                     onClick={() => {
                       setNotice("");
                       setEditing({ address: null });
@@ -268,26 +289,36 @@ export default function SupplierAddressModal({ supplierId, onClose }) {
           )}
           {editing && has(editing.address ? "suppliers.update" : "suppliers.create") && (
             <>
-              <AddressEditor
-                key={editing.address?.id || "new"}
-                supplierId={supplierId}
-                address={editing.address}
-                types={available}
-                onBusy={(pending, guard) => {
-                  setBusy(pending);
-                  closeEditor.current = guard;
-                }}
-                onCancel={finishEditor}
-                onSaved={() => {
-                  finishEditor();
-                  setNotice("Endereço salvo.");
-                  setRevision((number) => number + 1);
-                }}
-              />
+              <EditorContainer
+                title={
+                  embedded ? (editing.address ? "Editar endereço" : "Novo endereço") : undefined
+                }
+                onClose={() => closeEditor.current?.()}
+                busy={busy}
+              >
+                <AddressEditor
+                  hideHeading={embedded}
+                  key={editing.address?.id || "new"}
+                  supplierId={supplierId}
+                  address={editing.address}
+                  types={available}
+                  onBusy={(pending, guard) => {
+                    setBusy(pending);
+                    closeEditor.current = guard;
+                  }}
+                  onCancel={finishEditor}
+                  onSaved={() => {
+                    finishEditor();
+                    setNotice("Endereço salvo.");
+                    onChanged();
+                    setRevision((number) => number + 1);
+                  }}
+                />
+              </EditorContainer>
             </>
           )}
         </>
       )}
-    </Modal>
+    </Container>
   );
 }

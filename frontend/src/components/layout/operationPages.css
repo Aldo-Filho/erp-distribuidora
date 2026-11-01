@@ -1,0 +1,71 @@
+.operation-page {
+  min-width: 0;
+}
+.operation-page > .page-title {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.operation-page .embedded-content {
+  min-width: 0;
+}
+.operation-page .embedded-content > h2 {
+  margin: 0 0 18px;
+  font-size: 18px;
+}
+.operation-page .customer-detail-title {
+  margin-bottom: 18px;
+}
+.operation-page .customer-detail-title h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.operation-page .customer-address-card {
+  padding: 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.operation-page .customer-address-card p {
+  line-height: 1.6;
+}
+.operation-page .stock-dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+.operation-page .customer-details {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+.operation-page .form-grid > * {
+  min-width: 0;
+}
+.operation-page .product-tabs > button {
+  flex-basis: 130px;
+}
+.operation-page .stock-history-content td {
+  white-space: normal;
+  min-width: 140px;
+  max-width: 300px;
+  overflow-wrap: anywhere;
+}
+.operation-page .stock-history-content td small {
+  white-space: normal;
+}
+.operation-page .stock-history-filters .form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+}
+@media (max-width: 600px) {
+  .operation-page > .page-title > .actions {
+    justify-content: flex-start;
+  }
+  .operation-page .panel {
+    padding: 16px;
+  }
+  .operation-page .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useState } from "react";
 import { Eye, Package, Pencil, Plus, Power } from "lucide-react";
 import useAuth from "../../auth/useAuth";
@@ -12,8 +13,16 @@ import ProductVariantForm from "./ProductVariantForm";
 import ProductItemDetails from "./ProductItemDetails";
 import ProductStockCell from "./ProductStockCell";
 
-export default function ProductVariants({ catalog, query = "", onChanged, startStock = false }) {
+export default function ProductVariants({
+  catalog,
+  query = "",
+  onChanged,
+  startStock = false,
+  pageDetails = false,
+}) {
   const { has } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const read = useCallback(
     (filter, page, size, options) => products.items(catalog.id, filter, page, size, options),
     [catalog.id],
@@ -53,7 +62,9 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
   return (
     <section>
       {startStock && has("stock.read") && (
-        <p className="field-hint">Selecione o saldo de uma variação para consultar e movimentar seu estoque.</p>
+        <p className="field-hint">
+          Selecione o saldo de uma variação para consultar e movimentar seu estoque.
+        </p>
       )}
       <div className="product-toolbar">
         <h3>Variações</h3>
@@ -94,7 +105,7 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
                 <th>SKU / características</th>
                 <th>Preço base</th>
                 <th>Situação</th>
-              {has("stock.read") && <th>Estoque</th>}
+                {has("stock.read") && <th>Estoque</th>}
                 <th>Ações</th>
               </tr>
             </thead>
@@ -129,7 +140,13 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
                         title="Detalhes"
                         aria-label={`Detalhes de ${item.sku}`}
                         disabled={action.pending}
-                        onClick={() => setFlow({ kind: "details", item })}
+                        onClick={() =>
+                          pageDetails
+                            ? navigate(`/products/${catalog.id}/variants/${item.id}`, {
+                                state: location.state,
+                              })
+                            : setFlow({ kind: "details", item })
+                        }
                       >
                         <Eye size={17} />
                       </button>
@@ -151,7 +168,14 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
                           aria-label={`Estoque de ${item.sku}`}
                           className="secondary icon-button"
                           disabled={action.pending}
-                          onClick={() => setFlow({ kind: "details", item, stock: true })}
+                          onClick={() =>
+                            pageDetails
+                              ? navigate(
+                                  `/products/${catalog.id}/variants/${item.id}?section=stock`,
+                                  { state: location.state },
+                                )
+                              : setFlow({ kind: "details", item, stock: true })
+                          }
                         >
                           <Package size={17} />
                         </button>

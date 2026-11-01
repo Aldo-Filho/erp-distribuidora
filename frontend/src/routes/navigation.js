@@ -1,3 +1,5 @@
+import { parseHistoryQuery } from "./stockHistoryQuery";
+
 export const navigation = [
   {
     path: "/products",
@@ -51,9 +53,51 @@ export function firstRoute(session) {
 
 export function safeReturn(path, session) {
   const destination = path === "/stock" ? "/products" : path;
-  if (destination === "/orders/new" || /^\/orders\/[1-9]\d*\/edit$/.test(destination || "")) {
-    return session.permissionKeys.includes("orders.read") ? destination : firstRoute(session);
+  if (
+    typeof destination !== "string" ||
+    !destination.startsWith("/") ||
+    destination.startsWith("//") ||
+    /[\\#]/.test(destination)
+  )
+    return firstRoute(session);
+  const [pathname, query = "", extra] = destination.split("?");
+  if (extra !== undefined) return firstRoute(session);
+  const params = new URLSearchParams(query);
+  if (pathname === "/stock/history") {
+    return !parseHistoryQuery(params).error && session.permissionKeys.includes("stock.read")
+      ? destination
+      : firstRoute(session);
+  }
+  const match =
+    /^\/(purchases|products|suppliers|customers|orders)\/(new|([1-9]\d*)(\/edit|\/variants\/([1-9]\d*))?)$/.exec(
+      pathname,
+    );
+  if (match && (!match[3] || validId(match[3])) && (!match[5] || validId(match[5]))) {
+    const [, module, operation, , suffix] = match;
+    if (
+      (suffix?.startsWith("/variants/") && module !== "products") ||
+      (module === "orders" && operation !== "new" && suffix !== "/edit")
+    )
+      return firstRoute(session);
+    const sections = {
+      products: ["general", "commercial", "variants", "presentations", "suppliers", "stock"],
+      suppliers: ["general", "addresses", "links", "metadata"],
+      customers: ["general", "addresses", "prices", "metadata"],
+    };
+    const validQuery =
+      !query ||
+      (operation !== "new" &&
+        suffix !== "/edit" &&
+        params.size === 1 &&
+        sections[module]?.includes(params.get("section")));
+    return validQuery && session.permissionKeys.includes(`${module}.read`)
+      ? destination
+      : firstRoute(session);
   }
   const entry = navigation.find((item) => item.path === destination);
-  return entry && canAccessEntry(entry, session) ? destination : firstRoute(session);
+  return !query && entry && canAccessEntry(entry, session) ? destination : firstRoute(session);
+}
+
+export function validId(value) {
+  return /^[1-9]\d*$/.test(String(value || "")) && Number.isSafeInteger(Number(value));
 }

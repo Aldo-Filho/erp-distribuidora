@@ -1,3 +1,5 @@
+import EmbeddedContent from "../../components/layout/EmbeddedContent";
+import useDirtyUnload from "../../hooks/useDirtyUnload";
 import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
@@ -12,7 +14,15 @@ import CustomerAddressFields, {
 } from "./CustomerAddressFields";
 import { validateAddress } from "./customerFormData";
 
-function AddressEditor({ customerId, address, types, onSaved, onCancel, onBusy }) {
+function AddressEditor({
+  customerId,
+  address,
+  types,
+  onSaved,
+  onCancel,
+  onBusy,
+  hideHeading = false,
+}) {
   const confirm = useConfirm();
   const { session } = useAuth();
   const key = `customer-address:${session.userId}:${customerId}:${address?.id || "new"}`;
@@ -27,6 +37,7 @@ function AddressEditor({ customerId, address, types, onSaved, onCancel, onBusy }
   const [value, setValue] = useDraft(key, initial);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  useDirtyUnload(saving || JSON.stringify(value) !== JSON.stringify(initial));
   const lock = useRef(false);
   const live = useRef(true);
   useEffect(() => {
@@ -97,7 +108,7 @@ function AddressEditor({ customerId, address, types, onSaved, onCancel, onBusy }
   };
   return (
     <form onSubmit={submit} className="customer-form">
-      <h3>{address ? "Editar endereço" : "Novo endereço"}</h3>
+      {!hideHeading && <h3>{address ? "Editar endereço" : "Novo endereço"}</h3>}
       <ErrorAlert message={error} />
       <CustomerAddressFields value={value} onChange={setValue} disabled={saving} types={types} />
       <div className="actions">
@@ -110,7 +121,14 @@ function AddressEditor({ customerId, address, types, onSaved, onCancel, onBusy }
   );
 }
 
-export default function CustomerAddressModal({ customerId, onClose }) {
+export default function CustomerAddressModal({
+  customerId,
+  onClose,
+  embedded = false,
+  onChanged = () => {},
+}) {
+  const Container = embedded ? EmbeddedContent : Modal;
+  const EditorContainer = embedded ? Modal : EmbeddedContent;
   const confirm = useConfirm();
   const { has } = useAuth();
   const [state, setState] = useState({ loading: true });
@@ -178,6 +196,7 @@ export default function CustomerAddressModal({ customerId, onClose }) {
       await customers.deleteAddress(address.id);
       if (live.current) {
         setNotice("Endereço excluído.");
+        onChanged();
         setRevision((number) => number + 1);
       }
     } catch (issue) {
@@ -188,7 +207,7 @@ export default function CustomerAddressModal({ customerId, onClose }) {
     }
   };
   return (
-    <Modal
+    <Container
       title="Endereços do cliente"
       wide
       busy={busy}
@@ -209,12 +228,12 @@ export default function CustomerAddressModal({ customerId, onClose }) {
           {notice}
         </p>
       )}
-      {state.customer && <h3>{state.customer.legalName}</h3>}
+      {!embedded && state.customer && <h3>{state.customer.legalName}</h3>}
       {state.loading && <p role="status">Carregando endereços…</p>}
       {!state.loading && !state.error && !state.customer && <p>Cliente não encontrado.</p>}
       {state.customer && (
         <>
-          {!editing && (
+          {(!editing || embedded) && (
             <>
               {state.addresses?.map((address) => (
                 <div className="customer-address-card" key={address.id}>
@@ -229,7 +248,7 @@ export default function CustomerAddressModal({ customerId, onClose }) {
                     {has("customers.update") && (
                       <button
                         className="secondary"
-                        disabled={busy || state.loading || !!state.error}
+                        disabled={!!editing || busy || state.loading || !!state.error}
                         onClick={() => {
                           setNotice("");
                           setEditing({ address });
@@ -241,7 +260,7 @@ export default function CustomerAddressModal({ customerId, onClose }) {
                     {has("customers.delete") && (
                       <button
                         className="danger-link"
-                        disabled={busy || state.loading || !!state.error}
+                        disabled={!!editing || busy || state.loading || !!state.error}
                         onClick={() => remove(address)}
                       >
                         Excluir endereço
@@ -256,7 +275,9 @@ export default function CustomerAddressModal({ customerId, onClose }) {
               {has("customers.create") && (
                 <div className="actions">
                   <button
-                    disabled={busy || state.loading || !!state.error || !available.length}
+                    disabled={
+                      !!editing || busy || state.loading || !!state.error || !available.length
+                    }
                     onClick={() => {
                       setNotice("");
                       setEditing({ address: null });
@@ -270,34 +291,44 @@ export default function CustomerAddressModal({ customerId, onClose }) {
           )}
           {editing && has(editing.address ? "customers.update" : "customers.create") && (
             <>
-              <AddressEditor
-                key={editing.address?.id || "new"}
-                customerId={customerId}
-                address={editing.address}
-                types={available}
-                onBusy={(pending, guard) => {
-                  setBusy(pending);
-                  closeEditor.current = guard;
-                }}
-                onCancel={finishEditor}
-                onSaved={() => {
-                  finishEditor();
-                  setNotice("Endereço salvo.");
-                  setRevision((number) => number + 1);
-                }}
-              />
-              <button
-                type="button"
-                className="text-button"
-                disabled={busy || state.loading}
-                onClick={() => setRevision((number) => number + 1)}
+              <EditorContainer
+                title={
+                  embedded ? (editing.address ? "Editar endereço" : "Novo endereço") : undefined
+                }
+                onClose={() => closeEditor.current?.()}
+                busy={busy}
               >
-                Recarregar tipos disponíveis
-              </button>
+                <AddressEditor
+                  hideHeading={embedded}
+                  key={editing.address?.id || "new"}
+                  customerId={customerId}
+                  address={editing.address}
+                  types={available}
+                  onBusy={(pending, guard) => {
+                    setBusy(pending);
+                    closeEditor.current = guard;
+                  }}
+                  onCancel={finishEditor}
+                  onSaved={() => {
+                    finishEditor();
+                    setNotice("Endereço salvo.");
+                    onChanged();
+                    setRevision((number) => number + 1);
+                  }}
+                />
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={busy || state.loading}
+                  onClick={() => setRevision((number) => number + 1)}
+                >
+                  Recarregar tipos disponíveis
+                </button>
+              </EditorContainer>
             </>
           )}
         </>
       )}
-    </Modal>
+    </Container>
   );
 }

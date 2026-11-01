@@ -1,3 +1,4 @@
+import useListReturn from "../../hooks/useListReturn";
 import RowActions from "../../components/feedback/RowActions";
 import DocumentValue from "../../components/feedback/DocumentValue";
 import useConfirm from "../../components/feedback/useConfirm";
@@ -9,58 +10,18 @@ import useAuth from "../../auth/useAuth";
 import { customers } from "../../services/customers";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import Pagination from "../../components/feedback/Pagination";
-import Modal from "../../components/feedback/Modal";
-import CustomerForm from "./CustomerForm.jsx";
-import CustomerDetailsModal from "./CustomerDetailsModal";
-import CustomerAddressModal from "./CustomerAddressModal";
 import useCustomers, { emptyFilters } from "./useCustomers";
-
-function EditCustomer({ customerId, onClose, onSaved }) {
-  const [state, setState] = useState({ loading: true });
-  const [revision, setRevision] = useState(0);
-  useEffect(() => {
-    let live = true;
-    const controller = new AbortController();
-    setState({ loading: true });
-    customers.findOne(customerId, { signal: controller.signal }).then(
-      (customer) => {
-        if (live) setState({ customer });
-      },
-      (issue) => {
-        if (live) setState({ error: issue.message });
-      },
-    );
-    return () => {
-      live = false;
-      controller.abort();
-    };
-  }, [customerId, revision]);
-  if (state.customer)
-    return (
-      <CustomerForm
-        key={state.customer.id}
-        customer={state.customer}
-        onClose={onClose}
-        onSaved={onSaved}
-      />
-    );
-  return (
-    <Modal title="Editar cliente" onClose={onClose}>
-      <ErrorAlert message={state.error} retry={() => setRevision((number) => number + 1)} />
-      {state.loading ? (
-        <p role="status">Carregando cliente…</p>
-      ) : (
-        !state.error && <p>Cliente não encontrado.</p>
-      )}
-    </Modal>
-  );
-}
 
 export default function CustomersPage() {
   const confirm = useConfirm();
-  const { has, session } = useAuth();
-  const list = useCustomers();
-  const [flow, setFlow] = useState(null);
+  const { has } = useAuth();
+  const origin = useListReturn({ modulePath: "/customers" });
+  const list = useCustomers(origin.restored);
+  const listReturn = useListReturn({
+    modulePath: "/customers",
+    listState: { filters: list.filters, page: list.page, size: list.size },
+    ready: Boolean(list.data),
+  });
   const [failure, setFailure] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(null);
@@ -73,13 +34,6 @@ export default function CustomersPage() {
     };
   }, []);
   const changeFilter = (field, value) => list.changeFilters({ ...list.filters, [field]: value });
-  const closeFlow = () =>
-    setFlow((previous) => (previous?.returnTo ? { kind: "details", id: previous.returnTo } : null));
-  const saved = () => {
-    setNotice("Cliente salvo.");
-    list.reload();
-    closeFlow();
-  };
   const changeActive = async (customer) => {
     if (lock.current || !has("customers.update")) return;
     if (
@@ -129,7 +83,7 @@ export default function CustomersPage() {
           <button
             className="customer-icon-label"
             disabled={!!pending}
-            onClick={() => setFlow({ kind: "new" })}
+            onClick={() => listReturn.open("/customers/new")}
           >
             <Plus size={17} />
             Novo cliente
@@ -216,9 +170,7 @@ export default function CustomersPage() {
               <thead>
                 <tr>
                   <th>Cliente</th>
-                  <th>
-                    CPF/CNPJ
-                  </th>
+                  <th>CPF/CNPJ</th>
                   <th>Contato</th>
                   <th>Situação</th>
                   <th>Ações</th>
@@ -259,7 +211,7 @@ export default function CustomersPage() {
                           aria-label={`Detalhes de ${customer.legalName}`}
                           title="Detalhes"
                           disabled={!!pending}
-                          onClick={() => setFlow({ kind: "details", id: customer.id })}
+                          onClick={() => listReturn.open(`/customers/${customer.id}`)}
                         >
                           <Eye size={17} />
                         </button>
@@ -269,7 +221,7 @@ export default function CustomersPage() {
                             aria-label={`Editar ${customer.legalName}`}
                             title="Editar"
                             disabled={!!pending}
-                            onClick={() => setFlow({ kind: "edit", id: customer.id })}
+                            onClick={() => listReturn.open(`/customers/${customer.id}/edit`)}
                           >
                             <Pencil size={17} />
                           </button>
@@ -279,7 +231,9 @@ export default function CustomersPage() {
                           aria-label={`Endereços de ${customer.legalName}`}
                           title="Endereços"
                           disabled={!!pending}
-                          onClick={() => setFlow({ kind: "addresses", id: customer.id })}
+                          onClick={() =>
+                            listReturn.open(`/customers/${customer.id}?section=addresses`)
+                          }
                         >
                           <MapPin size={17} />
                         </button>
@@ -328,38 +282,6 @@ export default function CustomersPage() {
           />
         </div>
       </section>
-      {flow?.kind === "new" && has("customers.create") && (
-        <CustomerForm
-          key={`new:${session.userId}`}
-          customer={null}
-          onClose={closeFlow}
-          onSaved={saved}
-        />
-      )}
-      {flow?.kind === "edit" && has("customers.update") && (
-        <EditCustomer
-          key={`${session.userId}:${flow.id}`}
-          customerId={flow.id}
-          onClose={closeFlow}
-          onSaved={saved}
-        />
-      )}
-      {flow?.kind === "details" && (
-        <CustomerDetailsModal
-          key={`details:${flow.id}`}
-          customerId={flow.id}
-          onClose={closeFlow}
-          onEdit={(customer) => setFlow({ kind: "edit", id: customer.id, returnTo: customer.id })}
-          onAddresses={(id) => setFlow({ kind: "addresses", id, returnTo: id })}
-        />
-      )}
-      {flow?.kind === "addresses" && (
-        <CustomerAddressModal
-          key={`addresses:${flow.id}`}
-          customerId={flow.id}
-          onClose={closeFlow}
-        />
-      )}
     </div>
   );
 }

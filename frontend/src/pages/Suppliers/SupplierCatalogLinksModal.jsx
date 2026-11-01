@@ -1,3 +1,4 @@
+import EmbeddedContent from "../../components/layout/EmbeddedContent";
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import useAuth from "../../auth/useAuth";
@@ -39,10 +40,9 @@ function CatalogLinks({ supplierId, kind, onBusy }) {
         if (!has("suppliers.update") || !has("products.read"))
           throw new Error("Sem permissão para incluir a associação.");
         if (!selected) throw new Error("Selecione um cadastro disponível.");
-        await (isBrand ? supplierCatalogLinks.registerBrand : supplierCatalogLinks.registerCategory)(
-          supplierId,
-          Number(selected),
-        );
+        await (
+          isBrand ? supplierCatalogLinks.registerBrand : supplierCatalogLinks.registerCategory
+        )(supplierId, Number(selected));
         setSelected("");
         state.reload();
       },
@@ -64,7 +64,9 @@ function CatalogLinks({ supplierId, kind, onBusy }) {
         title: "Remover vínculo",
         confirmLabel: "Remover vínculo",
         destructive: true,
-        successMessage: isBrand ? "Vínculo com a marca removido." : "Vínculo com a categoria removido.",
+        successMessage: isBrand
+          ? "Vínculo com a marca removido."
+          : "Vínculo com a categoria removido.",
       },
     );
   const options = (available.data || []).filter(
@@ -168,11 +170,12 @@ function CatalogLinks({ supplierId, kind, onBusy }) {
   );
 }
 
-export default function SupplierCatalogLinksModal({ supplierId, onClose }) {
+export default function SupplierCatalogLinksModal({ supplierId, onClose, embedded = false }) {
+  const Container = embedded ? EmbeddedContent : Modal;
   const [kind, setKind] = useState("brands");
   const [busy, setBusy] = useState(false);
   return (
-    <Modal title="Marcas e categorias do fornecedor" onClose={onClose} busy={busy} wide>
+    <Container title="Marcas e categorias do fornecedor" onClose={onClose} busy={busy} wide>
       <p className="muted">
         Vínculos explícitos e independentes dos produtos fornecidos. Remover uma associação preserva
         os cadastros.
@@ -199,6 +202,6 @@ export default function SupplierCatalogLinksModal({ supplierId, onClose }) {
         kind={kind}
         onBusy={setBusy}
       />
-    </Modal>
+    </Container>
   );
 }

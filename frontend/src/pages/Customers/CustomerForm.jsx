@@ -1,3 +1,5 @@
+import EmbeddedContent from "../../components/layout/EmbeddedContent";
+import useDirtyUnload from "../../hooks/useDirtyUnload";
 import useConfirm from "../../components/feedback/useConfirm";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
@@ -21,13 +23,15 @@ function priceLabel(table) {
   );
 }
 
-export default function CustomerForm({ customer, onSaved, onClose }) {
+export default function CustomerForm({ customer, onSaved, onClose, embedded = false, closeRef }) {
+  const Container = embedded ? EmbeddedContent : Modal;
   const confirm = useConfirm();
   const { session, has } = useAuth();
   const key = `customer:${session.userId}:${customer?.id || "new"}`;
   const initial = useRef(customerValues(customer)).current;
   const [value, setValue] = useDraft(key, initial);
   const [saving, setSaving] = useState(false);
+  useDirtyUnload(saving || JSON.stringify(value) !== JSON.stringify(initial));
   const locked = useRef(false);
   const live = useRef(true);
   const [error, setError] = useState("");
@@ -78,6 +82,12 @@ export default function CustomerForm({ customer, onSaved, onClose }) {
     removeDraft(key);
     onClose();
   };
+  useEffect(() => {
+    if (closeRef) closeRef.current = close;
+    return () => {
+      if (closeRef) closeRef.current = null;
+    };
+  });
   const change = (field, next) => setValue((previous) => ({ ...previous, [field]: next }));
   const options = [...(priceState.tables || [])];
   if (customer?.priceTable && !options.some((table) => table.id === customer.priceTable.id))
@@ -121,7 +131,13 @@ export default function CustomerForm({ customer, onSaved, onClose }) {
     }
   };
   return (
-    <Modal title={customer ? "Editar cliente" : "Novo cliente"} onClose={close} busy={saving} wide>
+    <Container
+      hideTitle={embedded}
+      title={customer ? "Editar cliente" : "Novo cliente"}
+      onClose={close}
+      busy={saving}
+      wide
+    >
       <ErrorAlert message={error} />
       <form className="customer-form" onSubmit={submit}>
         <fieldset disabled={saving || !canWrite} className="customer-form-fields">
@@ -289,6 +305,6 @@ export default function CustomerForm({ customer, onSaved, onClose }) {
           <button disabled={saving || !canWrite}>{saving ? "Salvando…" : "Salvar cliente"}</button>
         </div>
       </form>
-    </Modal>
+    </Container>
   );
 }

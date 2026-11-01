@@ -1,3 +1,4 @@
+import useListReturn from "../../hooks/useListReturn";
 import RowActions from "../../components/feedback/RowActions";
 import DocumentValue from "../../components/feedback/DocumentValue";
 import useConfirm from "../../components/feedback/useConfirm";
@@ -9,59 +10,18 @@ import useAuth from "../../auth/useAuth";
 import { suppliers } from "../../services/suppliers";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import Pagination from "../../components/feedback/Pagination";
-import Modal from "../../components/feedback/Modal";
-import SupplierForm from "./SupplierForm.jsx";
-import SupplierDetailsModal from "./SupplierDetailsModal";
-import SupplierAddressModal from "./SupplierAddressModal";
-import SupplierCatalogLinksModal from "./SupplierCatalogLinksModal";
 import useSuppliers, { emptyFilters } from "./useSuppliers";
-
-function EditSupplier({ supplierId, onClose, onSaved }) {
-  const [state, setState] = useState({ loading: true });
-  const [revision, setRevision] = useState(0);
-  useEffect(() => {
-    let live = true;
-    const controller = new AbortController();
-    setState({ loading: true });
-    suppliers.findOne(supplierId, { signal: controller.signal }).then(
-      (supplier) => {
-        if (live) setState({ supplier });
-      },
-      (issue) => {
-        if (live) setState({ error: issue.message });
-      },
-    );
-    return () => {
-      live = false;
-      controller.abort();
-    };
-  }, [supplierId, revision]);
-  if (state.supplier)
-    return (
-      <SupplierForm
-        key={state.supplier.id}
-        supplier={state.supplier}
-        onClose={onClose}
-        onSaved={onSaved}
-      />
-    );
-  return (
-    <Modal title="Editar fornecedor" onClose={onClose}>
-      <ErrorAlert message={state.error} retry={() => setRevision((number) => number + 1)} />
-      {state.loading ? (
-        <p role="status">Carregando fornecedor…</p>
-      ) : (
-        !state.error && <p>Fornecedor não encontrado.</p>
-      )}
-    </Modal>
-  );
-}
 
 export default function SuppliersPage() {
   const confirm = useConfirm();
-  const { has, session } = useAuth();
-  const list = useSuppliers();
-  const [flow, setFlow] = useState(null);
+  const { has } = useAuth();
+  const origin = useListReturn({ modulePath: "/suppliers" });
+  const list = useSuppliers(origin.restored);
+  const listReturn = useListReturn({
+    modulePath: "/suppliers",
+    listState: { filters: list.filters, page: list.page, size: list.size },
+    ready: Boolean(list.data),
+  });
   const [failure, setFailure] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(null);
@@ -74,13 +34,6 @@ export default function SuppliersPage() {
     };
   }, []);
   const changeFilter = (field, value) => list.changeFilters({ ...list.filters, [field]: value });
-  const closeFlow = () =>
-    setFlow((previous) => (previous?.returnTo ? { kind: "details", id: previous.returnTo } : null));
-  const saved = () => {
-    setNotice("Fornecedor salvo.");
-    list.reload();
-    closeFlow();
-  };
   const changeActive = async (supplier) => {
     if (lock.current || !has("suppliers.update")) return;
     const action = supplier.active ? "Inativar" : "Ativar";
@@ -124,7 +77,7 @@ export default function SuppliersPage() {
           <button
             className="customer-icon-label"
             disabled={!!pending}
-            onClick={() => setFlow({ kind: "new" })}
+            onClick={() => listReturn.open("/suppliers/new")}
           >
             <Plus size={17} />
             Novo fornecedor
@@ -200,9 +153,7 @@ export default function SuppliersPage() {
               <thead>
                 <tr>
                   <th>Fornecedor</th>
-                  <th>
-                    CNPJ
-                  </th>
+                  <th>CNPJ</th>
                   <th>Contato</th>
                   <th>Situação</th>
                   <th>Ações</th>
@@ -242,7 +193,7 @@ export default function SuppliersPage() {
                           aria-label={`Detalhes de ${supplier.legalName}`}
                           title="Detalhes"
                           disabled={!!pending}
-                          onClick={() => setFlow({ kind: "details", id: supplier.id })}
+                          onClick={() => listReturn.open(`/suppliers/${supplier.id}`)}
                         >
                           <Eye size={17} />
                         </button>
@@ -252,7 +203,7 @@ export default function SuppliersPage() {
                             aria-label={`Editar ${supplier.legalName}`}
                             title="Editar"
                             disabled={!!pending}
-                            onClick={() => setFlow({ kind: "edit", id: supplier.id })}
+                            onClick={() => listReturn.open(`/suppliers/${supplier.id}/edit`)}
                           >
                             <Pencil size={17} />
                           </button>
@@ -262,7 +213,9 @@ export default function SuppliersPage() {
                           aria-label={`Endereços de ${supplier.legalName}`}
                           title="Endereços"
                           disabled={!!pending}
-                          onClick={() => setFlow({ kind: "addresses", id: supplier.id })}
+                          onClick={() =>
+                            listReturn.open(`/suppliers/${supplier.id}?section=addresses`)
+                          }
                         >
                           <MapPin size={17} />
                         </button>
@@ -313,42 +266,6 @@ export default function SuppliersPage() {
           />
         </div>
       </section>
-      {flow?.kind === "new" && has("suppliers.create") && (
-        <SupplierForm
-          key={`new:${session.userId}`}
-          supplier={null}
-          onClose={closeFlow}
-          onSaved={saved}
-        />
-      )}
-      {flow?.kind === "edit" && has("suppliers.update") && (
-        <EditSupplier
-          key={`${session.userId}:${flow.id}`}
-          supplierId={flow.id}
-          onClose={closeFlow}
-          onSaved={saved}
-        />
-      )}
-      {flow?.kind === "details" && (
-        <SupplierDetailsModal
-          key={`details:${flow.id}`}
-          supplierId={flow.id}
-          onClose={closeFlow}
-          onEdit={(supplier) => setFlow({ kind: "edit", id: supplier.id, returnTo: supplier.id })}
-          onAddresses={(id) => setFlow({ kind: "addresses", id, returnTo: id })}
-          onCatalogLinks={(id) => setFlow({ kind: "catalogLinks", id, returnTo: id })}
-        />
-      )}
-      {flow?.kind === "addresses" && (
-        <SupplierAddressModal
-          key={`addresses:${flow.id}`}
-          supplierId={flow.id}
-          onClose={closeFlow}
-        />
-      )}
-      {flow?.kind === "catalogLinks" && has("suppliers.read") && (
-        <SupplierCatalogLinksModal key={`links:${flow.id}`} supplierId={flow.id} onClose={closeFlow} />
-      )}
     </div>
   );
 }

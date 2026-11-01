@@ -20,10 +20,20 @@ export default function LoginPage() {
     signedIn(value);
     setPassword("");
     setChallenge(null);
-    navigate(safeReturn(location.state?.returnTo, value), { replace: true });
+    navigate(safeReturn(location.state?.returnTo, value), {
+      replace: true,
+      state: location.state?.returnContext,
+    });
   };
   if (loading) return <div className="screen-center">Carregando acesso…</div>;
-  if (session) return <Navigate to={safeReturn(location.state?.returnTo, session)} replace />;
+  if (session)
+    return (
+      <Navigate
+        to={safeReturn(location.state?.returnTo, session)}
+        state={location.state?.returnContext}
+        replace
+      />
+    );
   const submit = async (event) => {
     event.preventDefault();
     setError("");

@@ -42,7 +42,7 @@ export default function TradeItemForm({
       quantity: textNumber(item?.quantity ?? initialSelection?.quantity ?? 1),
       choiceId: String(
         (purchase ? item?.supplierOption?.id : item?.presentation?.id) ||
-          initialSelection?.presentation?.id ||
+          (purchase ? initialSelection?.supplierOption?.id : initialSelection?.presentation?.id) ||
           "",
       ),
       price: "",
@@ -61,7 +61,9 @@ export default function TradeItemForm({
   const [page, setPage] = useState(0);
   const [checkingCurrentPrice, setCheckingCurrentPrice] = useState(false);
   const [choice, setChoice] = useState(
-    purchase ? item?.supplierOption : item?.presentation || initialSelection?.presentation,
+    purchase
+      ? item?.supplierOption || initialSelection?.supplierOption
+      : item?.presentation || initialSelection?.presentation,
   );
   useEffect(() => {
     onStateChange?.(form.saving, form.dirty);
@@ -102,10 +104,7 @@ export default function TradeItemForm({
   const product =
     String(productRequest.data?.id) === form.value.productId
       ? productRequest.data
-      : !purchase &&
-          item &&
-          !has("products.read") &&
-          String(item.product.id) === form.value.productId
+      : item && !has("products.read") && String(item.product.id) === form.value.productId
         ? item.product
         : String(initialSelection?.product?.id) === form.value.productId
           ? initialSelection.product
@@ -135,7 +134,7 @@ export default function TradeItemForm({
       (stockRequest.loading || stockRequest.data?.scope !== form.value.productId),
     ),
   };
-  const choiceScope = `${form.value.productId}:${page}`;
+  const choiceScope = `${form.value.productId}:${purchase ? document.supplier?.id : "sale"}:${page}`;
   const choicesRequest = useProductResource(
     async (options) => {
       if (!purchase)
@@ -601,13 +600,12 @@ export default function TradeItemForm({
                         }}
                       >
                         <option value="">Selecionar</option>
-                        {!purchase &&
-                          item &&
+                        {(purchase || item) &&
                           selectedChoice &&
                           !choices.data?.content.some((row) => row.id === selectedChoice.id) && (
                             <option value={selectedChoice.id}>
-                              {item.presentationNameSnapshot || selectedChoice.name} · Apresentação
-                              atual
+                              {item?.presentationNameSnapshot || selectedChoice.name} ·{" "}
+                              {purchase ? "Opção selecionada" : "Apresentação atual"}
                             </option>
                           )}
                         {choices.data?.content.map((row) => (
@@ -638,6 +636,7 @@ export default function TradeItemForm({
                     }}
                   />
                   <WarehouseSelect
+                    autoSelectUnique={purchase && embedded}
                     value={form.value.warehouseId}
                     disabled={
                       !purchase && has("stock.read") && (stock.loading || Boolean(stock.error))

@@ -17,6 +17,14 @@ export function removeDraft(key) {
   drafts.delete(key);
 }
 
+export function readDraft(key) {
+  return drafts.get(key);
+}
+
+export function saveDraft(key, value) {
+  drafts.set(key, value);
+}
+
 // Only non-secret form fields. State survives a session redirect,
 // stays in this tab's memory and is discarded on reload, logout or account switch.
 export function useDraft(key, initial) {

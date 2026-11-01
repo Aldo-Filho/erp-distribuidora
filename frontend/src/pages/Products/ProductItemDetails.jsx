@@ -11,41 +11,59 @@ import ProductSuppliers from "./ProductSuppliers";
 import ProductStockPanel from "./ProductStockPanel";
 import ProductStockDialog from "./ProductStockDialog";
 
-export function ProductItemContent({ catalog, item, initialTab = "commercial", onStockChanged }) {
+export function ProductItemContent({
+  catalog,
+  item,
+  initialTab = "commercial",
+  onStockChanged,
+  section,
+  onSectionChange,
+}) {
   const { has } = useAuth();
-  const [tab, setTab] = useState(initialTab);
+  const [localTab, setLocalTab] = useState(initialTab);
+  const tab = section || localTab;
+  const setTab = onSectionChange || setLocalTab;
   const [stockOpen, setStockOpen] = useState(false);
   const measure = (value, places) =>
     value == null ? "—" : Number(value).toLocaleString("pt-BR", { maximumFractionDigits: places });
   return (
     <>
-      <div className="product-toolbar product-tabs" role="group" aria-label="Dados do SKU">
-        {has("stock.read") && (
-          <button type="button" className="secondary" onClick={() => setStockOpen(true)}>
-            Estoque
-          </button>
-        )}
-        <button
-          className={tab === "commercial" ? "" : "secondary"}
-          onClick={() => setTab("commercial")}
-        >
-          Dados comerciais
-        </button>
-        <button
-          className={tab === "presentations" ? "" : "secondary"}
-          onClick={() => setTab("presentations")}
-        >
-          Apresentações de venda
-        </button>
-        {has("suppliers.read") && (
+      {!section && (
+        <div className="product-toolbar product-tabs" role="group" aria-label="Dados do SKU">
+          {has("stock.read") && (
+            <button type="button" className="secondary" onClick={() => setStockOpen(true)}>
+              Estoque
+            </button>
+          )}
           <button
-            className={tab === "suppliers" ? "" : "secondary"}
-            onClick={() => setTab("suppliers")}
+            className={tab === "commercial" ? "" : "secondary"}
+            onClick={() => setTab("commercial")}
           >
-            Fornecedores / opções
+            Dados comerciais
           </button>
-        )}
-      </div>
+          <button
+            className={tab === "presentations" ? "" : "secondary"}
+            onClick={() => setTab("presentations")}
+          >
+            Apresentações de venda
+          </button>
+          {has("suppliers.read") && (
+            <button
+              className={tab === "suppliers" ? "" : "secondary"}
+              onClick={() => setTab("suppliers")}
+            >
+              Fornecedores / opções
+            </button>
+          )}
+        </div>
+      )}
+      {tab === "stock" && has("stock.read") && (
+        <ProductStockPanel item={item} onChanged={onStockChanged} />
+      )}
+      {((tab === "stock" && !has("stock.read")) ||
+        (tab === "suppliers" && !has("suppliers.read"))) && (
+        <p>Seu cargo não permite consultar esta seção.</p>
+      )}
       {!catalog.unit && (
         <p className="product-warning">
           Unidade legada pendente de conferência. Novas operações exigem confirmar o significado dos
@@ -113,7 +131,12 @@ export default function ProductItemDetails({
   const state = useProductResource((options) => products.findItem(item.id, options), [item.id]);
   if (initialTab === "stock" && has("stock.read")) {
     return (
-      <Modal title={`Estoque · ${item.sku}`} onClose={onClose} wide className="product-stock-dialog">
+      <Modal
+        title={`Estoque · ${item.sku}`}
+        onClose={onClose}
+        wide
+        className="product-stock-dialog"
+      >
         <ProductLoad state={state} empty="Variação não encontrada.">
           {state.data && <ProductStockPanel item={state.data} onChanged={onStockChanged} />}
         </ProductLoad>

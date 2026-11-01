@@ -1,6 +1,7 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Plus } from "lucide-react";
 import useAuth from "../../auth/useAuth";
+import EmbeddedContent from "../../components/layout/EmbeddedContent";
 import Modal from "../../components/feedback/Modal";
 import FilterSelect from "../../components/feedback/FilterSelect";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
@@ -17,7 +18,15 @@ import useProductForm from "./useProductForm";
 import ProductItemFields from "./ProductItemFields";
 import ProductClassificationsModal from "./ProductClassificationsModal";
 
-export default function ProductForm({ catalog, item, onSaved, onClose }) {
+export default function ProductForm({
+  catalog,
+  item,
+  onSaved,
+  onClose,
+  embedded = false,
+  closeRef,
+}) {
+  const Container = embedded ? EmbeddedContent : Modal;
   const classificationId = useId();
   const { has } = useAuth();
   const canWrite = has(catalog ? "products.update" : "products.create");
@@ -37,6 +46,12 @@ export default function ProductForm({ catalog, item, onSaved, onClose }) {
     onSaved,
   );
   const { value, change } = form;
+  useEffect(() => {
+    if (closeRef) closeRef.current = form.close;
+    return () => {
+      if (closeRef) closeRef.current = null;
+    };
+  });
   const [classification, setClassification] = useState(null);
   const options = useProductResource(async (request) => {
     const [brands, categories] = await Promise.all([
@@ -104,7 +119,8 @@ export default function ProductForm({ catalog, item, onSaved, onClose }) {
   };
   return (
     <>
-      <Modal
+      <Container
+        hideTitle={embedded}
         title={catalog ? "Editar produto" : "Novo produto"}
         onClose={form.close}
         busy={form.saving}
@@ -323,7 +339,7 @@ export default function ProductForm({ catalog, item, onSaved, onClose }) {
             </button>
           </div>
         </form>
-      </Modal>
+      </Container>
       {classification && (
         <ProductClassificationsModal
           kind={classification}

@@ -176,9 +176,15 @@ function CatalogResults({ onSelect, orderId, compact = false }) {
       {compact ? (
         <div className="customer-list-footer">
           <span>
-            {list.data ? `${list.data.totalElements} ${list.data.totalElements === 1 ? "produto encontrado" : "produtos encontrados"}` : ""}
+            {list.data
+              ? `${list.data.totalElements} ${list.data.totalElements === 1 ? "produto encontrado" : "produtos encontrados"}`
+              : ""}
           </span>
-          <Pagination page={list.page} totalPages={list.data?.totalPages} change={list.changePage} />
+          <Pagination
+            page={list.page}
+            totalPages={list.data?.totalPages}
+            change={list.changePage}
+          />
         </div>
       ) : (
         <ProductPageFooter list={list} />
@@ -292,11 +298,34 @@ function SkuSalePrice({ item, orderId }) {
   );
 }
 
-export function WarehouseSelect({ value, onChange, disabled = false, allowedIds }) {
+export function WarehouseSelect({
+  value,
+  onChange,
+  disabled = false,
+  allowedIds,
+  autoSelectUnique = false,
+}) {
   const { has } = useAuth();
   const allowed = has("warehouses.read");
   const state = useProductResource((options) => products.warehouses(options), [], allowed);
   const entries = state.data || [];
+  useEffect(() => {
+    if (!autoSelectUnique || value || disabled || !allowed || state.loading || state.error) return;
+    const choices = (state.data || []).filter(
+      (entry) => !allowedIds || allowedIds.includes(entry.id),
+    );
+    if (choices.length === 1) onChange({ target: { value: String(choices[0].id) } });
+  }, [
+    autoSelectUnique,
+    value,
+    disabled,
+    allowed,
+    state.loading,
+    state.error,
+    state.data,
+    allowedIds,
+    onChange,
+  ]);
   const selectedExists = entries.some((warehouse) => String(warehouse.id) === String(value));
   return (
     <div>
@@ -308,7 +337,9 @@ export function WarehouseSelect({ value, onChange, disabled = false, allowedIds 
           disabled={disabled || !allowed || state.loading || Boolean(state.error)}
           onChange={onChange}
         >
-          <option value="">{state.loading ? "Carregando depósitos…" : "Selecionar depósito"}</option>
+          <option value="">
+            {state.loading ? "Carregando depósitos…" : "Selecionar depósito"}
+          </option>
           {value && !selectedExists && (
             <option value={value} disabled>
               Depósito #{value}

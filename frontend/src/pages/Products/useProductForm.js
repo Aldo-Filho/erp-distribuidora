@@ -14,6 +14,16 @@ export default function useProductForm(identity, initialValue, onClose, onSaved)
   const live = useRef(true);
   const confirm = useConfirm();
   useEffect(() => {
+    const warn = (event) => {
+      if (saving || JSON.stringify(value) !== JSON.stringify(initial)) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [value, initial, saving]);
+  useEffect(() => {
     live.current = true;
     return () => {
       live.current = false;

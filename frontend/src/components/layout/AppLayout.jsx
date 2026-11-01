@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Truck,
   Users,
@@ -40,6 +40,7 @@ const icons = {
 
 export default function AppLayout() {
   const { session, logout, error } = useAuth();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [failure, setFailure] = useState("");
   return (
@@ -49,9 +50,7 @@ export default function AppLayout() {
           <span className="brand-mark">
             <Package size={20} aria-hidden="true" />
           </span>
-          <span className="sidebar-label">
-            JamsHub
-          </span>
+          <span className="sidebar-label">JamsHub</span>
         </div>
         <nav aria-label="Navegação principal">
           {navigation
@@ -62,6 +61,12 @@ export default function AppLayout() {
                 <NavLink
                   to={entry.path}
                   key={entry.path}
+                  className={({ isActive }) =>
+                    isActive ||
+                    (entry.path === "/products" && location.pathname === "/stock/history")
+                      ? "active"
+                      : undefined
+                  }
                   aria-label={entry.label}
                   title={entry.label}
                 >

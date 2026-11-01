@@ -1,5 +1,8 @@
-import { useRef, useState } from "react";
+import { removeDraft, useDraft } from "../../auth/drafts";
+import useDirtyUnload from "../../hooks/useDirtyUnload";
+import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
+import EmbeddedContent from "../../components/layout/EmbeddedContent";
 import Modal from "../../components/feedback/Modal";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import useConfirm from "../../components/feedback/useConfirm";
@@ -46,7 +49,15 @@ export function pendingBase(item) {
   const difference = scaled(item.baseQuantity) - scaled(item.receivedQuantity);
   return `${difference / 10n}${difference % 10n ? "," + String(difference % 10n) : ""}`;
 }
-export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved }) {
+export default function PurchaseReceiptForm({
+  purchase,
+  items,
+  onClose,
+  onSaved,
+  embedded = false,
+  closeRef,
+}) {
+  const Container = embedded ? EmbeddedContent : Modal;
   const { has, session } = useAuth();
   const [initialAttempt] = useState(() => {
     try {
@@ -55,27 +66,43 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
       return { attempt: null, error: issue.message };
     }
   });
+  const finish = (receipt) => {
+    removeDraft(`purchase-receipt-fields:${session.userId}:${purchase.id}:amounts`);
+    removeDraft(`purchase-receipt-fields:${session.userId}:${purchase.id}:notes`);
+    onSaved(receipt);
+  };
   const [frozen, setFrozen] = useState(initialAttempt.attempt);
   const [storageError, setStorageError] = useState(initialAttempt.error);
-  const [amounts, setAmounts] = useState(() =>
+  const draftKey = `purchase-receipt-fields:${session.userId}:${purchase.id}`;
+  const [amounts, setAmounts] = useDraft(
+    `${draftKey}:amounts`,
     Object.fromEntries(items.map((item) => [item.id, ""])),
   );
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useDraft(`${draftKey}:notes`, "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  useDirtyUnload(busy || !!notes || Object.values(amounts).some(Boolean));
   const locked = useRef(false);
   const confirm = useConfirm();
   const lockName = `${receiptKey(session.userId, purchase.id)}:operation`;
   const withPurchaseLock = async (action) => {
     if (!globalThis.navigator?.locks?.request) {
-      throw new Error("Este navegador não oferece bloqueio seguro entre abas. Use um navegador compatível para registrar recebimentos.");
+      throw new Error(
+        "Este navegador não oferece bloqueio seguro entre abas. Use um navegador compatível para registrar recebimentos.",
+      );
     }
-    return navigator.locks.request(lockName, { mode: "exclusive", ifAvailable: true }, async (lock) => {
-      if (!lock) {
-        throw new Error("Há outra aba processando esta compra. Aguarde a conclusão e consulte novamente a tentativa antes de enviar.");
-      }
-      return action();
-    });
+    return navigator.locks.request(
+      lockName,
+      { mode: "exclusive", ifAvailable: true },
+      async (lock) => {
+        if (!lock) {
+          throw new Error(
+            "Há outra aba processando esta compra. Aguarde a conclusão e consulte novamente a tentativa antes de enviar.",
+          );
+        }
+        return action();
+      },
+    );
   };
   const clearMatchingAttempt = (requestId) => {
     const current = pendingReceipt(session.userId, purchase.id);
@@ -96,8 +123,16 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
       }))
     )
       return;
+    removeDraft(`${draftKey}:amounts`);
+    removeDraft(`${draftKey}:notes`);
     onClose();
   };
+  useEffect(() => {
+    if (closeRef) closeRef.current = close;
+    return () => {
+      if (closeRef) closeRef.current = null;
+    };
+  });
   const verifyReceipt = async () => {
     if (locked.current || !frozen) return;
     locked.current = true;
@@ -108,7 +143,9 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
         const current = pendingReceipt(session.userId, purchase.id);
         if (current && current.requestId !== frozen.requestId) {
           setFrozen(current);
-          setError("Outra aba criou uma tentativa para esta compra. Revise os dados recuperados antes de prosseguir.");
+          setError(
+            "Outra aba criou uma tentativa para esta compra. Revise os dados recuperados antes de prosseguir.",
+          );
           return;
         }
         const receipts = await purchases.receipts(purchase.id);
@@ -119,7 +156,7 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
           } catch {
             // The server history already confirms the receipt.
           }
-          onSaved(registered);
+          finish(registered);
         } else {
           setError(
             "Ainda não foi encontrado um recibo para esta tentativa. Se o envio anterior já terminou, você pode repetir a mesma tentativa sem gerar outro identificador.",
@@ -145,7 +182,9 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
         const current = pendingReceipt(session.userId, purchase.id);
         if (current && (!frozen || current.requestId !== frozen.requestId)) {
           setFrozen(current);
-          setError("Existe uma tentativa criada ou alterada em outra aba. Revise-a e confirme antes de repetir.");
+          setError(
+            "Existe uma tentativa criada ou alterada em outra aba. Revise-a e confirme antes de repetir.",
+          );
           return;
         }
         let payload = current || frozen;
@@ -154,15 +193,17 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
           const receipts = await purchases.receipts(purchase.id);
           const registered = receipts.find((receipt) => receipt.requestId === frozen.requestId);
           if (registered) {
-            onSaved(registered);
+            finish(registered);
           } else {
-            setError("A tentativa desta aba não está mais salva. Verifique o histórico e recarregue os dados antes de registrar outro recebimento.");
+            setError(
+              "A tentativa desta aba não está mais salva. Verifique o histórico e recarregue os dados antes de registrar outro recebimento.",
+            );
           }
           return;
         }
         if (!payload) {
           const lines = items
-            .filter((item) => String(amounts[item.id]).trim() !== "")
+            .filter((item) => String(amounts[item.id] ?? "").trim() !== "")
             .map((item) => ({
               purchaseItemId: item.id,
               quantity: baseNumber(
@@ -192,7 +233,7 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
           } catch {
             // A later reconciliation can clear the leftover attempt.
           }
-          onSaved(receipt);
+          finish(receipt);
         } catch (issue) {
           const rejectedByApi =
             [400, 422].includes(issue.status) &&
@@ -202,7 +243,9 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
             try {
               clearMatchingAttempt(payload.requestId);
             } catch {
-              setStorageError("Não foi possível limpar a tentativa rejeitada. Verifique o armazenamento do navegador antes de reenviar.");
+              setStorageError(
+                "Não foi possível limpar a tentativa rejeitada. Verifique o armazenamento do navegador antes de reenviar.",
+              );
               setError(issue.message);
               return;
             }
@@ -211,7 +254,9 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
               Object.fromEntries(
                 items.map((item) => [
                   item.id,
-                  String(payload.items.find((line) => line.purchaseItemId === item.id)?.quantity ?? "").replace(".", ","),
+                  String(
+                    payload.items.find((line) => line.purchaseItemId === item.id)?.quantity ?? "",
+                  ).replace(".", ","),
                 ]),
               ),
             );
@@ -227,9 +272,15 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
     } catch (issue) {
       setError(issue.message);
       // Storage errors must prevent a new attempt rather than allow an unsafe retry.
-      if (issue.name === "SecurityError" || issue.name === "QuotaExceededError" ||
-          issue.message === "Não foi possível acessar a tentativa de recebimento salva neste navegador.") {
-        setStorageError("Não foi possível acessar ou salvar a tentativa. O recebimento foi bloqueado por segurança.");
+      if (
+        issue.name === "SecurityError" ||
+        issue.name === "QuotaExceededError" ||
+        issue.message ===
+          "Não foi possível acessar a tentativa de recebimento salva neste navegador."
+      ) {
+        setStorageError(
+          "Não foi possível acessar ou salvar a tentativa. O recebimento foi bloqueado por segurança.",
+        );
       }
     } finally {
       locked.current = false;
@@ -237,7 +288,7 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
     }
   };
   return (
-    <Modal
+    <Container
       title={`Receber compra #${purchase.id} · BASE`}
       onClose={close}
       busy={busy}
@@ -251,7 +302,8 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
             <p className="product-warning">
               Existe uma tentativa aguardando confirmação. Repetir envia exatamente o mesmo
               identificador e as mesmas quantidades, protegendo contra entrada duplicada. Você pode
-              fechar esta aba e retomar a tentativa ao entrar novamente com o mesmo usuário neste navegador.
+              fechar esta aba e retomar a tentativa ao entrar novamente com o mesmo usuário neste
+              navegador.
             </p>
             <dl className="customer-details">
               <div>
@@ -292,7 +344,7 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
                   placeholder="Receber agora em BASE"
                   aria-label={`Receber item ${item.id} em BASE`}
                   inputMode="decimal"
-                  value={amounts[item.id]}
+                  value={amounts[item.id] ?? ""}
                   disabled={pendingBase(item) === "0" || item.baseQuantity == null}
                   onChange={(event) =>
                     setAmounts((old) => ({ ...old, [item.id]: event.target.value }))
@@ -320,6 +372,6 @@ export default function PurchaseReceiptForm({ purchase, items, onClose, onSaved 
           </button>
         </div>
       </form>
-    </Modal>
+    </Container>
   );
 }

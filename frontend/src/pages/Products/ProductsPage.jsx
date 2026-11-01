@@ -1,3 +1,4 @@
+import useListReturn from "../../hooks/useListReturn";
 import { useState } from "react";
 import { Eye, History, Package, Pencil, Plus, Power } from "lucide-react";
 import useAuth from "../../auth/useAuth";
@@ -11,16 +12,19 @@ import { useProductResource } from "./useProductResource";
 import useProductAction from "./useProductAction";
 import { ProductLoad, ProductPageFooter } from "./ProductControls";
 import { inactiveCatalogMessage } from "./productFormData";
-import ProductDetailsModal from "./ProductDetailsModal";
-import ProductForm from "./ProductForm";
 import ProductClassificationsModal from "./ProductClassificationsModal";
 import ProductListRow from "./ProductListRow";
-import StockHistory from "../Operations/StockHistory";
 import "./products.css";
 
 export default function ProductsPage() {
-  const { has, session } = useAuth();
-  const list = useProducts();
+  const { has } = useAuth();
+  const origin = useListReturn({ modulePath: "/products" });
+  const list = useProducts(origin.restored);
+  const listReturn = useListReturn({
+    modulePath: "/products",
+    listState: { filters: list.filters, page: list.page, size: list.size },
+    ready: Boolean(list.data),
+  });
   const action = useProductAction();
   const [flow, setFlow] = useState(null);
   const classifications = useProductResource(async (options) => {
@@ -67,7 +71,7 @@ export default function ProductsPage() {
               type="button"
               className="secondary customer-icon-label"
               disabled={action.pending}
-              onClick={() => setFlow({ kind: "stockHistory" })}
+              onClick={() => listReturn.open("/stock/history")}
             >
               <History size={17} />
               Histórico de estoque
@@ -91,7 +95,7 @@ export default function ProductsPage() {
             <button
               className="customer-icon-label"
               disabled={action.pending}
-              onClick={() => setFlow({ kind: "new" })}
+              onClick={() => listReturn.open("/products/new")}
             >
               <Plus size={17} />
               Novo produto
@@ -184,8 +188,8 @@ export default function ProductsPage() {
                     key={catalog.id}
                     catalog={catalog}
                     canReadStock={has("stock.read")}
-                    onDetails={() => setFlow({ kind: "details", id: catalog.id })}
-                    onStock={() => setFlow({ kind: "details", id: catalog.id, stock: true })}
+                    onDetails={() => listReturn.open(`/products/${catalog.id}`)}
+                    onStock={() => listReturn.open(`/products/${catalog.id}?section=stock`)}
                   >
                     <td>
                       <RowActions label={`Ações de ${catalog.name}`}>
@@ -194,7 +198,7 @@ export default function ProductsPage() {
                           aria-label={`Detalhes de ${catalog.name}`}
                           className="secondary icon-button"
                           disabled={action.pending}
-                          onClick={() => setFlow({ kind: "details", id: catalog.id })}
+                          onClick={() => listReturn.open(`/products/${catalog.id}`)}
                         >
                           <Eye size={17} />
                         </button>
@@ -204,7 +208,7 @@ export default function ProductsPage() {
                             aria-label={`Editar ${catalog.name}`}
                             className="secondary icon-button"
                             disabled={action.pending}
-                            onClick={() => setFlow({ kind: "edit", id: catalog.id })}
+                            onClick={() => listReturn.open(`/products/${catalog.id}/edit`)}
                           >
                             <Pencil size={17} />
                           </button>
@@ -216,7 +220,7 @@ export default function ProductsPage() {
                             aria-label={`Estoque de ${catalog.name}`}
                             className="secondary icon-button"
                             disabled={action.pending}
-                            onClick={() => setFlow({ kind: "details", id: catalog.id, stock: true })}
+                            onClick={() => listReturn.open(`/products/${catalog.id}?section=stock`)}
                           >
                             <Package size={17} />
                           </button>
@@ -242,29 +246,6 @@ export default function ProductsPage() {
         </ProductLoad>
         <ProductPageFooter list={list} />
       </section>
-      {flow?.kind === "new" && has("products.create") && (
-        <ProductForm
-          key={`new:${session.userId}`}
-          onClose={() => setFlow(null)}
-          onSaved={() => {
-            setFlow(null);
-            action.succeed("Produto salvo.");
-            list.reload();
-          }}
-        />
-      )}
-      {(flow?.kind === "details" || (flow?.kind === "edit" && has("products.update"))) && (
-        <ProductDetailsModal
-          key={flow.id}
-          catalogId={flow.id}
-          query={list.filters.query}
-          startEdit={flow.kind === "edit"}
-          startStock={Boolean(flow.stock)}
-          onClose={() => setFlow(null)}
-          onChanged={list.reload}
-          onSaved={() => action.succeed("Produto salvo.")}
-        />
-      )}
       {["brands", "categories"].includes(flow?.kind) && (
         <ProductClassificationsModal
           kind={flow.kind}
@@ -274,9 +255,6 @@ export default function ProductsPage() {
           }}
           onChanged={classifications.reload}
         />
-      )}
-      {flow?.kind === "stockHistory" && has("stock.read") && (
-        <StockHistory filter={{}} onClose={() => setFlow(null)} />
       )}
     </div>
   );

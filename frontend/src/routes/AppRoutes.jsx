@@ -1,3 +1,7 @@
+import CustomerEntryPage from "../pages/Customers/CustomerEntryPage";
+import CustomerDetailsPage from "../pages/Customers/CustomerDetailsPage";
+import SupplierEntryPage from "../pages/Suppliers/SupplierEntryPage";
+import SupplierDetailsPage from "../pages/Suppliers/SupplierDetailsPage";
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
@@ -14,14 +18,21 @@ import SecurityAuditPage from "../pages/Security/SecurityAuditPage";
 import AccountPage from "../pages/Account/AccountPage";
 import SuppliersPage from "../pages/Suppliers/SuppliersPage";
 import CustomersPage from "../pages/Customers/CustomersPage";
+import ProductEntryPage from "../pages/Products/ProductEntryPage";
+import ProductDetailsPage from "../pages/Products/ProductDetailsPage";
+import ProductVariantPage from "../pages/Products/ProductVariantPage";
 import ProductsPage from "../pages/Products/ProductsPage";
+import StockHistoryPage from "../pages/Operations/StockHistoryPage";
 import StockPage from "../pages/Operations/StockPage";
 import WarehousesPage from "../pages/Operations/WarehousesPage";
 import OrdersPage from "../pages/Operations/OrdersPage";
 import OrderEntryPage from "../pages/Operations/OrderEntryPage";
 import PurchasesPage from "../pages/Operations/PurchasesPage";
+import PurchaseEntryPage from "../pages/Operations/PurchaseEntryPage";
+import PurchaseDetailsPage from "../pages/Operations/PurchaseDetailsPage";
 import useAuth from "../auth/useAuth";
 import { firstRoute } from "./navigation";
+import "../components/layout/operationPages.css";
 
 function Home() {
   const { session } = useAuth();
@@ -47,6 +58,7 @@ export default function AppRoutes() {
           <Route path="/security/sessions" element={<SessionsPage />} />
           <Route element={<ProtectedRoute permission="stock.read" />}>
             <Route path="/stock" element={<Navigate to="/products" replace />} />
+            <Route path="/stock/history" element={<StockHistoryPage />} />
           </Route>
           <Route element={<ProtectedRoute permission="warehouses.read" />}>
             <Route path="/warehouses" element={<WarehousesPage />} />
@@ -58,15 +70,30 @@ export default function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute permission="purchases.read" />}>
             <Route path="/purchases" element={<PurchasesPage />} />
+            <Route path="/purchases/new" element={<PurchaseEntryPage />} />
+            <Route path="/purchases/:id/edit" element={<PurchaseEntryPage />} />
+            <Route path="/purchases/:id" element={<PurchaseDetailsPage />} />
           </Route>
           <Route element={<ProtectedRoute anyPermissions={["products.read", "stock.read"]} />}>
             <Route path="/products" element={<ProductsEntry />} />
           </Route>
+          <Route element={<ProtectedRoute permission="products.read" />}>
+            <Route path="/products/new" element={<ProductEntryPage />} />
+            <Route path="/products/:id" element={<ProductDetailsPage />} />
+            <Route path="/products/:id/edit" element={<ProductEntryPage />} />
+            <Route path="/products/:id/variants/:itemId" element={<ProductVariantPage />} />
+          </Route>
           <Route element={<ProtectedRoute permission="suppliers.read" />}>
             <Route path="/suppliers" element={<SuppliersPage />} />
+            <Route path="/suppliers/new" element={<SupplierEntryPage />} />
+            <Route path="/suppliers/:id" element={<SupplierDetailsPage />} />
+            <Route path="/suppliers/:id/edit" element={<SupplierEntryPage />} />
           </Route>
           <Route element={<ProtectedRoute permission="customers.read" />}>
             <Route path="/customers" element={<CustomersPage />} />
+            <Route path="/customers/new" element={<CustomerEntryPage />} />
+            <Route path="/customers/:id" element={<CustomerDetailsPage />} />
+            <Route path="/customers/:id/edit" element={<CustomerEntryPage />} />
           </Route>
           <Route element={<ProtectedRoute permission="access.users.manage" />}>
             <Route path="/access/users" element={<UsersPage />} />

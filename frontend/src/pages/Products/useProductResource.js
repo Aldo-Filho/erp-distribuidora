@@ -35,11 +35,13 @@ export function useProductResource(read, dependencies, enabled = true) {
   };
 }
 
-export function useCatalogPage(read, initialFilters = { query: "", active: "" }) {
+export function useCatalogPage(read, initialFilters = { query: "", active: "" }, origin) {
   const [filters, setFilters] = useState(initialFilters);
   const [query, setQuery] = useState(initialFilters.query || "");
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(25);
+  const [page, setPage] = useState(() =>
+    Number.isSafeInteger(origin?.page) && origin.page >= 0 ? origin.page : 0,
+  );
+  const [size, setSize] = useState(() => ([25, 50, 100].includes(origin?.size) ? origin.size : 25));
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState({ loading: true });
   const generation = useRef(0);

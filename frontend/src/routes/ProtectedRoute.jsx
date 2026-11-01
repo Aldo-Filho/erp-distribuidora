@@ -17,7 +17,14 @@ export default function ProtectedRoute({ permission, anyPermissions }) {
         <ErrorAlert message={error} retry={refresh} />
       </div>
     );
-  if (!session) return <Navigate to="/login" state={{ returnTo: location.pathname }} replace />;
+  if (!session)
+    return (
+      <Navigate
+        to="/login"
+        state={{ returnTo: location.pathname + location.search, returnContext: location.state }}
+        replace
+      />
+    );
   if ((permission && !has(permission)) || (anyPermissions && !anyPermissions.some(has)))
     return (
       <section className="panel">

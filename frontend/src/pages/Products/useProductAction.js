@@ -24,7 +24,7 @@ export default function useProductAction() {
       setError("");
       setNotice("");
       await write();
-      if (live.current) setNotice("Alteração salva.");
+      if (live.current) setNotice(options.successMessage || "Alteração salva.");
     } catch (issue) {
       if (live.current) setError(issue.message);
     } finally {

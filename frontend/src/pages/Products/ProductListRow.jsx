@@ -65,7 +65,7 @@ export default function ProductListRow({ catalog, canReadStock, onDetails, onSto
               Ver por variação
             </button>
           ) : state.data ? (
-            <ProductStockCell item={state.data} onOpen={onStock} />
+            <ProductStockCell item={state.data} />
           ) : state.loading ? (
             "Carregando…"
           ) : (

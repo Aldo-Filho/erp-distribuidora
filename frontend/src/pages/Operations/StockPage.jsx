@@ -194,8 +194,8 @@ export default function StockPage() {
                             <button
                               type="button"
                               className="secondary icon-button"
-                              aria-label={`Entrada ou ajuste de ${stock.product.sku}`}
-                              title="Entrada ou ajuste"
+                              aria-label={`Movimentar estoque de ${stock.product.sku}`}
+                              title="Movimentar estoque"
                               onClick={() => setFlow({ type: "move", stock })}
                             >
                               <ArrowDownToLine size={17} />

@@ -1,6 +1,6 @@
 .record-dialog.dialog-wide.customer-details-dialog {
   max-width: 960px;
-  padding: 24px;
+  --dialog-padding: 24px;
 }
 .customer-details-dialog .dialog-heading {
   margin-bottom: 16px;
@@ -60,7 +60,7 @@
 }
 @media (max-width: 600px) {
   .record-dialog.dialog-wide.customer-details-dialog {
-    padding: 18px;
+    --dialog-padding: 18px;
   }
   .customer-details-dialog > .customer-details {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -69,7 +69,7 @@
 }
 @media (max-height: 740px) and (min-width: 700px) {
   .record-dialog.dialog-wide.customer-details-dialog {
-    padding: 20px;
+    --dialog-padding: 20px;
   }
   .customer-details-dialog > .customer-details {
     gap: 8px 20px;

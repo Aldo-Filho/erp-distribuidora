@@ -26,6 +26,37 @@
 .stock-movement-form {
   margin-top: 22px;
 }
+.stock-movement-preview {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+.stock-movement-preview dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.stock-movement-preview dt {
+  color: #61747e;
+  font-size: 12px;
+}
+.stock-movement-preview dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 600;
+}
+.stock-movement-preview p {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+@media (max-width: 480px) {
+  .stock-movement-preview dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .stock-dialog .stock-dialog-heading {
   display: flex;
   align-items: center;

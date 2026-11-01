@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, History, Pencil, Plus, Power } from "lucide-react";
+import { Eye, History, Package, Pencil, Plus, Power } from "lucide-react";
 import useAuth from "../../auth/useAuth";
 import PageHeading from "../../components/layout/PageHeading";
 import FilterSelect from "../../components/feedback/FilterSelect";
@@ -32,20 +32,25 @@ export default function ProductsPage() {
   }, []);
   const filter = (field, next) => list.changeFilters({ ...list.filters, [field]: next });
   const filtered = Object.values(list.filters).some((value) => String(value).trim());
-  const toggle = (catalog) =>
-    action.run(
+  const toggle = (catalog) => {
+    if (!has("products.update")) return;
+    const impact = catalog.active
+      ? inactiveCatalogMessage
+      : "Somente as variações com situação própria ativa voltarão a ficar disponíveis. Variações previamente inativas continuarão inativas.";
+    return action.run(
       async () => {
         await products.update(catalog.id, { active: !catalog.active });
         list.reload();
       },
-      catalog.active
-        ? inactiveCatalogMessage
-        : "Ativar o produto principal? Somente as variações com situação própria ativa voltarão a ficar disponíveis. Variações previamente inativas continuarão inativas.",
+      `${catalog.active ? "Inativar" : "Ativar"} o produto ${catalog.name}? ${impact}`,
       {
         title: catalog.active ? "Inativar produto" : "Ativar produto",
         confirmLabel: catalog.active ? "Inativar" : "Ativar",
+        destructive: catalog.active,
+        successMessage: catalog.active ? "Produto inativado." : "Produto ativado.",
       },
     );
+  };
   return (
     <div className="customers-page products-page">
       <div className="page-title">
@@ -58,15 +63,28 @@ export default function ProductsPage() {
         />
         <div className="product-toolbar">
           {has("stock.read") && (
-            <button type="button" className="secondary customer-icon-label"
-              onClick={() => setFlow({ kind: "stockHistory" })}>
-              <History size={17} /> Histórico de estoque
+            <button
+              type="button"
+              className="secondary customer-icon-label"
+              disabled={action.pending}
+              onClick={() => setFlow({ kind: "stockHistory" })}
+            >
+              <History size={17} />
+              Histórico de estoque
             </button>
           )}
-          <button className="secondary" onClick={() => setFlow({ kind: "brands" })}>
+          <button
+            className="secondary"
+            disabled={action.pending}
+            onClick={() => setFlow({ kind: "brands" })}
+          >
             Marcas
           </button>
-          <button className="secondary" onClick={() => setFlow({ kind: "categories" })}>
+          <button
+            className="secondary"
+            disabled={action.pending}
+            onClick={() => setFlow({ kind: "categories" })}
+          >
             Categorias
           </button>
           {has("products.create") && (
@@ -191,6 +209,18 @@ export default function ProductsPage() {
                             <Pencil size={17} />
                           </button>
                         )}
+                        {has("stock.read") && (
+                          <button
+                            type="button"
+                            title="Estoque"
+                            aria-label={`Estoque de ${catalog.name}`}
+                            className="secondary icon-button"
+                            disabled={action.pending}
+                            onClick={() => setFlow({ kind: "details", id: catalog.id, stock: true })}
+                          >
+                            <Package size={17} />
+                          </button>
+                        )}
                         {has("products.update") && (
                           <button
                             title={catalog.active ? "Inativar" : "Ativar"}
@@ -223,7 +253,7 @@ export default function ProductsPage() {
           }}
         />
       )}
-      {(flow?.kind === "details" || flow?.kind === "edit") && (
+      {(flow?.kind === "details" || (flow?.kind === "edit" && has("products.update"))) && (
         <ProductDetailsModal
           key={flow.id}
           catalogId={flow.id}
@@ -232,6 +262,7 @@ export default function ProductsPage() {
           startStock={Boolean(flow.stock)}
           onClose={() => setFlow(null)}
           onChanged={list.reload}
+          onSaved={() => action.succeed("Produto salvo.")}
         />
       )}
       {["brands", "categories"].includes(flow?.kind) && (

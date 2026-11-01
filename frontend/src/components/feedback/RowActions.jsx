@@ -139,7 +139,7 @@ export default function RowActions({ children, className = "", label = "Ações 
               );
             })}
           </div>,
-          document.body,
+          trigger.current?.closest('[role="dialog"]') || document.body,
         )}
     </div>
   );

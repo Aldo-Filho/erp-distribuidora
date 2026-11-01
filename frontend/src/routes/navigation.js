@@ -1,5 +1,10 @@
 export const navigation = [
-  { path: "/products", label: "Produtos", anyPermissions: ["products.read", "stock.read"], icon: "products" },
+  {
+    path: "/products",
+    label: "Produtos",
+    anyPermissions: ["products.read", "stock.read"],
+    icon: "products",
+  },
   { path: "/warehouses", label: "Depósitos", permission: "warehouses.read", icon: "warehouses" },
   { path: "/customers", label: "Clientes", permission: "customers.read", icon: "customers" },
   { path: "/suppliers", label: "Fornecedores", permission: "suppliers.read", icon: "suppliers" },
@@ -46,8 +51,9 @@ export function firstRoute(session) {
 
 export function safeReturn(path, session) {
   const destination = path === "/stock" ? "/products" : path;
+  if (destination === "/orders/new" || /^\/orders\/[1-9]\d*\/edit$/.test(destination || "")) {
+    return session.permissionKeys.includes("orders.read") ? destination : firstRoute(session);
+  }
   const entry = navigation.find((item) => item.path === destination);
-  return entry && canAccessEntry(entry, session)
-    ? destination
-    : firstRoute(session);
+  return entry && canAccessEntry(entry, session) ? destination : firstRoute(session);
 }

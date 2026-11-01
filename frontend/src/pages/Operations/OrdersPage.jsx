@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import useAuth from "../../auth/useAuth";
 import PageHeading from "../../components/layout/PageHeading";
@@ -39,13 +40,25 @@ const payments = {
 };
 
 export default function OrdersPage() {
-  const { has } = useAuth();
-  const [status, setStatusState] = useState("");
-  const setStatus = (next) => { setPage(0); setStatusState(next); };
-  const [paymentMethod, setPaymentMethodState] = useState("");
-  const setPaymentMethod = (next) => { setPage(0); setPaymentMethodState(next); };
-  const [page, setPage] = useState(0);
-  const [flow, setFlow] = useState(null);
+  const { has, session } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const origin = location.state?.orderList;
+  const [status, setStatusState] = useState(origin?.status || "");
+  const setStatus = (next) => {
+    setPage(0);
+    setStatusState(next);
+  };
+  const [paymentMethod, setPaymentMethodState] = useState(origin?.paymentMethod || "");
+  const setPaymentMethod = (next) => {
+    setPage(0);
+    setPaymentMethodState(next);
+  };
+  const [page, setPage] = useState(origin?.page || 0);
+  const [flow, setFlow] = useState(
+    location.state?.viewOrderId ? { type: "details", id: location.state.viewOrderId } : null,
+  );
+  const entryState = { orderList: { status, paymentMethod, page } };
   const [notice, setNotice] = useState("");
   const filterKey = `${status}:${paymentMethod}`;
   const state = useProductResource(
@@ -58,7 +71,7 @@ export default function OrdersPage() {
   );
   const loading = Boolean(
     state.loading ||
-      (state.data && (state.data.filterKey !== filterKey || state.data.page !== page)),
+    (state.data && (state.data.filterKey !== filterKey || state.data.page !== page)),
   );
   useEffect(() => {
     if (loading || state.error || !state.data) return;
@@ -78,7 +91,10 @@ export default function OrdersPage() {
           plural={filtered ? "pedidos encontrados" : "pedidos cadastrados"}
         />
         {has("orders.create") && (
-          <button className="customer-icon-label" onClick={() => setFlow({ type: "new" })}>
+          <button
+            className="customer-icon-label"
+            onClick={() => navigate("/orders/new", { state: entryState })}
+          >
             <Plus size={17} /> Nova venda
           </button>
         )}
@@ -178,7 +194,7 @@ export default function OrdersPage() {
                             type="button"
                             className="secondary icon-button"
                             aria-label={`Detalhes do pedido ${order.id}`}
-                            title="Consultar pedido"
+                            title="Detalhes"
                             onClick={() => setFlow({ type: "details", id: order.id })}
                           >
                             <Eye size={17} />
@@ -188,9 +204,9 @@ export default function OrdersPage() {
                               type="button"
                               className="secondary icon-button"
                               aria-label={`Editar pedido ${order.id}`}
-                              title="Editar pedido"
+                              title="Editar"
                               onClick={() =>
-                                setFlow({ type: "details", id: order.id, editing: true })
+                                navigate(`/orders/${order.id}/edit`, { state: entryState })
                               }
                             >
                               <Pencil size={17} />
@@ -212,13 +228,10 @@ export default function OrdersPage() {
           </>
         )}
       </section>
-      <Pagination
-        page={page}
-        totalPages={state.data?.records?.totalPages || 0}
-        change={setPage}
-      />
-      {flow?.type === "new" && (
+      <Pagination page={page} totalPages={state.data?.records?.totalPages || 0} change={setPage} />
+      {flow?.type === "new" && has("orders.create") && (
         <OrderHeaderForm
+          key={`new:${session.userId}`}
           onClose={() => setFlow(null)}
           onSaved={(order) => {
             setNotice(
@@ -231,10 +244,12 @@ export default function OrdersPage() {
       )}
       {flow?.type === "details" && (
         <OrderDetails
+          key={`details:${session.userId}:${flow.id}`}
           id={flow.id}
           initialEditing={flow.editing}
           onClose={() => setFlow(null)}
           onChanged={state.reload}
+          onEdit={(id) => navigate(`/orders/${id}/edit`, { state: entryState })}
         />
       )}
     </div>
@@ -247,8 +262,17 @@ function OrderStatus({ status }) {
     </span>
   );
 }
-function OrderHeaderForm({ order, onClose, onSaved }) {
+export function OrderHeaderForm({
+  order,
+  onClose,
+  onSaved,
+  embedded = false,
+  writeHeader,
+  onStateChange,
+  closeRef,
+}) {
   const { has, session } = useAuth();
+  const canWrite = has(order ? "orders.update" : "orders.create");
   const [picker, setPicker] = useState(false);
   const form = useProductForm(
     `school:order:${order?.id || "new"}`,
@@ -256,8 +280,19 @@ function OrderHeaderForm({ order, onClose, onSaved }) {
     onClose,
     onSaved,
   );
+  useEffect(() => {
+    onStateChange?.(form.saving, form.dirty, true);
+    return () => onStateChange?.(false, false, false);
+  }, [form.saving, form.dirty, onStateChange]);
+  useEffect(() => {
+    if (closeRef) closeRef.current = form.close;
+    return () => {
+      if (closeRef) closeRef.current = null;
+    };
+  });
+  const Container = embedded ? EmbeddedOrderHeader : Modal;
   return (
-    <Modal
+    <Container
       title={order ? "Alterar cliente e pagamento" : "Nova venda"}
       onClose={form.close}
       busy={form.saving}
@@ -268,27 +303,30 @@ function OrderHeaderForm({ order, onClose, onSaved }) {
         className="customer-form"
         onSubmit={(e) =>
           form.submit(e, (value) => {
+            if (!canWrite) throw new Error("Sem permissão para salvar vendas.");
+            if (order && order.status !== "PENDING") {
+              throw new Error("Somente pedidos pendentes podem ser editados.");
+            }
             if (!value.customer) throw new Error("Selecione um cliente.");
-            if (!order)
-              return orders.register({
+            if (!order) {
+              const body = {
                 customerId: value.customer.id,
                 paymentMethod: value.paymentMethod || null,
                 userId: session.userId,
-              });
+              };
+              return writeHeader ? writeHeader(null, body) : orders.register(body);
+            }
             const body = {};
             if (value.customer.id !== order.customer.id) body.customerId = value.customer.id;
             if (value.paymentMethod !== (order.paymentMethod || ""))
               body.paymentMethod = value.paymentMethod;
             if (!Object.keys(body).length) return undefined;
-            return orders.update(order.id, body);
+            return writeHeader ? writeHeader(order, body) : orders.update(order.id, body);
           })
         }
       >
         <ErrorAlert message={salesError(form.error)} />
-        <fieldset
-          disabled={form.saving || !has(order ? "orders.update" : "orders.create")}
-          className="customer-form-fields"
-        >
+        <fieldset disabled={form.saving || !canWrite} className="customer-form-fields">
           <div className="form-grid">
             <label className="span-all">
               Cliente
@@ -340,18 +378,15 @@ function OrderHeaderForm({ order, onClose, onSaved }) {
             {order ? "Voltar ao pedido" : "Cancelar"}
           </button>
           <button
-            disabled={
-              form.saving ||
-              !form.value.customer ||
-              !has(order ? "orders.update" : "orders.create") ||
-              (order && !form.dirty)
-            }
+            disabled={form.saving || !form.value.customer || !canWrite || (order && !form.dirty)}
           >
             {form.saving
               ? "Salvando…"
               : order
                 ? "Salvar alterações"
-                : "Continuar para produtos"}
+                : embedded
+                  ? "Iniciar pedido"
+                  : "Continuar para produtos"}
           </button>
         </div>
       </form>
@@ -364,10 +399,13 @@ function OrderHeaderForm({ order, onClose, onSaved }) {
           }}
         />
       )}
-    </Modal>
+    </Container>
   );
 }
-function OrderDetails({ id, initialEditing = false, onClose, onChanged }) {
+function EmbeddedOrderHeader({ children }) {
+  return <section className="order-entry-header-form order-dialog">{children}</section>;
+}
+function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }) {
   const { has } = useAuth();
   const [flow, setFlow] = useState(null);
   const [editing, setEditing] = useState(initialEditing);
@@ -427,7 +465,7 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged }) {
           if (current?.status !== status) {
             throw new Error(
               current?.status === (status === "CONFIRMED" ? "PENDING" : "CONFIRMED") ||
-              (status === "CANCELED" && current?.status === "PENDING")
+                (status === "CANCELED" && current?.status === "PENDING")
                 ? "O pedido ainda apresenta o status anterior, mas o resultado da operação " +
                     "não é conclusivo. Atualize o pedido antes de tentar novamente."
                 : "Não foi possível confirmar a operação. Confira a situação atual " +
@@ -454,9 +492,7 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged }) {
       wide
       className="order-dialog order-details-dialog"
     >
-      <div
-        className="order-details-content"
-      >
+      <div className="order-details-content">
         <ErrorAlert message={salesError(action.error)} />
         {notice && (
           <p className="success" role="status">
@@ -508,12 +544,22 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged }) {
               )}
               <div className="order-consult-actions">
                 <div className="order-secondary-actions">
+                  {editable && (
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={action.pending}
+                      onClick={() => setEditing(false)}
+                    >
+                      Concluir edição
+                    </button>
+                  )}
                   {canEdit && !editable && items.length > 0 && (
                     <button
                       type="button"
                       className="secondary customer-icon-label"
                       disabled={action.pending}
-                      onClick={() => setEditing(true)}
+                      onClick={() => (onEdit ? onEdit(id) : setEditing(true))}
                     >
                       <Pencil size={17} /> Editar pedido
                     </button>
@@ -692,7 +738,7 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged }) {
                         type="button"
                         className="secondary"
                         disabled={action.pending}
-                        onClick={() => setEditing(true)}
+                        onClick={() => (onEdit ? onEdit(id) : setEditing(true))}
                       >
                         {has("orders.create") ? "Montar pedido" : "Editar dados do pedido"}
                       </button>
@@ -714,12 +760,12 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged }) {
           {canCancel && !state.loading && (
             <button
               type="button"
-              className="secondary order-cancel-action"
+              className="order-cancel-action"
               disabled={action.pending}
               onClick={() =>
                 transition(
                   "CANCELED",
-                  "Cancelar este pedido? As reservas existentes serão liberadas.",
+                  `Cancelar o pedido #${id}? As reservas existentes serão liberadas.`,
                   "Cancelar pedido",
                 )
               }
@@ -793,28 +839,31 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged }) {
           )}
         </div>
       </div>
-      {flow?.type === "header" && order && (
+      {flow?.type === "header" && pending && editable && has("orders.update") && (
         <OrderHeaderForm
           order={order}
           onClose={() => setFlow(null)}
           onSaved={() => changed("Cliente e pagamento atualizados.")}
         />
       )}
-      {flow?.type === "item" && order && (
-        <TradeItemForm
-          document={order}
-          item={flow.item}
-          existingItems={items}
-          onClose={() => setFlow(null)}
-          onSaved={() =>
-            changed(flow.item ? "Produto atualizado no pedido." : "Produto adicionado ao pedido.")
-          }
-        />
-      )}
-      {flow?.type === "history" && (
+      {flow?.type === "item" &&
+        pending &&
+        editable &&
+        has(flow.item ? "orders.update" : "orders.create") && (
+          <TradeItemForm
+            document={order}
+            item={flow.item}
+            existingItems={items}
+            onClose={() => setFlow(null)}
+            onSaved={() =>
+              changed(flow.item ? "Produto atualizado no pedido." : "Produto adicionado ao pedido.")
+            }
+          />
+        )}
+      {flow?.type === "history" && has("stock.read") && (
         <StockHistory filter={{ orderId: id }} onClose={() => setFlow(null)} />
       )}
-      {flow?.type === "stock" && state.data && (
+      {flow?.type === "stock" && state.data && has("stock.read") && (
         <DocumentStock items={items} revision={revision} onClose={() => setFlow(null)} />
       )}
     </Modal>

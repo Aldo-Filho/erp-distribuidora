@@ -23,17 +23,28 @@ export default function TradeItemForm({
   existingItems = [],
   onClose,
   onSaved,
+  embedded = false,
+  initialSelection = null,
+  writeItem = null,
+  onStateChange,
+  closeRef,
+  onDuplicate,
+  quickAdd = false,
 }) {
   const { has } = useAuth();
   const service = purchase ? purchases : orders;
   const permission = `${purchase ? "purchases" : "orders"}.${item ? "update" : "create"}`;
   const form = useProductForm(
-    `school:${purchase ? "purchase" : "order"}:${document.id}:item:${item?.id || "new"}`,
+    `school:${purchase ? "purchase" : "order"}:${document.id}:item:${item?.id || (embedded ? `entry:${initialSelection?.key || "new"}` : "new")}`,
     {
-      productId: String(item?.product.id || ""),
-      warehouseId: String(item?.warehouse.id || ""),
-      quantity: textNumber(item?.quantity ?? 1),
-      choiceId: String((purchase ? item?.supplierOption?.id : item?.presentation?.id) || ""),
+      productId: String(item?.product.id || initialSelection?.product?.id || ""),
+      warehouseId: String(item?.warehouse.id || initialSelection?.warehouseId || ""),
+      quantity: textNumber(item?.quantity ?? initialSelection?.quantity ?? 1),
+      choiceId: String(
+        (purchase ? item?.supplierOption?.id : item?.presentation?.id) ||
+          initialSelection?.presentation?.id ||
+          "",
+      ),
       price: "",
       priceMode: "automatic",
       discount: textNumber(item?.discount ?? 0),
@@ -49,10 +60,22 @@ export default function TradeItemForm({
   );
   const [page, setPage] = useState(0);
   const [checkingCurrentPrice, setCheckingCurrentPrice] = useState(false);
-  const [choice, setChoice] = useState(purchase ? item?.supplierOption : item?.presentation);
+  const [choice, setChoice] = useState(
+    purchase ? item?.supplierOption : item?.presentation || initialSelection?.presentation,
+  );
+  useEffect(() => {
+    onStateChange?.(form.saving, form.dirty);
+    return () => onStateChange?.(false, false);
+  }, [form.saving, form.dirty, onStateChange]);
+  useEffect(() => {
+    if (closeRef) closeRef.current = form.close;
+    return () => {
+      if (closeRef) closeRef.current = null;
+    };
+  });
   const canChangeSaleIdentity = !purchase && has("products.read") && has("warehouses.read");
-  const showSalePicker = !purchase && (!item || canChangeSaleIdentity) &&
-    (picker || !form.value.productId);
+  const showSalePicker =
+    !purchase && (!item || canChangeSaleIdentity) && (picker || !form.value.productId);
   const canReadStock = has("stock.read");
   const canReadWarehouses = has("warehouses.read");
   const selectProduct = (next) => {
@@ -72,7 +95,9 @@ export default function TradeItemForm({
   const productRequest = useProductResource(
     (options) => products.findItem(form.value.productId, options),
     [form.value.productId],
-    Boolean(form.value.productId) && has("products.read"),
+    Boolean(form.value.productId) &&
+      has("products.read") &&
+      String(initialSelection?.product?.id) !== form.value.productId,
   );
   const product =
     String(productRequest.data?.id) === form.value.productId
@@ -82,7 +107,9 @@ export default function TradeItemForm({
           !has("products.read") &&
           String(item.product.id) === form.value.productId
         ? item.product
-        : undefined;
+        : String(initialSelection?.product?.id) === form.value.productId
+          ? initialSelection.product
+          : undefined;
   const productState = {
     ...productRequest,
     data: product,
@@ -183,11 +210,12 @@ export default function TradeItemForm({
     !purchase && resolveSalePrice && Boolean(product && selectedChoice),
   );
   const sameSaleIdentity =
-    !purchase && item &&
+    !purchase &&
+    item &&
     form.value.productId === String(item.product.id) &&
     form.value.choiceId === String(item.presentation?.id || "");
-  const currentQuotedPrice = priceRequest.data?.scope === priceScope
-    ? priceRequest.data.amount : null;
+  const currentQuotedPrice =
+    priceRequest.data?.scope === priceScope ? priceRequest.data.amount : null;
   const automaticAmount = sameSaleIdentity ? item.unitPrice : currentQuotedPrice;
   const priceLoading = Boolean(
     !purchase &&
@@ -208,26 +236,33 @@ export default function TradeItemForm({
   // Presentation-only calculation: the backend remains authoritative for amounts.
   const preview = (() => {
     if (purchase) return null;
-    const normalized = (input) => String(input ?? "").trim().replace(",", ".");
+    const normalized = (input) =>
+      String(input ?? "")
+        .trim()
+        .replace(",", ".");
     const count = Number(normalized(form.value.quantity));
     const unit = Number(normalized(displayedPrice));
     const discountInput = has("orders.discount") ? form.value.discount : (item?.discount ?? 0);
     const reduction = Number(normalized(discountInput));
     const discountType = has("orders.discount")
       ? form.value.discountType
-      : (item?.discountType || "AMOUNT");
+      : item?.discountType || "AMOUNT";
     if (
-      !normalized(form.value.quantity) || !normalized(displayedPrice) ||
+      !normalized(form.value.quantity) ||
+      !normalized(displayedPrice) ||
       !/^\d+(?:\.\d+)?$/.test(normalized(form.value.quantity)) ||
       !/^\d+(?:\.\d+)?$/.test(normalized(displayedPrice)) ||
       !/^\d+(?:\.\d+)?$/.test(normalized(discountInput)) ||
-      ![count, unit, reduction].every(Number.isFinite) || count <= 0 ||
+      ![count, unit, reduction].every(Number.isFinite) ||
+      count <= 0 ||
       (discountType === "PERCENTAGE" && reduction > 100)
-    ) return null;
+    )
+      return null;
     const gross = Math.round((count * unit + Number.EPSILON) * 100) / 100;
-    const discountValue = discountType === "PERCENTAGE"
-      ? Math.round((gross * reduction / 100 + Number.EPSILON) * 100) / 100
-      : reduction;
+    const discountValue =
+      discountType === "PERCENTAGE"
+        ? Math.round(((gross * reduction) / 100 + Number.EPSILON) * 100) / 100
+        : reduction;
     if (discountValue > gross) return null;
     return { gross, discountValue, net: Math.round((gross - discountValue) * 100) / 100 };
   })();
@@ -239,10 +274,14 @@ export default function TradeItemForm({
       (item && form.value.productId === String(item.product.id))
     )
       return;
-    const base = choices.data?.content.find(
-      (row) => row.basePresentation && row.active && String(row.productId) === form.value.productId,
-    ) || (choices.data?.totalElements === 1 && choices.data.content[0]?.active
-      ? choices.data.content[0] : null);
+    const base =
+      choices.data?.content.find(
+        (row) =>
+          row.basePresentation && row.active && String(row.productId) === form.value.productId,
+      ) ||
+      (choices.data?.totalElements === 1 && choices.data.content[0]?.active
+        ? choices.data.content[0]
+        : null);
     if (base) {
       setChoice(base);
       form.change("choiceId", String(base.id));
@@ -250,16 +289,30 @@ export default function TradeItemForm({
   }, [choices.data, form.value.productId, form.value.choiceId, page, purchase, item?.id]);
   useEffect(() => {
     if (
-      purchase || !canReadWarehouses || !canReadStock || stock.loading || stock.error ||
-      form.value.warehouseId || (item && form.value.productId === String(item.product.id))
+      purchase ||
+      !canReadWarehouses ||
+      !canReadStock ||
+      stock.loading ||
+      stock.error ||
+      form.value.warehouseId ||
+      (item && form.value.productId === String(item.product.id))
     ) {
       return;
     }
     if (stock.data?.length === 1) {
       form.change("warehouseId", String(stock.data[0].warehouse.id));
     }
-  }, [stock.data, stock.loading, stock.error, form.value.productId, form.value.warehouseId,
-    purchase, item?.id, canReadStock, canReadWarehouses]);
+  }, [
+    stock.data,
+    stock.loading,
+    stock.error,
+    form.value.productId,
+    form.value.warehouseId,
+    purchase,
+    item?.id,
+    canReadStock,
+    canReadWarehouses,
+  ]);
   useEffect(() => {
     if (!purchase && product && !showSalePicker) {
       quantityInput.current?.focus({ preventScroll: true });
@@ -372,6 +425,7 @@ export default function TradeItemForm({
         }
       }
       try {
+        if (writeItem) return await writeItem(item || null, body);
         return item ? await service.updateItem(item.id, body) : await service.addItem(body);
       } catch (issue) {
         if (!purchase && /Presentation|presentation/.test(issue.message)) {
@@ -385,8 +439,60 @@ export default function TradeItemForm({
   const selectedStock = stock.data?.find(
     (row) => String(row.warehouse.id) === form.value.warehouseId,
   );
+  const embeddedForm = useRef(null);
+  const quickAttempted = useRef(false);
+  useEffect(() => {
+    if (
+      !quickAdd ||
+      quickAttempted.current ||
+      item ||
+      !initialSelection?.presentation ||
+      !initialSelection?.warehouseId ||
+      !product ||
+      !selectedChoice ||
+      automaticAmount == null ||
+      priceLoading ||
+      priceRequest.error ||
+      duplicateItem ||
+      showSalePicker ||
+      form.saving ||
+      form.dirty ||
+      overridesSalePrice ||
+      Number(form.value.discount.replace(",", ".")) !== 0 ||
+      form.value.productId !== String(initialSelection.product.id) ||
+      form.value.choiceId !== String(initialSelection.presentation.id) ||
+      form.value.warehouseId !== String(initialSelection.warehouseId) ||
+      (has("stock.read") && (stock.loading || stock.error || !selectedStock))
+    )
+      return;
+    quickAttempted.current = true;
+    embeddedForm.current?.requestSubmit();
+  }, [
+    quickAdd,
+    item,
+    initialSelection,
+    product,
+    selectedChoice,
+    automaticAmount,
+    priceLoading,
+    priceRequest.error,
+    duplicateItem,
+    showSalePicker,
+    form.saving,
+    form.dirty,
+    overridesSalePrice,
+    form.value.discount,
+    form.value.productId,
+    form.value.choiceId,
+    form.value.warehouseId,
+    stock.loading,
+    stock.error,
+    selectedStock,
+    has,
+  ]);
+  const Container = embedded ? EmbeddedTradeItem : Modal;
   return (
-    <Modal
+    <Container
       title={`${item ? "Editar" : "Adicionar"} item da ${purchase ? "compra" : "venda"}`}
       onClose={form.close}
       busy={form.saving}
@@ -394,6 +500,7 @@ export default function TradeItemForm({
       className={purchase ? "purchase-dialog" : "order-dialog"}
     >
       <form
+        ref={embeddedForm}
         className={"customer-form " + (purchase ? "purchase-item-form" : "order-item-form")}
         onSubmit={(event) => {
           if (showSalePicker) {
@@ -454,8 +561,9 @@ export default function TradeItemForm({
             <>
               {item && (purchase || !canChangeSaleIdentity) ? (
                 <p>
-                  {item.presentationNameSnapshot || "Conversão legada pendente"} · {item.warehouse.name}{" "}
-                  · fator {quantity(item.baseFactorSnapshot)} {item.unitSnapshot}
+                  {item.presentationNameSnapshot || "Conversão legada pendente"} ·{" "}
+                  {item.warehouse.name} · fator {quantity(item.baseFactorSnapshot)}{" "}
+                  {item.unitSnapshot}
                   <br />
                   {purchase
                     ? "Para trocar produto, apresentação ou depósito, remova o item e adicione outro enquanto o documento estiver aberto."
@@ -478,8 +586,12 @@ export default function TradeItemForm({
                         value={form.value.choiceId}
                         onChange={(event) => {
                           const next =
-                            choices.data.content.find((row) => String(row.id) === event.target.value) ||
-                            (String(selectedChoice?.id) === event.target.value ? selectedChoice : null);
+                            choices.data.content.find(
+                              (row) => String(row.id) === event.target.value,
+                            ) ||
+                            (String(selectedChoice?.id) === event.target.value
+                              ? selectedChoice
+                              : null);
                           setChoice(next);
                           form.change("choiceId", event.target.value);
                           if (!purchase && event.target.value !== form.value.choiceId) {
@@ -527,7 +639,9 @@ export default function TradeItemForm({
                   />
                   <WarehouseSelect
                     value={form.value.warehouseId}
-                    disabled={!purchase && has("stock.read") && (stock.loading || Boolean(stock.error))}
+                    disabled={
+                      !purchase && has("stock.read") && (stock.loading || Boolean(stock.error))
+                    }
                     allowedIds={
                       !purchase && has("stock.read")
                         ? stock.data?.map((row) => row.warehouse.id) || []
@@ -552,7 +666,9 @@ export default function TradeItemForm({
               <div className="form-grid">
                 <label>
                   {purchase ? "Quantidade comercial · " : "Quantidade · "}
-                  {selectedChoice?.name || item?.presentationNameSnapshot || "selecione a apresentação"}
+                  {selectedChoice?.name ||
+                    item?.presentationNameSnapshot ||
+                    "selecione a apresentação"}
                   <input
                     ref={quantityInput}
                     required
@@ -562,7 +678,8 @@ export default function TradeItemForm({
                   />
                   {!purchase && selectedChoice && (
                     <small className="field-hint">
-                      Cada {selectedChoice.name}: {quantity(selectedChoice.baseFactor)} {product.unit}
+                      Cada {selectedChoice.name}: {quantity(selectedChoice.baseFactor)}{" "}
+                      {product.unit}
                     </small>
                   )}
                 </label>
@@ -597,7 +714,11 @@ export default function TradeItemForm({
                     />
                     {!purchase && (
                       <small className="field-hint">
-                        {manualPrice ? "Preço manual" : sameSaleIdentity ? "Preço salvo na venda" : "Preço automático do cliente"}
+                        {manualPrice
+                          ? "Preço manual"
+                          : sameSaleIdentity
+                            ? "Preço salvo na venda"
+                            : "Preço automático do cliente"}
                       </small>
                     )}
                     {!purchase && manualPrice && (
@@ -619,12 +740,24 @@ export default function TradeItemForm({
                   <strong>Total do item</strong>
                   {preview ? (
                     <dl className="customer-details">
-                      <div><dt>Total bruto</dt><dd>{money(preview.gross)}</dd></div>
-                      <div><dt>Desconto</dt><dd>{money(preview.discountValue)}</dd></div>
-                      <div><dt>Total líquido</dt><dd>{money(preview.net)}</dd></div>
+                      <div>
+                        <dt>Total bruto</dt>
+                        <dd>{money(preview.gross)}</dd>
+                      </div>
+                      <div>
+                        <dt>Desconto</dt>
+                        <dd>{money(preview.discountValue)}</dd>
+                      </div>
+                      <div>
+                        <dt>Total líquido</dt>
+                        <dd>{money(preview.net)}</dd>
+                      </div>
                     </dl>
                   ) : (
-                    <p className="field-hint">Informe valores válidos de quantidade, preço e desconto para visualizar o total.</p>
+                    <p className="field-hint">
+                      Informe valores válidos de quantidade, preço e desconto para visualizar o
+                      total.
+                    </p>
                   )}
                   <p className="field-hint">Valor conferido ao salvar.</p>
                 </div>
@@ -640,7 +773,8 @@ export default function TradeItemForm({
                     <p className="field-hint">
                       {manualPrice
                         ? "Preço informado explicitamente para esta apresentação."
-                        : !item || form.value.productId !== String(item.product.id) ||
+                        : !item ||
+                            form.value.productId !== String(item.product.id) ||
                             form.value.choiceId !== String(item.presentation?.id || "")
                           ? "Preço automático conforme a tabela do cliente e a apresentação selecionada."
                           : "Preço salvo no pedido (não é uma consulta à tabela vigente). Alterar só a quantidade mantém este valor."}
@@ -652,15 +786,18 @@ export default function TradeItemForm({
                           inputMode="decimal"
                           value={form.value.price}
                           placeholder={displayedPrice || "Preço por apresentação"}
-                          onChange={(event) => form.setValue((old) => ({
-                            ...old,
-                            price: event.target.value,
-                            priceMode: event.target.value.trim() ? "manual" : "automatic",
-                          }))}
+                          onChange={(event) =>
+                            form.setValue((old) => ({
+                              ...old,
+                              price: event.target.value,
+                              priceMode: event.target.value.trim() ? "manual" : "automatic",
+                            }))
+                          }
                         />
                       </label>
                     )}
-                    {item && !purchase &&
+                    {item &&
+                      !purchase &&
                       form.value.productId === String(item.product.id) &&
                       form.value.choiceId === String(item.presentation?.id || "") && (
                         <div className="span-all">
@@ -677,7 +814,8 @@ export default function TradeItemForm({
                           </button>
                           {currentPriceReady && (
                             <p className="field-hint">
-                              Preço automático vigente: {money(currentQuotedPrice)} por apresentação.
+                              Preço automático vigente: {money(currentQuotedPrice)} por
+                              apresentação.
                               {has("orders.manualPrice")
                                 ? " Para atualizar o item, aplique o valor explicitamente."
                                 : " Somente usuários com permissão de preço manual podem aplicar esse valor ao item existente."}
@@ -687,11 +825,13 @@ export default function TradeItemForm({
                             <button
                               type="button"
                               className="text-button"
-                              onClick={() => form.setValue((old) => ({
-                                ...old,
-                                price: textNumber(currentQuotedPrice),
-                                priceMode: "manual",
-                              }))}
+                              onClick={() =>
+                                form.setValue((old) => ({
+                                  ...old,
+                                  price: textNumber(currentQuotedPrice),
+                                  priceMode: "manual",
+                                }))
+                              }
                             >
                               Aplicar preço vigente
                             </button>
@@ -702,14 +842,20 @@ export default function TradeItemForm({
                       <div className="form-grid">
                         <label>
                           Desconto
-                          <input inputMode="decimal" required value={form.value.discount}
+                          <input
+                            inputMode="decimal"
+                            required
+                            value={form.value.discount}
                             onInvalid={() => setAdvanced(true)}
-                            onChange={(event) => form.change("discount", event.target.value)} />
+                            onChange={(event) => form.change("discount", event.target.value)}
+                          />
                         </label>
                         <label>
                           Tipo de desconto
-                          <FilterSelect value={form.value.discountType}
-                            onChange={(event) => form.change("discountType", event.target.value)}>
+                          <FilterSelect
+                            value={form.value.discountType}
+                            onChange={(event) => form.change("discountType", event.target.value)}
+                          >
                             <option value="AMOUNT">Valor do item (R$)</option>
                             <option value="PERCENTAGE">Percentual (%)</option>
                           </FilterSelect>
@@ -719,17 +865,65 @@ export default function TradeItemForm({
                   </div>
                 </details>
               )}
-              {purchase && <p>Informe a quantidade na apresentação selecionada. O estoque é controlado em BASE.</p>}
+              {purchase && (
+                <p>
+                  Informe a quantidade na apresentação selecionada. O estoque é controlado em BASE.
+                </p>
+              )}
               {!purchase && selectedChoice?.active === false && (
                 <p className="product-warning">
-                  A apresentação atual está inativa. Escolha uma apresentação ativa antes de confirmar o
-                  pedido.
+                  A apresentação atual está inativa. Escolha uma apresentação ativa antes de
+                  confirmar o pedido.
                 </p>
               )}
               {duplicateItem && (
                 <p className="product-warning">
-                  Esta combinação de produto, apresentação e depósito já está no pedido. Edite o item #
-                  {duplicateItem.id} para alterar a quantidade.
+                  Esta combinação de produto, apresentação e depósito já está no pedido. Edite o
+                  item #{duplicateItem.id} para alterar a quantidade.
+                  {writeItem &&
+                    has("orders.update") &&
+                    !manualPrice &&
+                    form.value.discountType === "AMOUNT" &&
+                    Number(form.value.discount.replace(",", ".")) === 0 && (
+                      <button
+                        type="button"
+                        className="text-button"
+                        disabled={form.saving}
+                        onClick={(event) =>
+                          form.submit(event, async (value) => {
+                            if (!has("orders.update"))
+                              throw new Error("Sem permissão para alterar a quantidade.");
+                            const extra = decimal(value.quantity, "Quantidade comercial", {
+                              positive: true,
+                              places:
+                                selectedChoice?.basePresentation && product?.unit !== "UN" ? 1 : 0,
+                              max: 9999999999999.9,
+                            });
+                            const next = decimal(
+                              String(
+                                (Math.round(Number(duplicateItem.quantity) * 10) +
+                                  Math.round(extra * 10)) /
+                                  10,
+                              ),
+                              "Quantidade total",
+                              { positive: true, places: 1, max: 9999999999999.9 },
+                            );
+                            return writeItem(duplicateItem, { quantity: next });
+                          })
+                        }
+                      >
+                        Adicionar à quantidade existente (mantém preço e desconto)
+                      </button>
+                    )}
+                  {onDuplicate && has("orders.update") && (
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() => onDuplicate(duplicateItem)}
+                    >
+                      Editar linha existente
+                    </button>
+                  )}
                 </p>
               )}
               {has("stock.read") && (
@@ -744,10 +938,18 @@ export default function TradeItemForm({
                         </p>
                       ) : (
                         <div className="order-stock-summary">
-                          <span>Disponível: <strong>{available(selectedStock)} {product.unit}</strong></span>
+                          <span>
+                            Disponível:{" "}
+                            <strong>
+                              {available(selectedStock)} {product.unit}
+                            </strong>
+                          </span>
                           <details>
                             <summary>Detalhes do saldo</summary>
-                            <p>Físico: {quantity(selectedStock.quantity)} · Reservado: {quantity(selectedStock.reservedQuantity)}</p>
+                            <p>
+                              Físico: {quantity(selectedStock.quantity)} · Reservado:{" "}
+                              {quantity(selectedStock.reservedQuantity)}
+                            </p>
                           </details>
                         </div>
                       )
@@ -800,6 +1002,15 @@ export default function TradeItemForm({
           onSelect={selectProduct}
         />
       )}
-    </Modal>
+    </Container>
+  );
+}
+
+function EmbeddedTradeItem({ title, children }) {
+  return (
+    <section className="order-entry-editor order-dialog" aria-label={title}>
+      <h3>{title}</h3>
+      {children}
+    </section>
   );
 }

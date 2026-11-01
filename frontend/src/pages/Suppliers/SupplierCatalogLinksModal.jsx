@@ -34,17 +34,21 @@ function CatalogLinks({ supplierId, kind, onBusy }) {
     return () => onBusy(false);
   }, [action.pending, onBusy]);
   const add = () =>
-    action.run(async () => {
-      if (!has("suppliers.update") || !has("products.read"))
-        throw new Error("Sem permissão para incluir a associação.");
-      if (!selected) throw new Error("Selecione um cadastro disponível.");
-      await (isBrand ? supplierCatalogLinks.registerBrand : supplierCatalogLinks.registerCategory)(
-        supplierId,
-        Number(selected),
-      );
-      setSelected("");
-      state.reload();
-    });
+    action.run(
+      async () => {
+        if (!has("suppliers.update") || !has("products.read"))
+          throw new Error("Sem permissão para incluir a associação.");
+        if (!selected) throw new Error("Selecione um cadastro disponível.");
+        await (isBrand ? supplierCatalogLinks.registerBrand : supplierCatalogLinks.registerCategory)(
+          supplierId,
+          Number(selected),
+        );
+        setSelected("");
+        state.reload();
+      },
+      undefined,
+      { successMessage: isBrand ? "Marca vinculada." : "Categoria vinculada." },
+    );
   const remove = (entry) =>
     action.run(
       async () => {
@@ -56,7 +60,12 @@ function CatalogLinks({ supplierId, kind, onBusy }) {
         state.reload();
       },
       `Remover o vínculo com ${entry[field].name}? O cadastro de ${isBrand ? "marca" : "categoria"} e os produtos serão preservados.`,
-      { title: "Remover vínculo", confirmLabel: "Remover vínculo" },
+      {
+        title: "Remover vínculo",
+        confirmLabel: "Remover vínculo",
+        destructive: true,
+        successMessage: isBrand ? "Vínculo com a marca removido." : "Vínculo com a categoria removido.",
+      },
     );
   const options = (available.data || []).filter(
     (entry) => !state.data?.some((link) => link[field].id === entry.id),
@@ -89,7 +98,7 @@ function CatalogLinks({ supplierId, kind, onBusy }) {
                         <button
                           title="Remover vínculo"
                           aria-label={`Remover vínculo com ${entry[field].name}`}
-                          className="secondary icon-button"
+                          className="secondary icon-button danger-link"
                           disabled={action.pending}
                           onClick={() => remove(entry)}
                         >

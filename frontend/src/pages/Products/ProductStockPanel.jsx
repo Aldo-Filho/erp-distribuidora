@@ -62,7 +62,7 @@ export default function ProductStockPanel({ item, onChanged }) {
                 )}
                 {has("stock.adjust") && (
                   <button type="button"
-                    onClick={() => setFlow({ type: "move", stock })}>Entrada ou ajuste</button>
+                    onClick={() => setFlow({ type: "move", stock })}>Movimentar estoque</button>
                 )}
               </div>
             </section>

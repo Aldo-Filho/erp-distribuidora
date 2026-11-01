@@ -88,6 +88,7 @@ export default function SuppliersPage() {
       !(await confirm(`${action} o fornecedor ${supplier.legalName}?`, {
         title: `${action} fornecedor`,
         confirmLabel: action,
+        destructive: supplier.active,
       }))
     )
       return;
@@ -294,7 +295,7 @@ export default function SuppliersPage() {
           </span>
           <label>
             Por página
-            <select
+            <FilterSelect
               value={list.size}
               onChange={(event) => list.changeSize(Number(event.target.value))}
             >
@@ -303,7 +304,7 @@ export default function SuppliersPage() {
                   {size}
                 </option>
               ))}
-            </select>
+            </FilterSelect>
           </label>
           <Pagination
             page={list.page}

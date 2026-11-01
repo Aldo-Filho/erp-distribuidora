@@ -17,13 +17,35 @@ body {
 
 :root {
   color: #172c36;
-  background: #f4f7f8;
+  background: #f8fafc;
   font-synthesis: none;
   --accent: #087b77;
   --border: #dce5e8;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: #78969e;
+  --scrollbar-thumb-hover: #527580;
 }
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+*::-webkit-scrollbar-thumb {
+  border: 2px solid var(--scrollbar-track);
+  border-radius: 999px;
+  background: var(--scrollbar-thumb);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
 }
 button,
 input,
@@ -316,6 +338,8 @@ p {
   display: flex;
 }
 .sidebar {
+  --scrollbar-thumb: #315661;
+  --scrollbar-thumb-hover: #527580;
   position: fixed;
   inset: 0 auto 0 0;
   display: flex;
@@ -865,13 +889,15 @@ td strong {
   z-index: 60;
 }
 .dialog {
+  --dialog-padding: 24px;
   width: 100%;
   max-width: 530px;
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
+  border: 8px solid white;
   border-radius: 14px;
   background: white;
-  padding: 24px;
+  padding: calc(var(--dialog-padding) - 8px);
   box-shadow: 0 20px 70px #0003;
 }
 .dialog p {
@@ -962,7 +988,7 @@ td strong {
 }
 @media (max-height: 740px) and (min-width: 700px) {
   .record-dialog {
-    padding: 20px;
+    --dialog-padding: 20px;
   }
   .record-dialog .customer-details,
   .record-dialog .form-grid {
@@ -971,7 +997,7 @@ td strong {
 }
 @media (max-width: 600px) {
   .modal-backdrop .record-dialog {
-    padding: 18px;
+    --dialog-padding: 18px;
   }
 }
 .record-metadata {
@@ -1105,7 +1131,7 @@ td strong {
 }
 @media (max-width: 480px) {
   .record-dialog {
-    padding: 18px;
+    --dialog-padding: 18px;
   }
   .customer-filters label {
     flex-basis: 100%;
@@ -1142,7 +1168,7 @@ td strong {
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 1200px) {
+@media (max-width: 1440px) {
   .responsive-row-actions .row-actions-inline {
     display: none;
   }
@@ -1262,7 +1288,7 @@ td strong {
     padding: 26px 22px;
   }
   .dialog {
-    padding: 22px;
+    --dialog-padding: 22px;
   }
   .error-alert {
     gap: 5px;

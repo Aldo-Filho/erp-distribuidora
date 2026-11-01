@@ -11,5 +11,6 @@ public record RequestStockMovementDTO(
     @NotNull StockMovementReason reason,
     @NotNull BigDecimal quantity,
     Long userId,
-    String notes
+    String notes,
+    BigDecimal expectedQuantity
 ) {}

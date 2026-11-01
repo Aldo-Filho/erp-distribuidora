@@ -120,15 +120,22 @@ function SupplierOptions({ catalog, item, link }) {
   const action = useProductAction();
   const [flow, setFlow] = useState(null);
   const unavailable = !link.active || !link.supplier.active || !item.active;
-  const toggle = (option) =>
-    action.run(
+  const toggle = (option) => {
+    if (!has("suppliers.update")) return;
+    return action.run(
       async () => {
         await productSuppliers.updateOption(option.id, { active: !option.active });
         list.reload();
       },
       `${option.active ? "Inativar" : "Ativar"} a opção ${option.name}? Isso preserva histórico e não altera a situação do produto, vínculo ou fornecedor.`,
-      { title: "Situação da opção", confirmLabel: option.active ? "Inativar" : "Ativar" },
+      {
+        title: option.active ? "Inativar opção de compra" : "Ativar opção de compra",
+        confirmLabel: option.active ? "Inativar" : "Ativar",
+        destructive: option.active,
+        successMessage: option.active ? "Opção de compra inativada." : "Opção de compra ativada.",
+      },
     );
+  };
   return (
     <section>
       <div className="product-toolbar">
@@ -235,7 +242,7 @@ function SupplierOptions({ catalog, item, link }) {
         </div>
       </ProductLoad>
       <ProductPageFooter list={list} />
-      {flow && (
+      {flow && has("suppliers.update") && (
         <ProductSupplierOptionForm
           catalog={catalog}
           item={item}
@@ -264,15 +271,28 @@ export default function ProductSuppliers({ catalog, item }) {
   const [selected, setSelected] = useState("");
   const [creating, setCreating] = useState(false);
   const link = state.data?.find((entry) => String(entry.id) === selected);
-  const changeLink = (link, body, message, label) =>
-    action.run(
+  const changeLink = (link, body, message, label) => {
+    if (!has("suppliers.update")) return;
+    let successMessage = body.preferred
+      ? "Fornecedor definido como preferencial."
+      : "Preferência removida.";
+    if (body.active != null) {
+      successMessage = body.active ? "Vínculo ativado." : "Vínculo inativado.";
+    }
+    return action.run(
       async () => {
         await productSuppliers.update(link.id, body);
         state.reload();
       },
       message,
-      { title: label, confirmLabel: label },
+      {
+        title: label ? `${label} vínculo` : undefined,
+        confirmLabel: label,
+        destructive: body.active === false,
+        successMessage,
+      },
     );
+  };
   if (!has("suppliers.read")) return null;
   return (
     <section>
@@ -340,7 +360,7 @@ export default function ProductSuppliers({ catalog, item }) {
                             changeLink(
                               entry,
                               { active: !entry.active },
-                              `${entry.active ? "Inativar" : "Ativar"} este vínculo? A inativação impede novas compras em todas as suas opções, preservando saldos, histórico e compromissos já confirmados.`,
+                              `${entry.active ? "Inativar" : "Ativar"} o vínculo com ${entry.supplier.legalName}? A inativação impede novas compras em todas as suas opções, preservando saldos, histórico e compromissos já confirmados.`,
                               entry.active ? "Inativar" : "Ativar",
                             )
                           }
@@ -376,7 +396,7 @@ export default function ProductSuppliers({ catalog, item }) {
       {link && !state.loading && (
         <SupplierOptions key={`${item.id}:${link.id}`} catalog={catalog} item={item} link={link} />
       )}
-      {creating && (
+      {creating && has("suppliers.update") && (
         <NewProductSupplier
           item={item}
           links={state.data || []}

@@ -33,7 +33,7 @@ const statuses = {
   CANCELED: "Cancelada",
 };
 export default function PurchasesPage() {
-  const { has } = useAuth();
+  const { has, session } = useAuth();
   const [status, setStatusState] = useState("");
   const setStatus = (next) => { setPage(0); setStatusState(next); };
   const [page, setPage] = useState(0);
@@ -154,11 +154,22 @@ export default function PurchasesPage() {
                             type="button"
                             className="secondary icon-button"
                             aria-label={`Detalhes da compra ${purchase.id}`}
-                            title="Consultar compra"
+                            title="Detalhes"
                             onClick={() => setFlow({ type: "details", id: purchase.id })}
                           >
                             <Eye size={17} />
                           </button>
+                          {purchase.status === "DRAFT" && has("purchases.update") && (
+                            <button
+                              type="button"
+                              className="secondary icon-button"
+                              aria-label={`Editar compra ${purchase.id}`}
+                              title="Editar"
+                              onClick={() => setFlow({ type: "edit", id: purchase.id })}
+                            >
+                              <Pencil size={17} />
+                            </button>
+                          )}
                         </RowActions>
                       </td>
                     </tr>
@@ -180,8 +191,9 @@ export default function PurchasesPage() {
         totalPages={state.data?.records?.totalPages || 0}
         change={setPage}
       />
-      {flow?.type === "new" && (
+      {flow?.type === "new" && has("purchases.create") && (
         <PurchaseHeaderForm
+          key={`new:${session.userId}`}
           onClose={() => setFlow(null)}
           onSaved={(purchase) => {
             setNotice(`Compra #${purchase.id} registrada. Adicione os itens antes de enviar.`);
@@ -191,7 +203,24 @@ export default function PurchasesPage() {
         />
       )}
       {flow?.type === "details" && (
-        <PurchaseDetails id={flow.id} onClose={() => setFlow(null)} onChanged={state.reload} />
+        <PurchaseDetails
+          key={`details:${session.userId}:${flow.id}`}
+          id={flow.id}
+          onClose={() => setFlow(null)}
+          onChanged={state.reload}
+        />
+      )}
+      {flow?.type === "edit" && has("purchases.update") && (
+        <EditPurchase
+          key={`edit:${session.userId}:${flow.id}`}
+          id={flow.id}
+          onClose={() => setFlow(null)}
+          onSaved={() => {
+            setNotice(`Compra #${flow.id} salva.`);
+            state.reload();
+            setFlow(null);
+          }}
+        />
       )}
     </div>
   );
@@ -203,8 +232,22 @@ function PurchaseStatus({ status }) {
     </span>
   );
 }
+function EditPurchase({ id, onClose, onSaved }) {
+  const state = useProductResource((options) => purchases.findOne(id, options), [id]);
+  if (state.data?.status === "DRAFT") {
+    return <PurchaseHeaderForm purchase={state.data} onClose={onClose} onSaved={onSaved} />;
+  }
+  return (
+    <Modal title="Editar compra em rascunho" onClose={onClose} wide className="purchase-dialog">
+      <ProductLoad state={state} empty="Compra não encontrada.">
+        {state.data && <p>A compra não está mais em rascunho e não pode ser editada.</p>}
+      </ProductLoad>
+    </Modal>
+  );
+}
 function PurchaseHeaderForm({ purchase, onClose, onSaved }) {
   const { has, session } = useAuth();
+  const canWrite = has(purchase ? "purchases.update" : "purchases.create");
   const [picker, setPicker] = useState(false);
   const form = useProductForm(
     `school:purchase:${purchase?.id || "new"}`,
@@ -227,6 +270,11 @@ function PurchaseHeaderForm({ purchase, onClose, onSaved }) {
         className="customer-form"
         onSubmit={(e) =>
           form.submit(e, (value) => {
+            if (!canWrite) throw new Error("Sem permissão para salvar compras.");
+            if (purchase && purchase.status !== "DRAFT") {
+              throw new Error("Somente compras em rascunho podem ser editadas.");
+            }
+            if (purchase && !form.dirty) return;
             if (!value.supplier) throw new Error("Selecione um fornecedor.");
             const body = { supplierId: value.supplier.id };
             if (value.expectedDeliveryDate) body.expectedDeliveryDate = value.expectedDeliveryDate;
@@ -239,7 +287,7 @@ function PurchaseHeaderForm({ purchase, onClose, onSaved }) {
       >
         <ErrorAlert message={form.error} />
         <fieldset
-          disabled={form.saving || !has(purchase ? "purchases.update" : "purchases.create")}
+          disabled={form.saving || !canWrite}
           className="customer-form-fields"
         >
           <div className="form-grid">
@@ -280,7 +328,7 @@ function PurchaseHeaderForm({ purchase, onClose, onSaved }) {
             Cancelar
           </button>
           <button
-            disabled={form.saving || !has(purchase ? "purchases.update" : "purchases.create")}
+            disabled={form.saving || !canWrite}
           >
             {form.saving ? "Salvando…" : "Salvar compra"}
           </button>
@@ -320,9 +368,9 @@ function PurchaseDetails({ id, onClose, onChanged }) {
     state.reload();
     onChanged();
   };
-  const changed = () => {
+  const changed = (message) => {
     setFlow(null);
-    action.succeed();
+    action.succeed(message);
     refresh();
   };
   const purchase = state.data?.purchase;
@@ -356,7 +404,16 @@ function PurchaseDetails({ id, onClose, onChanged }) {
         refresh();
       },
       message,
-      { title: label, confirmLabel: label, destructive: status === "CANCELED" },
+      {
+        title: label,
+        confirmLabel: label,
+        destructive: status === "CANCELED",
+        successMessage: {
+          SENT: `Envio da compra #${id} registrado.`,
+          CONFIRMED: `Compra #${id} confirmada.`,
+          CANCELED: `Compra #${id} cancelada.`,
+        }[status],
+      },
     );
   let pending = null;
   let receiptStorageError = false;
@@ -371,7 +428,7 @@ function PurchaseDetails({ id, onClose, onChanged }) {
       onClose={onClose}
       busy={action.pending}
       wide
-      className="purchase-dialog"
+      className="purchase-dialog purchase-details-dialog"
     >
       <ErrorAlert message={action.error} />
       {receiptStorageError && (
@@ -466,12 +523,13 @@ function PurchaseDetails({ id, onClose, onChanged }) {
                 canChangeStatus &&
                 has("purchases.cancel") && (
                   <button
-                    className="secondary"
+                    type="button"
+                    className="purchase-cancel-action"
                     disabled={action.pending}
                     onClick={() =>
                       transition(
                         "CANCELED",
-                        "Cancelar esta compra ainda sem recebimento?",
+                        `Cancelar a compra #${id} ainda sem recebimento?`,
                         "Cancelar compra",
                       )
                     }
@@ -584,6 +642,7 @@ function PurchaseDetails({ id, onClose, onChanged }) {
                                         title: "Remover item",
                                         confirmLabel: "Remover",
                                         destructive: true,
+                                        successMessage: `Item #${item.id} removido da compra.`,
                                       },
                                     )
                                   }
@@ -673,30 +732,37 @@ function PurchaseDetails({ id, onClose, onChanged }) {
           Fechar
         </button>
       </div>
-      {flow?.type === "header" && (
-        <PurchaseHeaderForm purchase={purchase} onClose={() => setFlow(null)} onSaved={changed} />
+      {flow?.type === "header" && purchase?.status === "DRAFT" && has("purchases.update") && (
+        <PurchaseHeaderForm
+          purchase={purchase}
+          onClose={() => setFlow(null)}
+          onSaved={() => changed(`Compra #${id} salva.`)}
+        />
       )}
-      {flow?.type === "item" && (
+      {flow?.type === "item" && purchase?.status === "DRAFT" &&
+        has(flow.item ? "purchases.update" : "purchases.create") && (
         <TradeItemForm
           purchase
           document={purchase}
           item={flow.item}
           onClose={() => setFlow(null)}
-          onSaved={changed}
+          onSaved={() =>
+            changed(flow.item ? "Item da compra atualizado." : "Item adicionado à compra.")
+          }
         />
       )}
-      {flow?.type === "receive" && (
+      {flow?.type === "receive" && purchase && has("purchases.receive") && (
         <PurchaseReceiptForm
           purchase={purchase}
           items={state.data.items}
           onClose={() => setFlow(null)}
-          onSaved={changed}
+          onSaved={() => changed("Recebimento da compra registrado.")}
         />
       )}
-      {flow?.type === "history" && (
+      {flow?.type === "history" && has("stock.read") && (
         <StockHistory filter={{ purchaseId: id }} onClose={() => setFlow(null)} />
       )}
-      {flow?.type === "stock" && (
+      {flow?.type === "stock" && has("stock.read") && (
         <DocumentStock items={state.data.items} revision={revision} onClose={() => setFlow(null)} />
       )}
     </Modal>

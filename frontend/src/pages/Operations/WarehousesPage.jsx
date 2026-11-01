@@ -13,12 +13,13 @@ import useProductForm from "../Products/useProductForm";
 import "./warehouses.css";
 
 export default function WarehousesPage() {
-  const { has } = useAuth();
+  const { has, session } = useAuth();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(0);
   const [flow, setFlow] = useState(null);
   const [notice, setNotice] = useState("");
+  const closeFlow = () => setFlow(null);
   const state = useProductResource(
     async (options) => ({
       filter,
@@ -27,6 +28,11 @@ export default function WarehousesPage() {
     }),
     [filter, page],
   );
+  const saved = (message) => {
+    setNotice(message);
+    state.reload();
+    closeFlow();
+  };
   useEffect(() => {
     const timer = setTimeout(() => { setPage(0); setFilter(query.trim()); }, 400);
     return () => clearTimeout(timer);
@@ -74,6 +80,7 @@ export default function WarehousesPage() {
           onClick={() => {
             setQuery("");
             setFilter("");
+            setPage(0);
           }}
         >
           Limpar filtros
@@ -127,26 +134,26 @@ export default function WarehousesPage() {
                           className="customer-row-actions"
                           label={`Ações de ${warehouse.name}`}
                         >
-                          <button
-                            type="button"
-                            className="secondary icon-button"
-                            aria-label={`Endereço de ${warehouse.name}`}
-                            title="Endereço"
-                            onClick={() => setFlow({ type: "addresses", warehouse })}
-                          >
-                            <MapPin size={17} />
-                          </button>
                           {has("warehouses.update") && (
                             <button
                               type="button"
                               className="secondary icon-button"
                               aria-label={`Editar depósito ${warehouse.name}`}
-                              title="Editar depósito"
-                              onClick={() => setFlow({ type: "edit", warehouse })}
+                              title="Editar"
+                              onClick={() => setFlow({ type: "edit", id: warehouse.id })}
                             >
                               <Pencil size={17} />
                             </button>
                           )}
+                          <button
+                            type="button"
+                            className="secondary icon-button"
+                            aria-label={`Endereço de ${warehouse.name}`}
+                            title="Endereço"
+                            onClick={() => setFlow({ type: "addresses", id: warehouse.id })}
+                          >
+                            <MapPin size={17} />
+                          </button>
                         </RowActions>
                       </td>
                     </tr>
@@ -168,35 +175,43 @@ export default function WarehousesPage() {
         totalPages={state.data?.records?.totalPages || 0}
         change={setPage}
       />
-      {flow?.type === "new" && (
+      {flow?.type === "new" && has("warehouses.create") && (
         <WarehouseForm
-          onClose={() => setFlow(null)}
-          onSaved={() => {
-            setFlow(null);
-            setNotice("Depósito cadastrado com sucesso.");
-            state.reload();
-          }}
+          key={`new:${session.userId}`}
+          onClose={closeFlow}
+          onSaved={() => saved("Depósito cadastrado.")}
         />
       )}
-      {flow?.type === "edit" && (
-        <WarehouseForm
-          warehouse={flow.warehouse}
-          onClose={() => setFlow(null)}
-          onSaved={() => {
-            setFlow(null);
-            setNotice("Depósito atualizado com sucesso.");
-            state.reload();
-          }}
+      {(flow?.type === "addresses" || (flow?.type === "edit" && has("warehouses.update"))) && (
+        <WarehouseResource
+          key={`${flow.type}:${session.userId}:${flow.id}`}
+          id={flow.id}
+          type={flow.type}
+          onClose={closeFlow}
+          onSaved={() => saved("Depósito salvo.")}
         />
-      )}
-      {flow?.type === "addresses" && (
-        <WarehouseAddresses warehouse={flow.warehouse} onClose={() => setFlow(null)} />
       )}
     </div>
   );
 }
+function WarehouseResource({ id, type, onClose, onSaved }) {
+  const state = useProductResource((options) => warehouses.findOne(id, options), [id]);
+  if (state.data) {
+    return type === "edit" ? (
+      <WarehouseForm warehouse={state.data} onClose={onClose} onSaved={onSaved} />
+    ) : (
+      <WarehouseAddresses warehouse={state.data} onClose={onClose} />
+    );
+  }
+  return (
+    <Modal title={type === "edit" ? "Editar depósito" : "Endereço do depósito"} onClose={onClose}>
+      <ProductLoad state={state} empty="Depósito não encontrado." />
+    </Modal>
+  );
+}
 function WarehouseForm({ warehouse, onClose, onSaved }) {
   const { has } = useAuth();
+  const canWrite = has(warehouse ? "warehouses.update" : "warehouses.create");
   const form = useProductForm(
     `school:warehouse:${warehouse?.id || "new"}`,
     { name: warehouse?.name || "", description: warehouse?.description || "" },
@@ -204,11 +219,17 @@ function WarehouseForm({ warehouse, onClose, onSaved }) {
     onSaved,
   );
   return (
-    <Modal title={warehouse ? "Editar depósito" : "Novo depósito"} onClose={form.close} busy={form.saving} wide>
+    <Modal
+      title={warehouse ? "Editar depósito" : "Novo depósito"}
+      onClose={form.close}
+      busy={form.saving}
+      wide
+    >
       <form
         className="customer-form"
         onSubmit={(e) =>
           form.submit(e, (value) => {
+            if (!canWrite) throw new Error("Sem permissão para salvar depósitos.");
             if (!value.name.trim()) throw new Error("Informe o nome do depósito.");
             const body = {
               name: value.name.trim(),
@@ -228,10 +249,7 @@ function WarehouseForm({ warehouse, onClose, onSaved }) {
         }
       >
         <ErrorAlert message={form.error} />
-        <fieldset
-          disabled={form.saving || !has(warehouse ? "warehouses.update" : "warehouses.create")}
-          className="customer-form-fields"
-        >
+        <fieldset disabled={form.saving || !canWrite} className="customer-form-fields">
           <div className="form-grid">
             <label className="span-all">
               Nome do depósito
@@ -255,7 +273,7 @@ function WarehouseForm({ warehouse, onClose, onSaved }) {
           <button type="button" className="secondary" disabled={form.saving} onClick={form.close}>
             Cancelar
           </button>
-          <button disabled={form.saving || !has(warehouse ? "warehouses.update" : "warehouses.create") || (warehouse && !form.dirty)}>
+          <button disabled={form.saving || !canWrite || (warehouse && !form.dirty)}>
             {form.saving ? "Salvando…" : warehouse ? "Salvar alterações" : "Salvar depósito"}
           </button>
         </div>
@@ -282,7 +300,7 @@ function WarehouseAddresses({ warehouse, onClose }) {
   const [adding, setAdding] = useState(false);
   const [notice, setNotice] = useState("");
   return (
-    <Modal title="Endereço do depósito" onClose={onClose} wide>
+    <Modal title="Endereço do depósito" onClose={onClose} wide className="warehouse-details-dialog">
       <div className="customer-detail-title">
         <h3>{warehouse.name}</h3>
       </div>
@@ -291,7 +309,7 @@ function WarehouseAddresses({ warehouse, onClose }) {
           <dt>Código</dt>
           <dd>#{warehouse.id}</dd>
         </div>
-        <div>
+        <div className="warehouse-detail-description">
           <dt>Descrição</dt>
           <dd>{warehouse.description || "Não informada"}</dd>
         </div>
@@ -306,12 +324,21 @@ function WarehouseAddresses({ warehouse, onClose }) {
           <div className="customer-address-card" key={address.id}>
             <strong>Endereço cadastrado</strong>
             <p>
-              {address.street}, {address.number} · {address.complement}
+              {address.street}, {address.number}
+              {address.complement ? ` · ${address.complement}` : ""}
               <br />
               {address.neighborhood} · {address.city}/{address.state} · CEP {address.zipCode}
             </p>
             {has("warehouses.update") && (
-              <button type="button" className="secondary" onClick={() => setEditingAddress(address)}>
+              <button
+                type="button"
+                className="secondary customer-icon-label"
+                disabled={state.loading || !!state.error}
+                onClick={() => {
+                  setNotice("");
+                  setEditingAddress(address);
+                }}
+              >
                 <Pencil size={16} /> Editar endereço
               </button>
             )}
@@ -320,7 +347,14 @@ function WarehouseAddresses({ warehouse, onClose }) {
       </ProductLoad>
       {has("warehouses.create") && !state.loading && !state.error && !state.data?.length && (
         <div className="row-actions">
-          <button className="secondary customer-icon-label" onClick={() => setAdding(true)}>
+          <button
+            type="button"
+            className="secondary customer-icon-label"
+            onClick={() => {
+              setNotice("");
+              setAdding(true);
+            }}
+          >
             <Plus size={17} /> Cadastrar endereço
           </button>
         </div>
@@ -330,25 +364,25 @@ function WarehouseAddresses({ warehouse, onClose }) {
           Fechar
         </button>
       </div>
-      {editingAddress && (
+      {editingAddress && has("warehouses.update") && (
         <WarehouseAddressForm
           warehouse={warehouse}
           address={editingAddress}
           onClose={() => setEditingAddress(null)}
           onSaved={() => {
             setEditingAddress(null);
-            setNotice("Endereço atualizado com sucesso.");
+            setNotice("Endereço atualizado.");
             state.reload();
           }}
         />
       )}
-      {adding && (
+      {adding && has("warehouses.create") && (
         <WarehouseAddressForm
           warehouse={warehouse}
           onClose={() => setAdding(false)}
           onSaved={() => {
             setAdding(false);
-            setNotice("Endereço cadastrado com sucesso.");
+            setNotice("Endereço cadastrado.");
             state.reload();
           }}
         />
@@ -358,6 +392,7 @@ function WarehouseAddresses({ warehouse, onClose }) {
 }
 function WarehouseAddressForm({ warehouse, address, onSaved, onClose }) {
   const { has } = useAuth();
+  const canWrite = has(address ? "warehouses.update" : "warehouses.create");
   const form = useProductForm(
     `school:warehouse-address:${warehouse.id}:${address?.id || "new"}`,
     Object.fromEntries(Object.keys(addressLabels).map((key) => [key, address?.[key] || ""])),
@@ -365,11 +400,17 @@ function WarehouseAddressForm({ warehouse, address, onSaved, onClose }) {
     onSaved,
   );
   return (
-    <Modal title={address ? "Editar endereço do depósito" : "Cadastrar endereço do depósito"} busy={form.saving} onClose={form.close} wide>
+    <Modal
+      title={address ? "Editar endereço do depósito" : "Cadastrar endereço do depósito"}
+      busy={form.saving}
+      onClose={form.close}
+      wide
+    >
       <form
         className="customer-form"
         onSubmit={(e) =>
           form.submit(e, (value) => {
+            if (!canWrite) throw new Error("Sem permissão para salvar endereços de depósitos.");
             if (Object.values(value).some((text) => !text.trim()))
               throw new Error("Preencha todos os campos do endereço.");
             const fields = Object.fromEntries(
@@ -387,10 +428,7 @@ function WarehouseAddressForm({ warehouse, address, onSaved, onClose }) {
         }
       >
         <ErrorAlert message={form.error} />
-        <fieldset
-          disabled={form.saving || !has(address ? "warehouses.update" : "warehouses.create")}
-          className="customer-form-fields"
-        >
+        <fieldset disabled={form.saving || !canWrite} className="customer-form-fields">
           <div className="form-grid">
             {Object.entries(addressLabels).map(([key, label]) => (
               <label
@@ -412,7 +450,7 @@ function WarehouseAddressForm({ warehouse, address, onSaved, onClose }) {
           <button type="button" className="secondary" disabled={form.saving} onClick={form.close}>
             Cancelar
           </button>
-          <button disabled={form.saving || !has(address ? "warehouses.update" : "warehouses.create") || (address && !form.dirty)}>
+          <button disabled={form.saving || !canWrite || (address && !form.dirty)}>
             {form.saving ? "Salvando…" : address ? "Salvar alterações" : "Salvar endereço"}
           </button>
         </div>

@@ -18,6 +18,7 @@ import ProductsPage from "../pages/Products/ProductsPage";
 import StockPage from "../pages/Operations/StockPage";
 import WarehousesPage from "../pages/Operations/WarehousesPage";
 import OrdersPage from "../pages/Operations/OrdersPage";
+import OrderEntryPage from "../pages/Operations/OrderEntryPage";
 import PurchasesPage from "../pages/Operations/PurchasesPage";
 import useAuth from "../auth/useAuth";
 import { firstRoute } from "./navigation";
@@ -52,6 +53,8 @@ export default function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute permission="orders.read" />}>
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/new" element={<OrderEntryPage />} />
+            <Route path="/orders/:id/edit" element={<OrderEntryPage />} />
           </Route>
           <Route element={<ProtectedRoute permission="purchases.read" />}>
             <Route path="/purchases" element={<PurchasesPage />} />

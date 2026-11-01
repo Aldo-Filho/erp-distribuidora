@@ -9,18 +9,21 @@ import { ProductLoad } from "./ProductControls";
 import ProductPresentations from "./ProductPresentations";
 import ProductSuppliers from "./ProductSuppliers";
 import ProductStockPanel from "./ProductStockPanel";
+import ProductStockDialog from "./ProductStockDialog";
 
 export function ProductItemContent({ catalog, item, initialTab = "commercial", onStockChanged }) {
   const { has } = useAuth();
   const [tab, setTab] = useState(initialTab);
+  const [stockOpen, setStockOpen] = useState(false);
   const measure = (value, places) =>
     value == null ? "—" : Number(value).toLocaleString("pt-BR", { maximumFractionDigits: places });
   return (
     <>
       <div className="product-toolbar product-tabs" role="group" aria-label="Dados do SKU">
         {has("stock.read") && (
-          <button type="button" className={tab === "stock" ? "" : "secondary"}
-            onClick={() => setTab("stock")}>Estoque</button>
+          <button type="button" className="secondary" onClick={() => setStockOpen(true)}>
+            Estoque
+          </button>
         )}
         <button
           className={tab === "commercial" ? "" : "secondary"}
@@ -87,26 +90,64 @@ export function ProductItemContent({ catalog, item, initialTab = "commercial", o
       {tab === "suppliers" && has("suppliers.read") && (
         <ProductSuppliers key={item.id} catalog={catalog} item={item} />
       )}
-      {tab === "stock" && has("stock.read") && (
-        <ProductStockPanel key={item.id} item={item} onChanged={onStockChanged} />
+      {stockOpen && has("stock.read") && (
+        <ProductStockDialog
+          item={item}
+          onChanged={onStockChanged}
+          onClose={() => setStockOpen(false)}
+        />
       )}
     </>
   );
 }
-export default function ProductItemDetails({ catalog, item, onClose, initialTab, onStockChanged }) {
+export default function ProductItemDetails({
+  catalog,
+  item,
+  onClose,
+  onEdit,
+  notice,
+  initialTab,
+  onStockChanged,
+}) {
+  const { has } = useAuth();
   const state = useProductResource((options) => products.findItem(item.id, options), [item.id]);
+  if (initialTab === "stock" && has("stock.read")) {
+    return (
+      <Modal title={`Estoque · ${item.sku}`} onClose={onClose} wide className="product-stock-dialog">
+        <ProductLoad state={state} empty="Variação não encontrada.">
+          {state.data && <ProductStockPanel item={state.data} onChanged={onStockChanged} />}
+        </ProductLoad>
+      </Modal>
+    );
+  }
   return (
-    <Modal title={`Variação ${item.sku}`} onClose={onClose} wide>
+    <Modal title={`Variação ${item.sku}`} onClose={onClose} wide className="product-details-dialog">
       <h3>{catalog.name}</h3>
-      <ProductLoad state={state}>
+      {notice && (
+        <p role="status" className="success">
+          {notice}
+        </p>
+      )}
+      <ProductLoad state={state} empty="Variação não encontrada.">
         {state.data && (
           <>
             <p>
               {state.data.ownActive ? "Ativa própria" : "Inativa própria"}
               {!catalog.active ? " · Indisponível pelo principal" : ""}
             </p>
-            <ProductItemContent catalog={catalog} item={state.data}
-              initialTab={initialTab} onStockChanged={onStockChanged} />
+            <ProductItemContent
+              catalog={catalog}
+              item={state.data}
+              initialTab={initialTab}
+              onStockChanged={onStockChanged}
+            />
+            {onEdit && has("products.update") && (
+              <div className="actions">
+                <button type="button" onClick={() => onEdit(state.data)}>
+                  Editar variação
+                </button>
+              </div>
+            )}
           </>
         )}
       </ProductLoad>

@@ -1,8 +1,16 @@
-.orders-page > .orders-list .table-scroll tbody tr {
-  height: 64px;
+.order-details-content > .customer-details {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-.orders-page > .orders-list .table-scroll td {
-  padding-block: 8px;
+@media (max-width: 600px) {
+  .order-details-content > .customer-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+@media (max-width: 400px) {
+  .order-details-content > .customer-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .order-customer-name {
   display: block;
@@ -87,8 +95,17 @@
 .order-flow-hint {
   margin-top: 16px;
 }
-.order-cancel-action {
-  color: #a03534;
+.order-dialog .order-cancel-action {
+  border-color: #b13d39;
+  background: #b13d39;
+  color: white;
+}
+.order-dialog .order-cancel-action:hover:not(:disabled),
+.order-dialog .order-cancel-action:focus-visible {
+  border-color: #a03534;
+  background: #a03534;
+  color: white;
+  filter: none;
 }
 .order-empty-items {
   padding: 24px;
@@ -115,12 +132,6 @@
   outline: 1px solid var(--accent);
   outline-offset: -1px;
   border-radius: 8px;
-}
-.order-details-content > .table-panel .table-scroll tbody tr {
-  height: 64px;
-}
-.order-details-content > .table-panel .table-scroll td {
-  padding-block: 8px;
 }
 .order-details-content > .record-metadata {
   margin-top: 18px;

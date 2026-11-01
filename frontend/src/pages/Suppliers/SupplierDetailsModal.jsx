@@ -5,6 +5,7 @@ import Modal from "../../components/feedback/Modal";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import RecordMetadata from "../../components/record/RecordMetadata";
 import { addressTypes } from "./SupplierAddressFields";
+import "./supplierDetails.css";
 
 export default function SupplierDetailsModal({
   supplierId,
@@ -54,7 +55,7 @@ export default function SupplierDetailsModal({
   }, [supplierId, addressRevision]);
   const supplier = state.supplier;
   return (
-    <Modal title="Detalhes do fornecedor" onClose={onClose} wide>
+    <Modal title="Detalhes do fornecedor" onClose={onClose} wide className="supplier-details-dialog">
       <ErrorAlert message={state.error} retry={() => setRevision((number) => number + 1)} />
       {state.loading ? (
         <p role="status">Carregando fornecedor…</p>

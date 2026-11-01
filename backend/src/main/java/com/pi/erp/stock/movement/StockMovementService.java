@@ -123,6 +123,10 @@ public class StockMovementService {
                     previous.getType() != data.type() ||
                     previous.getReason() != data.reason() ||
                     (data.quantity() == null || previous.getQuantity().compareTo(data.quantity()) != 0) ||
+                    (
+                        data.expectedQuantity() != null &&
+                        previous.getPreviousBalance().compareTo(data.expectedQuantity()) != 0
+                    ) ||
                     !previous.getUserId().equals(operatorUserId) ||
                     !Objects.equals(previous.getNotes(), notes)
             ) {
@@ -134,6 +138,21 @@ public class StockMovementService {
         }
 
         StockItem stockItem = findStockItem(data.stockItemId());
+        if (data.expectedQuantity() != null) {
+            if (data.type() != StockMovementType.ADJUSTMENT) {
+                throw new IllegalArgumentException("Expected quantity is only allowed for adjustments.");
+            }
+            ProductQuantity.requireBase(
+                data.expectedQuantity(),
+                stockItem.getProduct().getUnit(),
+                true
+            );
+            if (stockItem.getQuantity().compareTo(data.expectedQuantity()) != 0) {
+                throw new IllegalArgumentException(
+                    "Stock balance changed. Refresh the balance before correcting it."
+                );
+            }
+        }
         validateMovement(data.type(), data.reason(), data.quantity());
         validateUser(operatorUserId);
         if (data.type() == StockMovementType.ADJUSTMENT) {
@@ -152,7 +171,8 @@ public class StockMovementService {
                 data.reason(),
                 data.quantity(),
                 operatorUserId,
-                data.notes()
+                data.notes(),
+                data.expectedQuantity()
             ),
             stockItem,
             previousBalance,

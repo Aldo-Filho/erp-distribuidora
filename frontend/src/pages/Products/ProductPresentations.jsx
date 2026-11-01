@@ -19,18 +19,22 @@ export default function ProductPresentations({ catalog, item }) {
   const list = useCatalogPage(read);
   const action = useProductAction();
   const [flow, setFlow] = useState(null);
-  const toggle = (presentation) =>
-    action.run(
+  const toggle = (presentation) => {
+    if (!has("products.update") || presentation.basePresentation || !catalog.unit) return;
+    return action.run(
       async () => {
         await products.updatePresentation(presentation.id, { active: !presentation.active });
         list.reload();
       },
       `${presentation.active ? "Inativar" : "Ativar"} a apresentação ${presentation.name}? O histórico e as condições já contratadas serão preservados.`,
       {
-        title: "Situação da apresentação",
+        title: presentation.active ? "Inativar apresentação" : "Ativar apresentação",
         confirmLabel: presentation.active ? "Inativar" : "Ativar",
+        destructive: presentation.active,
+        successMessage: presentation.active ? "Apresentação inativada." : "Apresentação ativada.",
       },
     );
+  };
   return (
     <section>
       <div className="product-toolbar">
@@ -129,7 +133,7 @@ export default function ProductPresentations({ catalog, item }) {
         </div>
       </ProductLoad>
       <ProductPageFooter list={list} />
-      {flow && (
+      {flow && has(flow.presentation ? "products.update" : "products.create") && (
         <ProductPresentationForm
           catalog={catalog}
           item={item}

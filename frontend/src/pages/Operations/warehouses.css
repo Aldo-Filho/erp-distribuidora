@@ -5,3 +5,27 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.warehouse-details-dialog .customer-details {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.warehouse-detail-description {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1440px) {
+  .warehouses-page .responsive-row-actions .row-actions-inline {
+    display: flex;
+  }
+  .warehouses-page .row-actions-more {
+    display: none;
+  }
+  .warehouses-page .table-scroll th:last-child,
+  .warehouses-page .table-scroll td:last-child {
+    min-width: 96px;
+  }
+}
+@media (max-width: 480px) {
+  .warehouse-details-dialog .customer-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

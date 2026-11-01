@@ -1,0 +1,214 @@
+.order-entry-viewport {
+  container-type: inline-size;
+}
+.order-entry-page .page-title {
+  align-items: center;
+}
+.order-entry-page .page-title h1 {
+  margin-bottom: 4px;
+}
+.order-entry-heading-panel {
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.order-entry-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(160px, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+.order-entry-header > div:not(:last-child) {
+  min-width: 0;
+}
+.order-entry-header > button {
+  align-self: end;
+}
+.order-entry-header > div > strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.order-entry-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.order-entry-catalog,
+.order-entry-cart {
+  padding: 18px;
+  min-width: 0;
+}
+.order-entry-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.order-entry-section-title h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.order-entry-side {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.order-entry-side.is-sticky {
+  position: sticky;
+  top: 20px;
+}
+.order-entry-product {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.order-entry-product.is-selected .order-entry-product-heading strong {
+  color: #087b77;
+}
+.order-entry-product-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.order-entry-product-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.order-entry-product-heading strong,
+.order-entry-cart-line strong {
+  overflow-wrap: anywhere;
+}
+.order-entry-product small,
+.order-entry-cart-line > small {
+  display: block;
+  margin-top: 4px;
+  color: #61747e;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.order-entry-product-heading > button {
+  flex-shrink: 0;
+  min-width: 42px;
+  min-height: 42px;
+  justify-content: center;
+}
+.order-entry-skus {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.order-entry-quantity {
+  flex: 0 0 76px;
+}
+.order-entry-catalog .order-entry-editor {
+  margin-top: 16px;
+}
+.order-entry-skus > button {
+  text-align: left;
+}
+.order-entry-cart-line {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.order-entry-line-price {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 10px 0;
+  font-size: 12px;
+  color: #61747e;
+}
+.order-entry-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 16px;
+}
+.order-entry-total > strong {
+  font-size: 24px;
+  color: #102f39;
+}
+.order-entry-cart-actions {
+  display: grid;
+  gap: 10px;
+}
+.order-entry-cart-actions button {
+  justify-content: center;
+}
+.order-entry-cart-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.order-entry-metadata {
+  margin-top: 20px;
+}
+.order-entry-metadata > summary {
+  cursor: pointer;
+  color: #61747e;
+  font-size: 12px;
+}
+.order-entry-editor {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  min-width: 0;
+}
+.order-entry-editor > h3 {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+.order-entry-editor .form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.order-entry-editor .order-selected-product {
+  align-items: start;
+  flex-wrap: wrap;
+}
+.order-entry-editor .customer-details {
+  grid-template-columns: minmax(0, 1fr);
+}
+.order-entry-editor .actions {
+  flex-wrap: wrap;
+}
+.order-entry-jumps {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.order-entry-header-form .customer-form {
+  margin: 0;
+}
+@container (max-width: 999px) {
+  .order-entry-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .order-entry-side.is-sticky {
+    position: static;
+  }
+}
+@media (max-width: 1200px) {
+  .order-entry-header {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .order-entry-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .order-entry-heading-panel,
+  .order-entry-catalog,
+  .order-entry-cart,
+  .order-entry-editor {
+    padding: 14px;
+  }
+  .order-entry-editor .order-selected-product > button {
+    width: 100%;
+  }
+}

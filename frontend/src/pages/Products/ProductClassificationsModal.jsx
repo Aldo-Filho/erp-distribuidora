@@ -33,8 +33,9 @@ export default function ProductClassificationsModal({ kind, onClose, onChanged =
       name: form.value.name.trim(),
     });
   };
-  const remove = (entry) =>
-    action.run(
+  const remove = (entry) => {
+    if (!has("products.delete") || form.saving) return;
+    return action.run(
       async () => {
         try {
           await (isBrand ? products.deleteBrand : products.deleteCategory)(entry.id);
@@ -53,8 +54,10 @@ export default function ProductClassificationsModal({ kind, onClose, onChanged =
         title: isBrand ? "Excluir marca" : "Excluir categoria",
         confirmLabel: "Excluir",
         destructive: true,
+        successMessage: isBrand ? "Marca excluída." : "Categoria excluída.",
       },
     );
+  };
   return (
     <Modal
       title={isBrand ? "Marcas" : "Categorias"}

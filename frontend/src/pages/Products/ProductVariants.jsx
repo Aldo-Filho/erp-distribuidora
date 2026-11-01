@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Eye, Pencil, Plus, Power } from "lucide-react";
+import { Eye, Package, Pencil, Plus, Power } from "lucide-react";
 import useAuth from "../../auth/useAuth";
 import RowActions from "../../components/feedback/RowActions";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
@@ -21,14 +21,19 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
   const list = useCatalogPage(read, { query, active: "" });
   const action = useProductAction();
   const [flow, setFlow] = useState(null);
+  const closeFlow = () =>
+    setFlow((previous) =>
+      previous?.returnTo ? { kind: "details", item: previous.item, stock: previous.stock } : null,
+    );
   const saved = () => {
-    setFlow(null);
+    closeFlow();
     list.reload();
     onChanged();
     action.succeed("Variação salva.");
   };
-  const toggle = (item) =>
-    action.run(
+  const toggle = (item) => {
+    if (!has("products.update") || (!item.ownActive && !catalog.active)) return;
+    return action.run(
       async () => {
         await products.updateItem(item.id, { active: !item.ownActive });
         list.reload();
@@ -40,8 +45,11 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
       {
         title: item.ownActive ? "Inativar variação" : "Ativar variação",
         confirmLabel: item.ownActive ? "Inativar" : "Ativar",
+        destructive: item.ownActive,
+        successMessage: item.ownActive ? "Variação inativada." : "Variação ativada.",
       },
     );
+  };
   return (
     <section>
       {startStock && has("stock.read") && (
@@ -111,8 +119,7 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
                   </td>
                   {has("stock.read") && (
                     <td>
-                      <ProductStockCell item={item}
-                        onOpen={() => setFlow({ kind: "details", item, stock: true })} />
+                      <ProductStockCell item={item} />
                     </td>
                   )}
                   <td>
@@ -137,6 +144,18 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
                           <Pencil size={17} />
                         </button>
                       )}
+                      {has("stock.read") && (
+                        <button
+                          type="button"
+                          title="Estoque"
+                          aria-label={`Estoque de ${item.sku}`}
+                          className="secondary icon-button"
+                          disabled={action.pending}
+                          onClick={() => setFlow({ kind: "details", item, stock: true })}
+                        >
+                          <Package size={17} />
+                        </button>
+                      )}
                       {has("products.update") && (
                         <button
                           className="secondary icon-button row-status-action"
@@ -157,20 +176,29 @@ export default function ProductVariants({ catalog, query = "", onChanged, startS
         </div>
       </ProductLoad>
       <ProductPageFooter list={list} />
-      {(flow?.kind === "edit" || flow?.kind === "new") && (
+      {((flow?.kind === "edit" && has("products.update")) ||
+        (flow?.kind === "new" && has("products.create"))) && (
         <ProductVariantForm
           key={flow.item?.id || "new"}
           catalog={catalog}
           item={flow.item}
-          onClose={() => setFlow(null)}
+          onClose={closeFlow}
           onSaved={saved}
         />
       )}
       {flow?.kind === "details" && (
-        <ProductItemDetails catalog={catalog} item={flow.item}
+        <ProductItemDetails
+          catalog={catalog}
+          item={flow.item}
           initialTab={flow.stock ? "stock" : "commercial"}
-          onStockChanged={() => { list.reload(); onChanged(); }}
-          onClose={() => setFlow(null)} />
+          notice={action.notice}
+          onStockChanged={() => {
+            list.reload();
+            onChanged();
+          }}
+          onEdit={(item) => setFlow({ kind: "edit", item, returnTo: true, stock: flow.stock })}
+          onClose={closeFlow}
+        />
       )}
     </section>
   );

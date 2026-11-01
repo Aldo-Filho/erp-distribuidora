@@ -1,0 +1,17 @@
+.supplier-details-dialog > .customer-details {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.supplier-details-dialog .customer-address-card {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .supplier-details-dialog > .customer-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+@media (max-width: 400px) {
+  .supplier-details-dialog > .customer-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

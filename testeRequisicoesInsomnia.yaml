@@ -2664,6 +2664,280 @@ collection:
           send: true
           store: true
         rebuildPath: true
+  - name: Cobertura de endpoints adicionados
+    meta:
+      id: fld_endpoint_coverage_20261111
+      description: 'Endpoints acrescentados a partir dos controllers. Execute Obter CSRF e Entrar antes das escritas. Ajuste os IDs e UUIDs no Base Environment.'
+    children:
+    - name: Catálogos e apresentações
+      meta:
+        id: fld_catalog_20261111
+      children:
+      - url: '{{ _.base_url }}/productCatalog/search'
+        name: Buscar catálogos
+        method: GET
+        parameters:
+        - name: page
+          value: '{{ _.page }}'
+        - name: size
+          value: '{{ _.page_size }}'
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productCatalog/{{ _.catalog_id }}'
+        name: Consultar catálogo
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productCatalog'
+        name: Criar catálogo
+        method: POST
+        body: { mimeType: application/json, text: '{"name":"Catálogo de teste","brandId":{{ _.brand_id }},"categoryId":{{ _.category_id }},"unit":"UN","type":"SIMPLE","active":true}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productCatalog/{{ _.catalog_id }}'
+        name: Atualizar catálogo
+        method: PATCH
+        body: { mimeType: application/json, text: '{"name":"Catálogo atualizado","active":true}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productCatalog/{{ _.catalog_id }}/items/search'
+        name: Buscar itens do catálogo
+        method: GET
+        parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productCatalog/{{ _.catalog_id }}/items'
+        name: Criar item no catálogo
+        method: POST
+        body: { mimeType: application/json, text: '{"cost":10,"price":15,"active":true}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productPresentation/search'
+        name: Buscar apresentações
+        method: GET
+        parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productPresentation/{{ _.presentation_id }}'
+        name: Consultar apresentação
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productPresentation'
+        name: Criar apresentação
+        method: POST
+        body: { mimeType: application/json, text: '{"productId":{{ _.product_id }},"name":"Caixa","baseFactor":12,"price":180,"active":true}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productPresentation/{{ _.presentation_id }}'
+        name: Atualizar apresentação
+        method: PATCH
+        body: { mimeType: application/json, text: '{"name":"Caixa atualizada","baseFactor":12,"active":true}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+    - name: Opções de fornecedor
+      meta: { id: fld_supplier_options_20261111 }
+      children:
+      - url: '{{ _.base_url }}/productSupplierOption/search'
+        name: Buscar opções de fornecedor
+        method: GET
+        parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productSupplierOption/{{ _.supplier_option_id }}'
+        name: Consultar opção de fornecedor
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productSupplierOption'
+        name: Criar opção de fornecedor
+        method: POST
+        body: { mimeType: application/json, text: '{"productSupplierId":{{ _.supplier_product_id }},"name":"Unidade","baseFactor":1,"basePresentation":true,"cost":10,"active":true}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/productSupplierOption/{{ _.supplier_option_id }}'
+        name: Atualizar opção de fornecedor
+        method: PATCH
+        body: { mimeType: application/json, text: '{"name":"Unidade atualizada","baseFactor":1,"active":true}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+    - name: Pedidos
+      meta: { id: fld_orders_20261111 }
+      children:
+      - url: '{{ _.base_url }}/order/search'
+        name: Buscar pedidos
+        method: GET
+        parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/order/{{ _.order_id }}'
+        name: Consultar pedido
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/order/{{ _.order_id }}/price'
+        name: Consultar preço do pedido
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/order'
+        name: Criar pedido
+        method: POST
+        body: { mimeType: application/json, text: '{"customerId":{{ _.customer_id }}}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/order/{{ _.order_id }}'
+        name: Atualizar pedido
+        method: PATCH
+        body: { mimeType: application/json, text: '{"paymentMethod":"CASH"}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/order/{{ _.order_id }}'
+        name: Excluir pedido
+        method: DELETE
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/order/{{ _.order_id }}/dispatch'
+        name: Despachar pedido
+        method: POST
+        body: { mimeType: application/json, text: '{"notes":"Teste pelo Insomnia"}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/orderItem/search'
+        name: Buscar itens de pedido
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/orderItem/{{ _.order_item_id }}'
+        name: Consultar item de pedido
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/orderItem'
+        name: Criar item de pedido
+        method: POST
+        body: { mimeType: application/json, text: '{"orderId":{{ _.order_id }},"productId":{{ _.product_id }},"warehouseId":{{ _.warehouse_id }},"quantity":1}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/orderItem/{{ _.order_item_id }}'
+        name: Atualizar item de pedido
+        method: PATCH
+        body: { mimeType: application/json, text: '{"quantity":2}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/orderItem/{{ _.order_item_id }}'
+        name: Excluir item de pedido
+        method: DELETE
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+    - name: Compras e recebimentos
+      meta: { id: fld_purchases_20261111 }
+      children:
+      - url: '{{ _.base_url }}/purchase/search'
+        name: Buscar compras
+        method: GET
+        parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}'
+        name: Consultar compra
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchase'
+        name: Criar compra
+        method: POST
+        body: { mimeType: application/json, text: '{"supplierId":{{ _.supplier_id }},"userId":{{ _.user_id }}}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}'
+        name: Atualizar compra
+        method: PATCH
+        body: { mimeType: application/json, text: '{"expectedDeliveryDate":"2026-12-01"}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}'
+        name: Excluir compra
+        method: DELETE
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchaseItem/search'
+        name: Buscar itens de compra
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchaseItem/{{ _.purchase_item_id }}'
+        name: Consultar item de compra
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchaseItem'
+        name: Criar item de compra
+        method: POST
+        body: { mimeType: application/json, text: '{"purchaseId":{{ _.purchase_id }},"productId":{{ _.product_id }},"warehouseId":{{ _.warehouse_id }},"quantity":1}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchaseItem/{{ _.purchase_item_id }}'
+        name: Atualizar item de compra
+        method: PATCH
+        body: { mimeType: application/json, text: '{"quantity":2}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchaseItem/{{ _.purchase_item_id }}'
+        name: Excluir item de compra
+        method: DELETE
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}/receive'
+        name: Receber compra
+        method: POST
+        body: { mimeType: application/json, text: '{"requestId":"{{ _.request_id }}","notes":"Teste pelo Insomnia","items":[{"purchaseItemId":{{ _.purchase_item_id }},"quantity":1}]}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}/receipts'
+        name: Listar recebimentos da compra
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}/receipts/{{ _.receipt_id }}'
+        name: Consultar recebimento
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+    - name: Endpoints somente leitura/contrato
+      meta: { id: fld_readonly_contracts_20261111 }
+      children:
+      - url: '{{ _.base_url }}/user'
+        name: Criar funcionário diretamente (retorna 405)
+        meta:
+          description: 'Endpoint mantido pelo controller para informar que novos funcionários devem ser criados por convite.'
+        method: POST
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/permission'
+        name: Criar permissão (retorna 405)
+        meta:
+          description: 'O catálogo de permissões é somente leitura.'
+        method: POST
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/permission/{{ _.permission_id }}'
+        name: Atualizar permissão (retorna 405)
+        meta:
+          description: 'O catálogo de permissões é somente leitura.'
+        method: PATCH
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/permission/{{ _.permission_id }}'
+        name: Excluir permissão (retorna 405)
+        meta:
+          description: 'O catálogo de permissões é somente leitura.'
+        method: DELETE
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+    - name: Estoque
+      meta: { id: fld_stock_movements_20261111 }
+      children:
+      - url: '{{ _.base_url }}/warehouse/{{ _.warehouse_id }}'
+        name: Consultar depósito
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/stockMovement/search'
+        name: Buscar movimentações de estoque
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/stockMovement/{{ _.stock_movement_id }}'
+        name: Consultar movimentação de estoque
+        method: GET
+        settings: { cookies: { send: true, store: true } }
+      - url: '{{ _.base_url }}/stockMovement'
+        name: Criar movimentação de estoque
+        method: POST
+        body: { mimeType: application/json, text: '{"requestId":"{{ _.request_id }}","stockItemId":{{ _.stock_item_id }},"type":"IN","reason":"ADJUSTMENT","quantity":1,"notes":"Teste pelo Insomnia"}' }
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
+        settings: { cookies: { send: true, store: true } }
 cookieJar:
   name: Default Jar
   meta:
@@ -2691,6 +2965,18 @@ environments:
     customer_id: 1
     customer_address_id: 1
     price_table_id: 1
+    catalog_id: 1
+    presentation_id: 1
+    supplier_option_id: 1
+    order_id: 1
+    order_item_id: 1
+    purchase_id: 1
+    purchase_item_id: 1
+    receipt_id: 1
+    stock_movement_id: 1
+    request_id: '00000000-0000-0000-0000-000000000001'
+    page: 0
+    page_size: 25
     csrf_token: ''
     login_email: ''
     login_password: ''

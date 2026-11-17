@@ -15,19 +15,19 @@ public class PasswordRecoveryController {
     @Autowired
     private PasswordRecoveryService service;
 
-    @PostMapping("/auth/passwordRecovery")
+    @PostMapping("/auth/password-recoveries")
     public ResponseEntity<Void> recovery(@RequestBody @Valid RequestPasswordRecoveryDTO data) {
         service.recovery(data.email());
         return ResponseEntity.accepted().build();
     }
 
-    @PostMapping("/user/{id}/passwordRecovery")
+    @PostMapping("/users/{id}/password-recoveries")
     public ResponseEntity<Void> administrative(@PathVariable Long id) {
         service.administrative(id);
         return ResponseEntity.accepted().build();
     }
 
-    @PostMapping("/auth/passwordReset")
+    @PostMapping("/auth/password-resets")
     public ResponseEntity<Void> reset(@RequestBody @Valid RequestPasswordResetDTO data) {
         service.reset(data);
         return ResponseEntity.noContent().build();

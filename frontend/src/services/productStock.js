@@ -7,10 +7,7 @@ export const productStock = {
     let page = 0;
     let response;
     do {
-      response = await api(
-        "/stockItem/search?" + queryString({ productId, page, size: 100 }),
-        options,
-      );
+      response = await api("/stock-items?" + queryString({ productId, page, size: 100 }), options);
       stocks.push(...response.content);
       page += 1;
     } while (page < response.totalPages);

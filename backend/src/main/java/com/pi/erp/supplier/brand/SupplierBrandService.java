@@ -5,8 +5,9 @@ import com.pi.erp.product.brand.Brand;
 import com.pi.erp.product.brand.BrandRepository;
 import com.pi.erp.supplier.Supplier;
 import com.pi.erp.supplier.SupplierRepository;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,9 +23,9 @@ public class SupplierBrandService {
     @Autowired
     private BrandRepository brandRepository;
 
-    public List<SupplierBrand> search(Long supplierId) {
+    public Page<SupplierBrand> search(Long supplierId, Pageable pageable) {
         findSupplier(supplierId);
-        return repository.findAllBySupplierId(supplierId);
+        return repository.findAllBySupplierId(supplierId, pageable);
     }
 
     @Transactional

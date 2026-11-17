@@ -7,11 +7,8 @@ import { removeDraft, useDraft } from "../../auth/drafts";
 import { suppliers } from "../../services/suppliers";
 import Modal from "../../components/feedback/Modal";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
-import SupplierAddressFields, {
-  supplierAddressKeys as addressKeys,
-  addressTypes,
-  emptySupplierAddress as emptyAddress,
-} from "./SupplierAddressFields";
+import SupplierAddressFields from "./SupplierAddressFields";
+import { supplierAddressKeys as addressKeys, addressTypes, emptySupplierAddress as emptyAddress } from "./supplierAddressData.js";
 import { validateAddress } from "./supplierFormData";
 
 function AddressEditor({
@@ -27,14 +24,14 @@ function AddressEditor({
   const { session, has } = useAuth();
   const canWrite = has(address ? "suppliers.update" : "suppliers.create");
   const key = `supplier-address:${session.userId}:${supplierId}:${address?.id || "new"}`;
-  const initial = useRef(
+  const [initial] = useState(() =>
     Object.fromEntries(
       addressKeys.map((field) => [
         field,
         address?.[field] ?? (field === "addressType" ? types[0] : emptyAddress[field]),
       ]),
     ),
-  ).current;
+  );
   const [value, setValue] = useDraft(key, initial);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -132,8 +129,10 @@ export default function SupplierAddressModal({
   const EditorContainer = embedded ? Modal : EmbeddedContent;
   const confirm = useConfirm();
   const { has } = useAuth();
-  const [state, setState] = useState({ loading: true });
+  const [result, setResult] = useState(null);
   const [revision, setRevision] = useState(0);
+  const requestKey = `${supplierId}:${revision}`;
+  const state = result?.requestKey === requestKey ? result.state : { loading: true };
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
@@ -150,23 +149,22 @@ export default function SupplierAddressModal({
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
-    setState((previous) => ({ ...previous, loading: true, error: "" }));
     Promise.all([
       suppliers.findOne(supplierId, { signal: controller.signal }),
       suppliers.addresses(supplierId, { signal: controller.signal }),
     ]).then(
       ([supplier, addresses]) => {
-        if (active) setState({ supplier, addresses });
+        if (active) setResult({ requestKey, state: { supplier, addresses } });
       },
       (issue) => {
-        if (active) setState((previous) => ({ ...previous, loading: false, error: issue.message }));
+        if (active) setResult({ requestKey, state: { error: issue.message } });
       },
     );
     return () => {
       active = false;
       controller.abort();
     };
-  }, [supplierId, revision]);
+  }, [supplierId, requestKey]);
   const finishEditor = () => {
     closeEditor.current = null;
     setBusy(false);

@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import useAuth from "../auth/useAuth";
 import ErrorAlert from "../components/feedback/ErrorAlert";
 
@@ -30,6 +30,7 @@ export default function ProtectedRoute({ permission, anyPermissions }) {
       <section className="panel">
         <h1>Acesso negado</h1>
         <p>Seu cargo não permite abrir esta tela.</p>
+        <Link to="/dashboard">Voltar à visão geral</Link>
       </section>
     );
   return <Outlet />;

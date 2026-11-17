@@ -1,6 +1,9 @@
+import { useSearchParams } from "react-router-dom";
+import BarcodeScanner from "../../components/feedback/BarcodeScanner";
+import { available } from "./stockBalance.js";
 import useListReturn from "../../hooks/useListReturn";
 import { validId } from "../../routes/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Eye, Plus, Settings, ArrowDownToLine, History } from "lucide-react";
 import useAuth from "../../auth/useAuth";
 import PageHeading from "../../components/layout/PageHeading";
@@ -9,34 +12,29 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 import RowActions from "../../components/feedback/RowActions";
 import { stockOperations } from "../../services/operations";
 import { useProductResource } from "../Products/useProductResource";
-import { ProductLoad } from "../Products/ProductControls";
+
 import { quantity } from "../Products/productFormData";
-import { SkuPicker, skuName } from "./OperationSelectors";
+import { SkuPicker } from "./OperationSelectors";
+import { skuName } from "./operationLabels.js";
 import StockHistory from "./StockHistory";
 import { StockConfiguration, StockMovement } from "./StockActions";
 import "../Products/products.css";
 import "./operations.css";
 import "./stock.css";
 //* Difference is display-only. All persisted balances come from the API.*
-export function available(stock) {
-  const scaled = (value) => {
-    const [whole, fraction = ""] = String(value).split(".");
-    return BigInt(whole) * 10n + BigInt(fraction.padEnd(1, "0"));
-  };
-  const difference = scaled(stock.quantity) - scaled(stock.reservedQuantity);
-  return `${difference / 10n}${difference % 10n ? "," + String(difference % 10n) : ""}`;
-}
 export default function StockPage() {
   const { has } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const lowStock = params.get("lowStock") === "true";
   const origin = useListReturn({ modulePath: "/products" });
   const [product, setProduct] = useState(() =>
-    validId(origin.restored?.filters?.productId)
+    !lowStock && validId(origin.restored?.filters?.productId)
       ? { id: Number(origin.restored.filters.productId) }
       : null,
   );
   const [picker, setPicker] = useState(false);
   const [page, setPage] = useState(() =>
-    Number.isSafeInteger(origin.restored?.page) && origin.restored.page >= 0
+    !lowStock && Number.isSafeInteger(origin.restored?.page) && origin.restored.page >= 0
       ? origin.restored.page
       : 0,
   );
@@ -46,19 +44,18 @@ export default function StockPage() {
     async (options) => ({
       productId: product?.id || null,
       page,
-      records: await stockOperations.search({ productId: product?.id, page, size: 20 }, options),
+      records: await stockOperations.search({ productId: product?.id, lowStock, page, size: 20 }, options),
     }),
-    [product?.id, page],
+    [product?.id, lowStock, page],
   );
   const loading = Boolean(
     state.loading ||
     (state.data && (state.data.productId !== (product?.id || null) || state.data.page !== page)),
   );
-  useEffect(() => {
-    if (loading || state.error || !state.data) return;
+  if (!loading && !state.error && state.data) {
     const lastPage = Math.max(0, state.data.records.totalPages - 1);
     if (page > lastPage) setPage(lastPage);
-  }, [loading, state.error, state.data, page]);
+  }
   const records = loading || state.error ? null : state.data?.records?.content;
   const listReturn = useListReturn({
     modulePath: "/products",
@@ -101,6 +98,8 @@ export default function StockPage() {
           )}
         </div>
       </header>
+      {lowStock && <p className="panel">Exibindo itens com saldo disponível abaixo do mínimo. <button className="secondary" onClick={() => { setParams({}); setPage(0); }}>Mostrar todo o estoque</button></p>}
+      <BarcodeScanner onResolved={item => { setProduct(item); setPage(0); }} />
       <section className="panel customer-filters" aria-label="Filtros de estoque">
         <label className="customer-query">
           Produto / SKU

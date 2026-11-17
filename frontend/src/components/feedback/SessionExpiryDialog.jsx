@@ -3,17 +3,18 @@ import { auth } from "../../services/auth";
 import ErrorAlert from "./ErrorAlert";
 
 export default function SessionExpiryDialog({ session, refresh, logout }) {
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(Date.now);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const [clock, setClock] = useState({ at: Date.now(), server: Date.parse(session.serverTime) });
+  const [clock, setClock] = useState(() => ({ at: Date.now(), server: Date.parse(session.serverTime) }));
   useEffect(() => {
-    setClock({ at: Date.now(), server: Date.parse(session.serverTime) });
-  }, [session.serverTime]);
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 1000);
+    const sample = { at: Date.now(), server: Date.parse(session.serverTime) };
+    const interval = setInterval(() => {
+      setClock(sample);
+      setNow(Date.now());
+    }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [session.serverTime]);
   const remaining =
     Math.min(Date.parse(session.idleExpiresAt), Date.parse(session.absoluteExpiresAt)) -
     clock.server -

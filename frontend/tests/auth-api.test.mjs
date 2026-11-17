@@ -26,7 +26,7 @@ test("mutation obtains CSRF and sends credentials through /api exactly once", as
     return url === "/api/auth/csrf" ? csrf() : response(201, { id: 7 });
   };
   const { api } = await fresh();
-  assert.deepEqual(await api("/user/invitation", { method: "POST", body: { name: "Employee" } }), {
+  assert.deepEqual(await api("/user-invitations", { method: "POST", body: { name: "Employee" } }), {
     id: 7,
   });
   assert.equal(calls.length, 2);
@@ -53,8 +53,8 @@ test("simultaneous writes share CSRF loading without repeating any mutation", as
     return response(204);
   };
   const { api } = await fresh();
-  const first = api("/auth/activity", { method: "POST" });
-  const second = api("/auth/activity", { method: "POST" });
+  const first = api("/auth/session-activities", { method: "POST" });
+  const second = api("/auth/session-activities", { method: "POST" });
   release();
   await Promise.all([first, second]);
   assert.equal(tokenRequests, 1);
@@ -86,7 +86,7 @@ test("a delayed CSRF response cannot restore the token from an old session gener
   const second = loadCsrf();
   releaseOld();
   await Promise.all([first, second]);
-  await api("/auth/activity", { method: "POST" });
+  await api("/auth/session-activities", { method: "POST" });
   assert.deepEqual(sent, ["current"]);
   assert.equal(tokenRequests, 2);
 });
@@ -123,7 +123,7 @@ test("public login failure does not signal expiration of another session", async
   globalThis.fetch = async (url) => (url === "/api/auth/csrf" ? csrf() : response(401));
   const { api } = await fresh();
   await assert.rejects(
-    api("/auth/login", { method: "POST", publicRequest: true, body: {} }),
+    api("/auth/sessions", { method: "POST", publicRequest: true, body: {} }),
     (error) => error.status === 401,
   );
   assert.equal(dispatched, 0);
@@ -140,9 +140,9 @@ test("403 clears CSRF for the next conscious attempt without replaying the rejec
     return response(writes === 1 ? 403 : 204);
   };
   const { api } = await fresh();
-  await assert.rejects(api("/auth/activity", { method: "POST" }), (error) => error.status === 403);
+  await assert.rejects(api("/auth/session-activities", { method: "POST" }), (error) => error.status === 403);
   assert.equal(writes, 1);
-  await api("/auth/activity", { method: "POST" });
+  await api("/auth/session-activities", { method: "POST" });
   assert.deepEqual(sent, ["token-1", "token-2"]);
 });
 
@@ -160,7 +160,7 @@ test("409 keeps the replacement challenge as an error result and never retries l
   };
   const { api } = await fresh();
   await assert.rejects(
-    api("/auth/login", { method: "POST", publicRequest: true, body: {} }),
+    api("/auth/sessions", { method: "POST", publicRequest: true, body: {} }),
     (error) => {
       assert.equal(error.status, 409);
       assert.deepEqual(error.data, challenge);
@@ -177,15 +177,16 @@ test("network errors preserve the failure and never repeat the operation", async
     throw new TypeError("network");
   };
   const { api } = await fresh();
-  await assert.rejects(api("/auth/session"), /Não foi possível acessar o servidor/);
+  await assert.rejects(api("/auth/sessions/current"), /Não foi possível acessar o servidor/);
   assert.equal(attempts, 1);
 });
 
 test("return navigation allows only internal routes authorized for the current session", () => {
   const user = { permissionKeys: ["access.users.manage"] };
-  assert.equal(firstRoute(user), "/access/users");
+  assert.equal(firstRoute(user), "/dashboard");
+  assert.equal(safeReturn("/access/users", user), "/access/users");
   assert.equal(safeReturn("/access/invitations", user), "/access/invitations");
-  assert.equal(safeReturn("/access/roles", user), "/access/users");
+  assert.equal(safeReturn("/access/roles", user), "/dashboard");
   for (const target of [
     "https://external.invalid",
     "//external.invalid",
@@ -193,8 +194,8 @@ test("return navigation allows only internal routes authorized for the current s
     "/missing",
     "/account?redirect=https://external.invalid",
   ]) {
-    assert.equal(safeReturn(target, user), "/access/users");
+    assert.equal(safeReturn(target, user), "/dashboard");
   }
-  assert.equal(firstRoute({ permissionKeys: [] }), "/account");
+  assert.equal(firstRoute({ permissionKeys: [] }), "/dashboard");
   assert.equal(safeReturn("/security/sessions", { permissionKeys: [] }), "/security/sessions");
 });

@@ -6,7 +6,7 @@ import useConfirm from "../../components/feedback/useConfirm";
 export default function useProductForm(identity, initialValue, onClose, onSaved) {
   const { session } = useAuth();
   const key = `products:${session.userId}:${identity}`;
-  const initial = useRef(initialValue).current;
+  const [initial] = useState(() => initialValue);
   const [value, setValue] = useDraft(key, initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");

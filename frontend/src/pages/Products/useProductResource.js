@@ -1,22 +1,32 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
-// Callers declare dependencies explicitly, as with useEffect.
-export function useProductResource(read, dependencies, enabled = true) {
-  const [state, setState] = useState({ loading: enabled });
+// Callers declare a serializable resource identity; callbacks always see current values.
+export function useProductResource(read, dependencies, enabled = true, onLoaded) {
+  const [result, setResult] = useState(null);
   const [revision, setRevision] = useState(0);
   const generation = useRef(0);
+  const signature = JSON.stringify([dependencies, enabled, revision]);
+  const [request, setRequest] = useState(() => ({ signature }));
+  if (request.signature !== signature) setRequest({ signature });
+  const load = useEffectEvent((options) => read(options));
+  const loaded = useEffectEvent((data) => onLoaded?.(data));
+  const state = !enabled ? {} :
+    result?.request === request
+      ? result.state : { loading: true };
   useEffect(() => {
     const id = ++generation.current;
     const controller = new AbortController();
-    setState(enabled ? { loading: true } : {});
     if (enabled) {
-      read({ signal: controller.signal }).then(
+      load({ signal: controller.signal }).then(
         (data) => {
-          if (id === generation.current) setState({ data });
+          if (id === generation.current) {
+            loaded(data);
+            setResult({ request, state: { data } });
+          }
         },
         (error) => {
           if (id === generation.current && error.name !== "AbortError")
-            setState({ error: error.message });
+            setResult({ request, state: { error: error.message } });
         },
       );
     }
@@ -24,12 +34,11 @@ export function useProductResource(read, dependencies, enabled = true) {
       generation.current += 1;
       controller.abort();
     };
-  }, [...dependencies, enabled, revision]);
+  }, [request, enabled]);
   return {
     ...state,
     reload: () => {
       generation.current += 1;
-      setState({ loading: true });
       setRevision((n) => n + 1);
     },
   };
@@ -43,13 +52,15 @@ export function useCatalogPage(read, initialFilters = { query: "", active: "" },
   );
   const [size, setSize] = useState(() => ([25, 50, 100].includes(origin?.size) ? origin.size : 25));
   const [revision, setRevision] = useState(0);
-  const [state, setState] = useState({ loading: true });
+  const [result, setResult] = useState(null);
+  const requestKey = JSON.stringify([filters, query, page, size, revision]);
+  const state = result?.requestKey === requestKey ? result.state : { loading: true };
   const generation = useRef(0);
   const currentRequest = useRef(null);
   const invalidate = () => {
     generation.current += 1;
     currentRequest.current?.abort();
-    setState({ loading: true });
+    setRevision((n) => n + 1);
   };
   useEffect(() => {
     if (filters.query === query) return;
@@ -64,7 +75,6 @@ export function useCatalogPage(read, initialFilters = { query: "", active: "" },
     const id = ++generation.current;
     const controller = new AbortController();
     currentRequest.current = controller;
-    setState({ loading: true });
     read({ ...filters, query }, page, size, { signal: controller.signal }).then(
       (data) => {
         if (id !== generation.current) return;
@@ -73,18 +83,18 @@ export function useCatalogPage(read, initialFilters = { query: "", active: "" },
           setPage(last);
           return;
         }
-        setState({ data });
+        setResult({ requestKey, state: { data } });
       },
       (error) => {
         if (id === generation.current && error.name !== "AbortError")
-          setState({ error: error.message });
+          setResult({ requestKey, state: { error: error.message } });
       },
     );
     return () => {
       generation.current += 1;
       controller.abort();
     };
-  }, [read, filters, query, page, size, revision]);
+  }, [read, filters, query, page, size, requestKey]);
   return {
     ...state,
     filters,
@@ -108,7 +118,6 @@ export function useCatalogPage(read, initialFilters = { query: "", active: "" },
     },
     reload: () => {
       invalidate();
-      setRevision((n) => n + 1);
     },
   };
 }

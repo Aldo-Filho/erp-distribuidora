@@ -7,7 +7,7 @@ import { suppliers } from "../../services/suppliers";
 import { useProductResource } from "../Products/useProductResource";
 import { ProductLoad } from "../Products/ProductControls";
 import SupplierForm from "./SupplierForm";
-import { supplierSections } from "./SupplierDetailsContent";
+import { supplierSections } from "./supplierSections.js";
 
 export default function SupplierEntryPage() {
   const { id } = useParams();

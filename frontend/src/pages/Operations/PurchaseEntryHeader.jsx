@@ -5,7 +5,8 @@ import Modal from "../../components/feedback/Modal";
 import EmbeddedContent from "../../components/layout/EmbeddedContent";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import useProductForm from "../Products/useProductForm";
-import { PartyPicker, partyName } from "./OperationSelectors";
+import { PartyPicker } from "./OperationSelectors";
+import { partyName } from "./operationLabels.js";
 
 export default function PurchaseEntryHeader(props) {
   const { purchase, disabled, onStateChange, onClose, onClosed, onSaved } = props;

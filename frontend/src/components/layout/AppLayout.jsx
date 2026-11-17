@@ -1,5 +1,8 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
+  LayoutDashboard,
+  Wallet,
+  Palette,
   Truck,
   Users,
   ContactRound,
@@ -18,11 +21,15 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
+import useAppearance from "../../appearance/useAppearance";
 import useAuth from "../../auth/useAuth";
-import { canAccessEntry, navigation } from "../../routes/navigation";
+import { canAccessEntry, navigation, navigationGroups } from "../../routes/navigation";
 import ErrorAlert from "../feedback/ErrorAlert";
 
 const icons = {
+  dashboard: LayoutDashboard,
+  finance: Wallet,
+  appearance: Palette,
   warehouses: Warehouse,
   orders: ShoppingCart,
   purchases: ClipboardList,
@@ -40,41 +47,71 @@ const icons = {
 
 export default function AppLayout() {
   const { session, logout, error } = useAuth();
+  const { settings } = useAppearance();
+  const [failedLogo, setFailedLogo] = useState(null);
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [failure, setFailure] = useState("");
+  const visibleGroups = navigationGroups
+    .map((group) => ({
+      ...group,
+      entries: navigation.filter(
+        (entry) => entry.group === group.id && canAccessEntry(entry, session),
+      ),
+    }))
+    .filter((group) => group.entries.length > 0);
   return (
     <div className={"app-shell" + (collapsed ? " is-collapsed" : "")}>
       <aside id="main-sidebar" className="sidebar">
         <div className="brand" aria-label="JamsHub — Gestão para distribuidoras">
           <span className="brand-mark">
-            <Package size={20} aria-hidden="true" />
+            {settings.logoUrl && failedLogo !== settings.logoUrl ? (
+              <img
+                className="company-brand-logo"
+                src={`/api${settings.logoUrl}`}
+                alt="Logo da empresa"
+                onError={() => setFailedLogo(settings.logoUrl)}
+              />
+            ) : (
+              <Package size={20} aria-hidden="true" />
+            )}
           </span>
           <span className="sidebar-label">JamsHub</span>
         </div>
         <nav aria-label="Navegação principal">
-          {navigation
-            .filter((entry) => canAccessEntry(entry, session))
-            .map((entry) => {
-              const Icon = icons[entry.icon];
-              return (
-                <NavLink
-                  to={entry.path}
-                  key={entry.path}
-                  className={({ isActive }) =>
-                    isActive ||
-                    (entry.path === "/products" && location.pathname === "/stock/history")
-                      ? "active"
-                      : undefined
-                  }
-                  aria-label={entry.label}
-                  title={entry.label}
-                >
-                  <Icon size={18} />
-                  <span className="sidebar-label">{entry.label}</span>
-                </NavLink>
-              );
-            })}
+          {visibleGroups.map((group) => (
+            <section
+              className="sidebar-group"
+              key={group.id}
+              aria-labelledby={`sidebar-group-${group.id}`}
+            >
+              <h2 className="sidebar-group-title" id={`sidebar-group-${group.id}`}>
+                {group.label}
+              </h2>
+              <div className="sidebar-group-links">
+                {group.entries.map((entry) => {
+                  const Icon = icons[entry.icon];
+                  return (
+                    <NavLink
+                      to={entry.path}
+                      key={entry.path}
+                      className={({ isActive }) =>
+                        isActive ||
+                        (entry.path === "/products" && location.pathname === "/stock/history")
+                          ? "active"
+                          : undefined
+                      }
+                      aria-label={entry.label}
+                      title={entry.label}
+                    >
+                      <Icon size={18} />
+                      <span className="sidebar-label">{entry.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </nav>
         <button
           className="sidebar-toggle"

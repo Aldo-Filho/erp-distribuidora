@@ -3,10 +3,11 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import Modal from "../../components/feedback/Modal";
 import { quantity } from "./productFormData";
-import { available } from "../Operations/StockPage";
+import { available } from "../Operations/stockBalance.js";
 
 export default function ProductStockPopover({ item, stocks, anchor, id, onClose, onManage }) {
   const [position, setPosition] = useState(null);
+  const [portalTarget, setPortalTarget] = useState(null);
   const [mobile] = useState(() => window.matchMedia("(max-width: 600px)").matches);
   const panel = useRef(null);
   const closeButton = useRef(null);
@@ -14,6 +15,7 @@ export default function ProductStockPopover({ item, stocks, anchor, id, onClose,
 
   useLayoutEffect(() => {
     if (mobile) return;
+    setPortalTarget(anchor.current?.closest('[role="dialog"]') || document.body);
     const rect = anchor.current.getBoundingClientRect();
     const width = Math.min(380, window.innerWidth - 24);
     const below = window.innerHeight - rect.bottom - 18;
@@ -121,6 +123,6 @@ export default function ProductStockPopover({ item, stocks, anchor, id, onClose,
       </div>
       {content}
     </section>,
-    anchor.current?.closest('[role="dialog"]') || document.body,
+    portalTarget,
   );
 }

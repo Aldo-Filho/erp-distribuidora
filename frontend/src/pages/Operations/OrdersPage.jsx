@@ -1,4 +1,10 @@
-import { useEffect, useState } from "react";
+import DocumentDemonstrativeInvoice from "../Fiscal/DocumentDemonstrativeInvoice";
+import OrderConfirmationForm from "../Finance/OrderConfirmationForm";
+import DocumentFinancialLink from "../Finance/DocumentFinancialLink";
+import "../Finance/finance.css";
+import DocumentSearch, { useDocumentSearch, emptyDocumentSearch } from "./DocumentSearch";
+import { orderStatuses } from "./orderStatuses.js";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import useAuth from "../../auth/useAuth";
@@ -15,21 +21,18 @@ import { ProductLoad } from "../Products/ProductControls";
 import useProductForm from "../Products/useProductForm";
 import useProductAction from "../Products/useProductAction";
 import { money, quantity } from "../Products/productFormData";
-import { PartyPicker, partyName } from "./OperationSelectors";
+import { PartyPicker } from "./OperationSelectors";
+import { partyName } from "./operationLabels.js";
 import TradeItemForm from "./TradeItemForm";
 import StockHistory from "./StockHistory";
 import DocumentStock from "./DocumentStock";
+import EmbeddedContent from "../../components/layout/EmbeddedContent";
+import OrderStockCheck, { useOrderStockCheck } from "./OrderStockCheck";
 import { salesError } from "./salesErrors";
 import "../Products/products.css";
 import "./operations.css";
 import "./orders.css";
 
-export const orderStatuses = {
-  PENDING: "Pendente",
-  CONFIRMED: "Confirmado / reservado",
-  INVOICED: "Despachado",
-  CANCELED: "Cancelado",
-};
 const payments = {
   CASH: "Dinheiro",
   CREDIT_CARD: "Cartão de crédito",
@@ -43,7 +46,11 @@ export default function OrdersPage() {
   const { has, session } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const origin = location.state?.orderList;
+  const dashboardParams = new URLSearchParams(location.search);
+  const origin = dashboardParams.has("status") ? {
+    status: dashboardParams.get("status"), page: 0,
+    search: { ...emptyDocumentSearch, from: dashboardParams.get("from") || "", to: dashboardParams.get("to") || "" },
+  } : location.state?.orderList;
   const [status, setStatusState] = useState(origin?.status || "");
   const setStatus = (next) => {
     setPage(0);
@@ -55,31 +62,44 @@ export default function OrdersPage() {
     setPaymentMethodState(next);
   };
   const [page, setPage] = useState(origin?.page || 0);
-  const [flow, setFlow] = useState(
-    location.state?.viewOrderId ? { type: "details", id: location.state.viewOrderId } : null,
-  );
-  const entryState = { orderList: { status, paymentMethod, page } };
+  const [flow, setFlow] = useState(null);
+  const search = useDocumentSearch(origin?.search, setPage);
+  const restoredScroll = useRef(false);
+  const entryState = () => ({
+    orderList: { status, paymentMethod, page, search: search.value, scroll: window.scrollY },
+  });
   const [notice, setNotice] = useState("");
-  const filterKey = `${status}:${paymentMethod}`;
+  const filterKey = `${status}:${paymentMethod}:${search.key}`;
   const state = useProductResource(
     async (options) => ({
       filterKey,
       page,
-      records: await orders.search({ status, paymentMethod, page, size: 20 }, options),
+      records: await orders.search(
+        { status, paymentMethod, ...search.filter, page, size: 20 },
+        options,
+      ),
     }),
-    [status, paymentMethod, page],
+    [status, paymentMethod, page, search.key],
   );
   const loading = Boolean(
+    search.pending ||
     state.loading ||
     (state.data && (state.data.filterKey !== filterKey || state.data.page !== page)),
   );
-  useEffect(() => {
-    if (loading || state.error || !state.data) return;
+  if (!loading && !state.error && state.data) {
     const lastPage = Math.max(0, state.data.records.totalPages - 1);
     if (page > lastPage) setPage(lastPage);
-  }, [loading, state.error, state.data, page]);
+  }
   const records = loading || state.error ? null : state.data?.records?.content;
-  const filtered = Boolean(status || paymentMethod);
+  const filtered = Boolean(status || paymentMethod || Object.values(search.value).some(Boolean));
+  useEffect(() => {
+    if (!records || restoredScroll.current) return;
+    const frame = requestAnimationFrame(() => {
+      restoredScroll.current = true;
+      window.scrollTo(0, origin?.scroll || 0);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [records, origin?.scroll]);
   return (
     <div className="customers-page operation-documents orders-page">
       <header className="page-title">
@@ -93,13 +113,14 @@ export default function OrdersPage() {
         {has("orders.create") && (
           <button
             className="customer-icon-label"
-            onClick={() => navigate("/orders/new", { state: entryState })}
+            onClick={() => navigate("/orders/new", { state: entryState() })}
           >
             <Plus size={17} /> Nova venda
           </button>
         )}
       </header>
       <section className="panel customer-filters" aria-label="Filtros de vendas">
+        <DocumentSearch search={search} />
         <label>
           Situação
           <FilterSelect value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -128,6 +149,7 @@ export default function OrdersPage() {
           onClick={() => {
             setStatus("");
             setPaymentMethod("");
+            search.change(emptyDocumentSearch);
           }}
         >
           Limpar filtros
@@ -169,7 +191,14 @@ export default function OrdersPage() {
                 </thead>
                 <tbody>
                   {records.map((order) => (
-                    <tr key={order.id}>
+                    <tr
+                      key={order.id}
+                      className={
+                        Number(location.state?.viewOrderId) === order.id
+                          ? "document-return-highlight"
+                          : ""
+                      }
+                    >
                       <td>
                         <strong>#{order.id}</strong>
                         <small>{payments[order.paymentMethod] || "Pagamento não informado"}</small>
@@ -195,7 +224,7 @@ export default function OrdersPage() {
                             className="secondary icon-button"
                             aria-label={`Detalhes do pedido ${order.id}`}
                             title="Detalhes"
-                            onClick={() => setFlow({ type: "details", id: order.id })}
+                            onClick={() => navigate(`/orders/${order.id}`, { state: entryState() })}
                           >
                             <Eye size={17} />
                           </button>
@@ -206,7 +235,7 @@ export default function OrdersPage() {
                               aria-label={`Editar pedido ${order.id}`}
                               title="Editar"
                               onClick={() =>
-                                navigate(`/orders/${order.id}/edit`, { state: entryState })
+                                navigate(`/orders/${order.id}/edit`, { state: entryState() })
                               }
                             >
                               <Pencil size={17} />
@@ -249,7 +278,7 @@ export default function OrdersPage() {
           initialEditing={flow.editing}
           onClose={() => setFlow(null)}
           onChanged={state.reload}
-          onEdit={(id) => navigate(`/orders/${id}/edit`, { state: entryState })}
+          onEdit={(id) => navigate(`/orders/${id}/edit`, { state: entryState() })}
         />
       )}
     </div>
@@ -405,13 +434,26 @@ export function OrderHeaderForm({
 function EmbeddedOrderHeader({ children }) {
   return <section className="order-entry-header-form order-dialog">{children}</section>;
 }
-function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }) {
+export function OrderDetails({
+  id,
+  initialEditing = false,
+  onClose,
+  onChanged,
+  onEdit,
+  embedded = false,
+  onStateChange,
+}) {
+  const Container = embedded ? EmbeddedContent : Modal;
   const { has } = useAuth();
   const [flow, setFlow] = useState(null);
   const [editing, setEditing] = useState(initialEditing);
   const [revision, setRevision] = useState(0);
   const [notice, setNotice] = useState("");
   const action = useProductAction();
+  useEffect(() => {
+    onStateChange?.(action.pending);
+    return () => onStateChange?.(false);
+  }, [action.pending, onStateChange]);
   const state = useProductResource(
     async (options) => {
       const [order, items] = await Promise.all([
@@ -435,14 +477,13 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }
   const order = state.data?.order;
   const items = state.data?.items || [];
   const pending = order?.status === "PENDING";
+  const stockCheck = useOrderStockCheck(items, pending, revision);
   const canEdit = pending && (has("orders.update") || has("orders.create") || has("orders.delete"));
   const editable = canEdit && editing;
   const showItemActions = editable && (has("orders.update") || has("orders.delete"));
-  const canConfirm = pending && has("orders.update") && has("orders.confirm") && items.length > 0;
-  const canCancel =
-    ["PENDING", "CONFIRMED"].includes(order?.status) &&
-    has("orders.update") &&
-    has("orders.cancel");
+  const canConfirm = pending && has("orders.confirm");
+  const stockBlocked = stockCheck.loading || stockCheck.error || stockCheck.shortages.length > 0;
+  const canCancel = ["PENDING", "CONFIRMED"].includes(order?.status) && has("orders.cancel");
   const canDispatch = order?.status === "CONFIRMED" && has("orders.dispatch");
   const transition = (status, message, label) =>
     action.run(
@@ -485,7 +526,8 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }
       { title: label, confirmLabel: label, destructive: status === "CANCELED" },
     );
   return (
-    <Modal
+    <Container
+      hideTitle={embedded}
       title={`${editable ? "Editar venda" : "Detalhes da venda"} #${id}`}
       onClose={onClose}
       busy={action.pending}
@@ -522,6 +564,13 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }
                   </dd>
                 </div>
               </dl>
+              <p className="field-hint">A forma de pagamento registrada não comprova quitação.</p>
+              {pending && (
+                <OrderStockCheck
+                  state={stockCheck}
+                  onAdjust={onEdit && canEdit ? () => onEdit(id) : undefined}
+                />
+              )}
               {pending && (
                 <p className="field-hint order-flow-hint">
                   {!items.length
@@ -601,7 +650,7 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }
                   disabled={action.pending}
                   onClick={refresh}
                 >
-                  Atualizar pedido
+                  Recarregar dados
                 </button>
               </div>
               <div className="order-section-heading">
@@ -750,11 +799,16 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }
                   </div>
                 )}
               </section>
+              <DocumentFinancialLink id={id} status={order.status} />
+              <DocumentDemonstrativeInvoice id={id} status={order.status} />
               <RecordMetadata record={order} />
             </>
           )}
         </ProductLoad>
       </div>
+      {flow?.type === "confirm" && order && has("orders.confirm") && (
+        <OrderConfirmationForm order={order} onClose={() => { setFlow(null); refresh(); }} onSaved={() => changed("Venda confirmada; conta a receber criada e estoque reservado.")} />
+      )}
       <div className="order-footer-actions">
         <div>
           {canCancel && !state.loading && (
@@ -776,21 +830,15 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }
         </div>
         <div className="order-secondary-actions">
           <button type="button" className="secondary" disabled={action.pending} onClick={onClose}>
-            {editable && pending ? "Fechar e manter pendente" : "Fechar"}
+            Voltar à lista
           </button>
           {canConfirm && !state.loading && (
             <button
               type="button"
-              disabled={action.pending}
-              onClick={() =>
-                transition(
-                  "CONFIRMED",
-                  "Confirmar este pedido e reservar os itens no depósito?",
-                  "Confirmar venda",
-                )
-              }
+              disabled={action.pending || !items.length || Boolean(stockBlocked)}
+              onClick={() => setFlow({ type: "confirm" })}
             >
-              Confirmar venda
+              Confirmar e reservar
             </button>
           )}
           {canDispatch && !state.loading && (
@@ -866,6 +914,6 @@ function OrderDetails({ id, initialEditing = false, onClose, onChanged, onEdit }
       {flow?.type === "stock" && state.data && has("stock.read") && (
         <DocumentStock items={items} revision={revision} onClose={() => setFlow(null)} />
       )}
-    </Modal>
+    </Container>
   );
 }

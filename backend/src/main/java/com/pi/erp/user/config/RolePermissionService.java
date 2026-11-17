@@ -7,8 +7,9 @@ import com.pi.erp.user.config.permission.Permission;
 import com.pi.erp.user.config.permission.PermissionRepository;
 import com.pi.erp.user.config.role.Role;
 import com.pi.erp.user.config.role.RoleRepository;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +28,9 @@ public class RolePermissionService {
     @Autowired
     private PermissionRepository permissionRepository;
 
-    public List<RolePermission> search(Long roleId) {
+    public Page<RolePermission> search(Long roleId, Pageable pageable) {
         findRole(roleId);
-        return repository.findAllByRoleId(roleId);
+        return repository.findAllByRoleId(roleId, pageable);
     }
 
     @Transactional

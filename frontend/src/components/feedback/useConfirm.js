@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
-import { ConfirmationContext } from "./ConfirmationProvider";
+import { ConfirmationContext } from "./ConfirmationContext.js";
 
 export default function useConfirm() {
   const { request, cancel } = useContext(ConfirmationContext);

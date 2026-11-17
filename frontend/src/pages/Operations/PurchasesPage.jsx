@@ -1,5 +1,6 @@
+import DocumentSearch, { useDocumentSearch, emptyDocumentSearch } from "./DocumentSearch";
 import useListReturn from "../../hooks/useListReturn";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Eye, Pencil, Plus } from "lucide-react";
 import useAuth from "../../auth/useAuth";
 import PageHeading from "../../components/layout/PageHeading";
@@ -10,7 +11,7 @@ import RowActions from "../../components/feedback/RowActions";
 import { purchases } from "../../services/operations";
 import { useProductResource } from "../Products/useProductResource";
 import { money } from "../Products/productFormData";
-import { partyName } from "./OperationSelectors";
+import { partyName } from "./operationLabels.js";
 import "../Products/products.css";
 import "./operations.css";
 import "./purchases.css";
@@ -38,28 +39,30 @@ export default function PurchasesPage() {
       ? context.restored.page
       : 0,
   );
+  const search = useDocumentSearch(context.restored?.search, setPage);
   const notice = "";
   const state = useProductResource(
     async (options) => ({
       status,
       page,
-      records: await purchases.search({ status, page, size: 20 }, options),
+      records: await purchases.search({ status, ...search.filter, page, size: 20 }, options),
     }),
-    [status, page],
+    [status, page, search.key],
   );
   const loading = Boolean(
-    state.loading || (state.data && (state.data.status !== status || state.data.page !== page)),
+    search.pending ||
+    state.loading ||
+    (state.data && (state.data.status !== status || state.data.page !== page)),
   );
-  useEffect(() => {
-    if (loading || state.error || !state.data) return;
+  if (!loading && !state.error && state.data) {
     const lastPage = Math.max(0, state.data.records.totalPages - 1);
     if (page > lastPage) setPage(lastPage);
-  }, [loading, state.error, state.data, page]);
+  }
   const records = loading || state.error ? null : state.data?.records?.content;
-  const filtered = Boolean(status);
+  const filtered = Boolean(status || Object.values(search.value).some(Boolean));
   const listReturn = useListReturn({
     modulePath: "/purchases",
-    listState: { status, page },
+    listState: { status, page, search: search.value },
     ready: Boolean(records),
   });
   return (
@@ -79,6 +82,7 @@ export default function PurchasesPage() {
         )}
       </header>
       <section className="panel customer-filters" aria-label="Filtros de compras">
+        <DocumentSearch search={search} purchase />
         <label>
           Situação
           <FilterSelect value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -90,7 +94,14 @@ export default function PurchasesPage() {
             ))}
           </FilterSelect>
         </label>
-        <button type="button" className="secondary" onClick={() => setStatus("")}>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => {
+            setStatus("");
+            search.change(emptyDocumentSearch);
+          }}
+        >
           Limpar filtros
         </button>
       </section>
@@ -126,7 +137,14 @@ export default function PurchasesPage() {
                 </thead>
                 <tbody>
                   {records.map((purchase) => (
-                    <tr key={purchase.id}>
+                    <tr
+                      key={purchase.id}
+                      className={
+                        Number(context.navigationState?.highlightId) === purchase.id
+                          ? "document-return-highlight"
+                          : ""
+                      }
+                    >
                       <td>
                         <strong>#{purchase.id}</strong>
                         <small>
@@ -164,6 +182,9 @@ export default function PurchasesPage() {
                           >
                             <Eye size={17} />
                           </button>
+                          {has("finance.read") && ["CONFIRMED", "PARTIALLY_RECEIVED", "RECEIVED", "CANCELED"].includes(purchase.status) && (
+                            <button type="button" className="secondary" onClick={() => listReturn.open(`/finance/payables?documentId=${purchase.id}`)}>Financeiro</button>
+                          )}
                           {purchase.status === "DRAFT" && has("purchases.update") && (
                             <button
                               type="button"

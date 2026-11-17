@@ -23,6 +23,9 @@ public class OrderDispatchService {
     private OrderRepository repository;
 
     @Autowired
+    private com.pi.erp.financial.FinancialService financialService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -33,6 +36,9 @@ public class OrderDispatchService {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private com.pi.erp.fiscal.DemonstrativeInvoiceService demonstrativeInvoices;
 
     @Transactional
     public Order dispatch(Long id, RequestOrderDispatchDTO data) {
@@ -51,6 +57,8 @@ public class OrderDispatchService {
             throw new IllegalArgumentException("Only confirmed orders can be dispatched.");
         }
 
+        financialService.requireOrderNotReversed(order.getId());
+
         User user = userRepository
             .findById(operatorUserId)
             .orElseThrow(() -> new ResourceNotFoundException("Operator user not found."));
@@ -68,6 +76,7 @@ public class OrderDispatchService {
             stockMovementService.registerSale(reservation, user.getId(), notes);
         }
 
+        demonstrativeInvoices.issue(order);
         order.setStatus(OrderStatus.INVOICED);
         return repository.save(order);
     }

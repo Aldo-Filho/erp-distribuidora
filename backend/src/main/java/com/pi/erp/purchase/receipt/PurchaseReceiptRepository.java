@@ -3,10 +3,17 @@ package com.pi.erp.purchase.receipt;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface PurchaseReceiptRepository extends JpaRepository<PurchaseReceipt, Long> {
+    @Query("SELECT receipt.id FROM PurchaseReceipt receipt WHERE receipt.purchase.id = :purchaseId")
+    Page<Long> findIdsByPurchaseId(@Param("purchaseId") Long purchaseId, Pageable pageable);
+
     @EntityGraph(
         type = EntityGraph.EntityGraphType.LOAD,
         attributePaths = {

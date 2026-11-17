@@ -24,6 +24,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,9 @@ public class PurchaseReceiptService {
 
     @Autowired
     private PurchaseRepository purchaseRepository;
+
+    @Autowired
+    private com.pi.erp.financial.FinancialService financialService;
 
     @Autowired
     private PurchaseItemRepository purchaseItemRepository;
@@ -61,11 +66,17 @@ public class PurchaseReceiptService {
     private EntityManager entityManager;
 
     @Transactional(readOnly = true)
-    public List<PurchaseReceipt> search(Long id) {
+    public Page<PurchaseReceipt> search(Long id, Pageable pageable) {
         if (!purchaseRepository.existsById(id)) {
             throw new ResourceNotFoundException("Purchase not found.");
         }
-        return repository.findByPurchaseIdOrderByIdAsc(id);
+        return repository
+            .findIdsByPurchaseId(id, pageable)
+            .map(receiptId ->
+                repository
+                    .findByIdAndPurchaseId(receiptId, id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Purchase receipt not found."))
+            );
     }
 
     @Transactional(readOnly = true)
@@ -80,11 +91,12 @@ public class PurchaseReceiptService {
             .findByIdForUpdate(id)
             .orElseThrow(() -> new ResourceNotFoundException("Purchase not found."));
         entityManager.refresh(purchase);
+        financialService.requirePurchaseNotReversed(purchase.getId());
 
         if (data.requestId() == null) {
             throw new IllegalArgumentException("Request ID is required.");
         }
-        Map<Long, BigDecimal> quantities = requestedQuantities(data);
+        Map<Long, BigDecimal> quantities = requestedQuantities(id, data);
         String notes = data.notes() == null || data.notes().isBlank() ? null : data.notes().trim();
         Optional<PurchaseReceipt> previous = repository.findByPurchaseIdAndRequestId(
             id,
@@ -133,7 +145,9 @@ public class PurchaseReceiptService {
 
         List<PurchaseItem> allItems = purchaseItemRepository.findByPurchaseId(id);
         if (allItems.isEmpty()) {
-            throw new IllegalArgumentException("Purchase must have at least one item.");
+            throw new IllegalArgumentException(
+                "Adicione pelo menos um item antes de continuar a compra."
+            );
         }
         productCatalogService.lockProducts(
             allItems.stream().map(PurchaseItem::getProduct).toList()
@@ -167,7 +181,9 @@ public class PurchaseReceiptService {
                     .compareTo(item.getBaseQuantity().subtract(item.getReceivedQuantity())) > 0
             ) {
                 throw new IllegalArgumentException(
-                    "Received quantity exceeds the outstanding purchase quantity."
+                    "Item #" +
+                        item.getId() +
+                        ": a quantidade recebida supera o saldo pendente. Ajuste o recebimento."
                 );
             }
             Long stockId = stockItemRepository
@@ -254,7 +270,10 @@ public class PurchaseReceiptService {
         return new ReceiptRegistration(receipt, true);
     }
 
-    private Map<Long, BigDecimal> requestedQuantities(RequestPurchaseReceiptDTO data) {
+    private Map<Long, BigDecimal> requestedQuantities(
+        Long purchaseId,
+        RequestPurchaseReceiptDTO data
+    ) {
         if (data.items() == null || data.items().isEmpty()) {
             throw new IllegalArgumentException("At least one receipt item is required.");
         }
@@ -263,18 +282,44 @@ public class PurchaseReceiptService {
             if (
                 item == null ||
                 item.purchaseItemId() == null ||
-                item.quantity() == null ||
-                item.quantity().signum() <= 0
+                (item.quantity() == null) == (item.commercialQuantity() == null)
             ) {
                 throw new IllegalArgumentException(
-                    "Receipt items require an ID and a positive quantity."
+                    "Informe a quantidade comercial ou BASE de cada item, exclusivamente."
                 );
             }
+            BigDecimal amount = item.quantity();
+            if (item.commercialQuantity() != null) {
+                PurchaseItem line = purchaseItemRepository
+                    .findByIdAndPurchaseIdForUpdate(item.purchaseItemId(), purchaseId)
+                    .orElseThrow(() ->
+                        new ResourceNotFoundException("Item não encontrado nesta compra.")
+                    );
+                if (
+                    line.getBaseFactorSnapshot() == null || line.getUnitSnapshot() == null
+                ) throw new IllegalArgumentException(
+                    "Confirme a conversão do item #" + line.getId() + " antes de receber."
+                );
+                // Use the immutable contracted conversion, never the current supplier option.
+                try {
+                    amount = ProductQuantity.toBase(
+                        item.commercialQuantity(),
+                        line.getBaseFactorSnapshot(),
+                        line.getUnitSnapshot(),
+                        false
+                    );
+                } catch (IllegalArgumentException issue) {
+                    throw new IllegalArgumentException(
+                        "Item #" + line.getId() +
+                        ": informe apresentações inteiras maiores que zero, respeitando a conversão contratada e o limite de quantidade BASE."
+                    );
+                }
+            }
+            if (amount == null || amount.signum() <= 0) throw new IllegalArgumentException(
+                "A quantidade recebida deve ser maior que zero."
+            );
             if (
-                quantities.putIfAbsent(
-                    item.purchaseItemId(),
-                    item.quantity().stripTrailingZeros()
-                ) != null
+                quantities.putIfAbsent(item.purchaseItemId(), amount.stripTrailingZeros()) != null
             ) {
                 throw new IllegalArgumentException(
                     "Receipt cannot contain duplicate purchase items."

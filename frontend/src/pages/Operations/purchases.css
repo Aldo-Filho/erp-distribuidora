@@ -21,21 +21,21 @@
 }
 .purchase-status.purchase-status-draft,
 .purchase-status.purchase-status-partially_received {
-  background: #fff5e8;
-  color: #8a5a1f;
+  background: var(--warning-bg);
+  color: var(--warning-fg);
 }
 .purchase-status.purchase-status-sent {
-  background: #edf4f6;
-  color: #315767;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
 }
 .purchase-status.purchase-status-confirmed,
 .purchase-status.purchase-status-received {
-  background: #eaf7f1;
-  color: #146557;
+  background: var(--success-bg);
+  color: var(--success-fg);
 }
 .purchase-status.purchase-status-canceled {
-  background: #fff3f2;
-  color: #a03534;
+  background: var(--danger-bg);
+  color: var(--danger-fg);
 }
 .purchase-supplier-control {
   display: flex;
@@ -58,15 +58,15 @@
   gap: 8px;
 }
 .purchase-dialog .purchase-cancel-action {
-  border-color: #b13d39;
-  background: #b13d39;
-  color: white;
+  border-color: var(--danger-fg);
+  background: var(--danger-fg);
+  color: var(--on-accent);
 }
 .purchase-dialog .purchase-cancel-action:hover:not(:disabled),
 .purchase-dialog .purchase-cancel-action:focus-visible {
-  border-color: #a03534;
-  background: #a03534;
-  color: white;
+  border-color: var(--danger-fg);
+  background: var(--danger-fg);
+  color: var(--on-accent);
   filter: none;
 }
 .purchase-section-heading {
@@ -82,7 +82,7 @@
 }
 .purchase-section-heading > span {
   font-size: 12px;
-  color: #61747e;
+  color: var(--muted);
 }
 .purchase-receipt-card {
   border: 1px solid var(--border);

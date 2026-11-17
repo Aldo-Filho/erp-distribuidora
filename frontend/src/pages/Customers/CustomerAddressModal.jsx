@@ -7,11 +7,8 @@ import { removeDraft, useDraft } from "../../auth/drafts";
 import { customers } from "../../services/customers";
 import Modal from "../../components/feedback/Modal";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
-import CustomerAddressFields, {
-  addressKeys,
-  addressTypes,
-  emptyAddress,
-} from "./CustomerAddressFields";
+import CustomerAddressFields from "./CustomerAddressFields";
+import { addressKeys, addressTypes, emptyAddress } from "./customerAddressData.js";
 import { validateAddress } from "./customerFormData";
 
 function AddressEditor({
@@ -26,14 +23,14 @@ function AddressEditor({
   const confirm = useConfirm();
   const { session } = useAuth();
   const key = `customer-address:${session.userId}:${customerId}:${address?.id || "new"}`;
-  const initial = useRef(
+  const [initial] = useState(() =>
     Object.fromEntries(
       addressKeys.map((field) => [
         field,
         address?.[field] ?? (field === "addressType" ? types[0] : emptyAddress[field]),
       ]),
     ),
-  ).current;
+  );
   const [value, setValue] = useDraft(key, initial);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -131,8 +128,10 @@ export default function CustomerAddressModal({
   const EditorContainer = embedded ? Modal : EmbeddedContent;
   const confirm = useConfirm();
   const { has } = useAuth();
-  const [state, setState] = useState({ loading: true });
+  const [result, setResult] = useState(null);
   const [revision, setRevision] = useState(0);
+  const requestKey = `${customerId}:${revision}`;
+  const state = result?.requestKey === requestKey ? result.state : { loading: true };
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
@@ -149,23 +148,22 @@ export default function CustomerAddressModal({
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
-    setState((previous) => ({ ...previous, loading: true, error: "" }));
     Promise.all([
       customers.findOne(customerId, { signal: controller.signal }),
       customers.addresses(customerId, { signal: controller.signal }),
     ]).then(
       ([customer, addresses]) => {
-        if (active) setState({ customer, addresses });
+        if (active) setResult({ requestKey, state: { customer, addresses } });
       },
       (issue) => {
-        if (active) setState((previous) => ({ ...previous, loading: false, error: issue.message }));
+        if (active) setResult({ requestKey, state: { error: issue.message } });
       },
     );
     return () => {
       active = false;
       controller.abort();
     };
-  }, [customerId, revision]);
+  }, [customerId, requestKey]);
   const finishEditor = () => {
     closeEditor.current = null;
     setBusy(false);

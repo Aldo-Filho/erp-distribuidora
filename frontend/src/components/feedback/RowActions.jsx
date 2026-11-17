@@ -5,12 +5,14 @@ import { MoreHorizontal } from "lucide-react";
 export default function RowActions({ children, className = "", label = "Ações do registro" }) {
   const actions = Children.toArray(children).filter(isValidElement);
   const [position, setPosition] = useState(null);
+  const [portalTarget, setPortalTarget] = useState(null);
   const trigger = useRef(null);
   const menu = useRef(null);
   const firstFocus = useRef("first");
   const id = useId();
 
   const show = (focus = "first") => {
+    setPortalTarget(trigger.current?.closest('[role="dialog"]') || document.body);
     const rect = trigger.current.getBoundingClientRect();
     const width = Math.min(220, window.innerWidth - 24);
     const height = Math.min(actions.length * 40 + 12, window.innerHeight - 24);
@@ -139,7 +141,7 @@ export default function RowActions({ children, className = "", label = "Ações 
               );
             })}
           </div>,
-          trigger.current?.closest('[role="dialog"]') || document.body,
+          portalTarget,
         )}
     </div>
   );

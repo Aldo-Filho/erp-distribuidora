@@ -1,3 +1,4 @@
+import ThemeSettings from "../../appearance/ThemeSettings";
 import { useState } from "react";
 import useAuth from "../../auth/useAuth";
 import { auth } from "../../services/auth";
@@ -34,6 +35,7 @@ export default function AccountPage() {
           <dd>{session.roleName}</dd>
         </dl>
       </section>
+      <ThemeSettings />
       <section className="panel narrow">
         <h2>Alterar senha</h2>
         <form

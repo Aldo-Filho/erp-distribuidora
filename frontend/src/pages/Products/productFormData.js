@@ -50,7 +50,8 @@ export function decimal(
   if (fraction.length > places)
     throw new Error(`${label}: use no máximo ${places} casa(s) decimal(is).`);
   const value = Number(normalized);
-  if (!Number.isFinite(value) || value > max || (positive && value <= 0))
+  if (positive && value <= 0) throw new Error(`${label}: informe um valor maior que zero.`);
+  if (!Number.isFinite(value) || value > max)
     throw new Error(`${label}: valor fora da faixa permitida.`);
   return value;
 }
@@ -85,7 +86,7 @@ export function itemValues(item) {
     },
   };
 }
-export function itemPayload(value, catalog, item, canStock) {
+export function itemPayload(value, catalog, item, canStock, canAdjustStock = false) {
   const body = {};
   for (const field of ["cost", "price", "weightKg", "dimensionX", "dimensionY", "dimensionZ"]) {
     const labels = {
@@ -147,6 +148,8 @@ export function itemPayload(value, catalog, item, canStock) {
     }
     if (body.stock.reservedQuantity !== 0)
       throw new Error("O reservado inicial deve ser zero. As reservas são geradas pelos pedidos.");
+    if (body.stock.quantity > 0 && !canAdjustStock)
+      throw new Error("Saldo inicial positivo requer permissão para movimentar estoque.");
     if (body.stock.maxQuantity != null && body.stock.maxQuantity < body.stock.minQuantity)
       throw new Error("O máximo não pode ser menor que o mínimo.");
   }

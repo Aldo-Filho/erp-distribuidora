@@ -1,3 +1,4 @@
+import BarcodeScanner from "../../components/feedback/BarcodeScanner";
 import { useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
 import Modal from "../../components/feedback/Modal";
@@ -10,7 +11,8 @@ import { useProductResource } from "../Products/useProductResource";
 import { ProductLoad } from "../Products/ProductControls";
 import useProductForm from "../Products/useProductForm";
 import { baseNumber, quantity, textNumber } from "../Products/productFormData";
-import { SkuPicker, skuName, WarehouseSelect } from "./OperationSelectors";
+import { SkuPicker, WarehouseSelect } from "./OperationSelectors";
+import { skuName } from "./operationLabels.js";
 import "./stock.css";
 
 export function StockConfiguration({ stock, product: fixedProduct, onSaved, onClose }) {
@@ -65,6 +67,7 @@ export function StockConfiguration({ stock, product: fixedProduct, onSaved, onCl
       wide
       className="stock-dialog"
     >
+      {!stock && !fixedProduct && has("products.read") && <BarcodeScanner disabled={form.saving} onResolved={product => form.change("productId", String(product.id))} />}
       <form className="customer-form" onSubmit={submit}>
         <ErrorAlert message={form.error} />
         <fieldset
@@ -209,9 +212,12 @@ function readMovement(userId, stockItemId) {
     if (!saved) return null;
     const attempt = JSON.parse(saved);
     if (
-      !attempt || typeof attempt.requestId !== "string" ||
-      attempt.stockItemId !== stockItemId || !["INBOUND", "OUTBOUND", "ADJUSTMENT"].includes(attempt.type) ||
-      attempt.reason !== "MANUAL_ADJUSTMENT" || typeof attempt.quantity !== "number" ||
+      !attempt ||
+      typeof attempt.requestId !== "string" ||
+      attempt.stockItemId !== stockItemId ||
+      !["INBOUND", "OUTBOUND", "ADJUSTMENT"].includes(attempt.type) ||
+      attempt.reason !== "MANUAL_ADJUSTMENT" ||
+      typeof attempt.quantity !== "number" ||
       (attempt.expectedQuantity != null &&
         (attempt.type !== "ADJUSTMENT" || typeof attempt.expectedQuantity !== "number"))
     ) {
@@ -219,7 +225,9 @@ function readMovement(userId, stockItemId) {
     }
     return attempt;
   } catch {
-    throw new Error("Não foi possível ler a tentativa de estoque salva. O envio foi bloqueado por segurança.");
+    throw new Error(
+      "Não foi possível ler a tentativa de estoque salva. O envio foi bloqueado por segurança.",
+    );
   }
 }
 function clearMovement(userId, stockItemId, requestId) {
@@ -231,16 +239,15 @@ function clearMovement(userId, stockItemId, requestId) {
 export function StockMovement({ stock, onSaved, onClose }) {
   const { has, session } = useAuth();
   const confirm = useConfirm();
-  const initial = useRef(null);
-  if (initial.current === null) {
+  const [initial] = useState(() => {
     try {
-      initial.current = { attempt: readMovement(session.userId, stock.id), error: "" };
+      return { attempt: readMovement(session.userId, stock.id), error: "" };
     } catch (issue) {
-      initial.current = { attempt: null, error: issue.message };
+      return { attempt: null, error: issue.message };
     }
-  }
-  const [frozen, setFrozen] = useState(initial.current.attempt);
-  const [storageError, setStorageError] = useState(initial.current.error);
+  });
+  const [frozen, setFrozen] = useState(initial.attempt);
+  const [storageError, setStorageError] = useState(initial.error);
   const [value, setValue] = useState({ type: "INBOUND", quantity: "", notes: "" });
   const [currentStock, setCurrentStock] = useState(stock);
   const [busy, setBusy] = useState(false);
@@ -259,20 +266,33 @@ export function StockMovement({ stock, onSaved, onClose }) {
   }
   const close = async () => {
     if (locked.current) return;
-    if (!frozen && (value.quantity.trim() || value.notes.trim()) &&
-        !(await confirm("Descartar o movimento ainda não enviado?", {
-          title: "Descartar movimento", confirmLabel: "Descartar", destructive: true,
-        }))) return;
+    if (
+      !frozen &&
+      (value.quantity.trim() || value.notes.trim()) &&
+      !(await confirm("Descartar o movimento ainda não enviado?", {
+        title: "Descartar movimento",
+        confirmLabel: "Descartar",
+        destructive: true,
+      }))
+    )
+      return;
     onClose();
   };
   const withLock = async (action) => {
     if (!globalThis.navigator?.locks?.request) {
-      throw new Error("Este navegador não oferece bloqueio seguro entre abas para movimentos de estoque.");
+      throw new Error(
+        "Este navegador não oferece bloqueio seguro entre abas para movimentos de estoque.",
+      );
     }
-    return navigator.locks.request(`${key}:operation`, { mode: "exclusive", ifAvailable: true }, (lock) => {
-      if (!lock) throw new Error("Outra aba está movimentando este item. Aguarde e tente novamente.");
-      return action();
-    });
+    return navigator.locks.request(
+      `${key}:operation`,
+      { mode: "exclusive", ifAvailable: true },
+      (lock) => {
+        if (!lock)
+          throw new Error("Outra aba está movimentando este item. Aguarde e tente novamente.");
+        return action();
+      },
+    );
   };
   const verifyMovement = async () => {
     if (locked.current || !frozen) return;
@@ -283,18 +303,23 @@ export function StockMovement({ stock, onSaved, onClose }) {
       await withLock(async () => {
         const saved = readMovement(session.userId, stock.id);
         if (!saved) {
-          setError("A tentativa não está mais salva neste navegador. Consulte o histórico antes de registrar outro movimento.");
+          setError(
+            "A tentativa não está mais salva neste navegador. Consulte o histórico antes de registrar outro movimento.",
+          );
           return;
         }
         if (saved.requestId !== frozen.requestId) {
           setFrozen(saved);
-          setError("Outra aba atualizou a tentativa deste item. Confira os dados antes de continuar.");
+          setError(
+            "Outra aba atualizou a tentativa deste item. Confira os dados antes de continuar.",
+          );
           return;
         }
-        const movements = await stockOperations.history({ stockItemId: stock.id });
-        const registered = movements.find((movement) => movement.requestId === saved.requestId);
+        const registered = await stockOperations.findMovement(stock.id, saved.requestId);
         if (!registered) {
-          setError("A tentativa ainda não aparece no histórico. Se o envio anterior terminou, repita o mesmo identificador e os mesmos dados.");
+          setError(
+            "A tentativa ainda não aparece no histórico. Se o envio anterior terminou, repita o mesmo identificador e os mesmos dados.",
+          );
           return;
         }
         try {
@@ -307,7 +332,9 @@ export function StockMovement({ stock, onSaved, onClose }) {
     } catch (issue) {
       setError(`${issue.message} A tentativa foi preservada para nova consulta ou repetição.`);
       if (issue.name === "SecurityError" || issue.message?.includes("tentativa de estoque salva")) {
-        setStorageError("Não foi possível acessar a tentativa. O envio foi bloqueado por segurança.");
+        setStorageError(
+          "Não foi possível acessar a tentativa. O envio foi bloqueado por segurança.",
+        );
       }
     } finally {
       locked.current = false;
@@ -316,10 +343,17 @@ export function StockMovement({ stock, onSaved, onClose }) {
   };
   const discardRejected = async () => {
     if (locked.current || storageError || !frozen || rejectedRequestId !== frozen.requestId) return;
-    if (!(await confirm(
-      "Descartar a tentativa rejeitada? Antes de permitir uma nova tentativa, o sistema consultará o histórico. A ausência no histórico não garante que uma operação ainda em processamento não seja registrada.",
-      { title: "Descartar tentativa rejeitada", confirmLabel: "Verificar e descartar", destructive: true },
-    ))) return;
+    if (
+      !(await confirm(
+        "Descartar a tentativa rejeitada? Antes de permitir uma nova tentativa, o sistema consultará o histórico. A ausência no histórico não garante que uma operação ainda em processamento não seja registrada.",
+        {
+          title: "Descartar tentativa rejeitada",
+          confirmLabel: "Verificar e descartar",
+          destructive: true,
+        },
+      ))
+    )
+      return;
     if (locked.current) return;
     locked.current = true;
     setBusy(true);
@@ -328,11 +362,12 @@ export function StockMovement({ stock, onSaved, onClose }) {
       await withLock(async () => {
         const saved = readMovement(session.userId, stock.id);
         if (!saved || saved.requestId !== frozen.requestId) {
-          setError("A tentativa salva mudou ou não está disponível. Reabra o formulário antes de continuar.");
+          setError(
+            "A tentativa salva mudou ou não está disponível. Reabra o formulário antes de continuar.",
+          );
           return;
         }
-        const movements = await stockOperations.history({ stockItemId: stock.id });
-        const registered = movements.find((movement) => movement.requestId === saved.requestId);
+        const registered = await stockOperations.findMovement(stock.id, saved.requestId);
         if (registered) {
           try {
             clearMovement(session.userId, stock.id, saved.requestId);
@@ -355,19 +390,28 @@ export function StockMovement({ stock, onSaved, onClose }) {
         setCurrentStock(refreshedStock);
         const correction = saved.type === "ADJUSTMENT";
         const entered = correction
-          ? Number(scaledQuantity(saved.expectedQuantity ?? refreshedStock.quantity) + scaledQuantity(saved.quantity)) / 10
+          ? Number(
+              scaledQuantity(saved.expectedQuantity ?? refreshedStock.quantity) +
+                scaledQuantity(saved.quantity),
+            ) / 10
           : saved.quantity;
         setValue({
           type: correction ? "CORRECTION" : saved.type,
           quantity: textNumber(entered),
           notes: saved.notes || "",
         });
-        setError("A tentativa rejeitada foi descartada após consulta ao histórico. Corrija os dados antes de um novo envio.");
+        setError(
+          "A tentativa rejeitada foi descartada após consulta ao histórico. Corrija os dados antes de um novo envio.",
+        );
       });
     } catch (issue) {
-      setError(`${issue.message} A tentativa foi mantida; não foi possível confirmar que é seguro descartá-la.`);
+      setError(
+        `${issue.message} A tentativa foi mantida; não foi possível confirmar que é seguro descartá-la.`,
+      );
       if (issue.name === "SecurityError" || issue.message?.includes("tentativa de estoque salva")) {
-        setStorageError("Não foi possível acessar a tentativa. O envio foi bloqueado por segurança.");
+        setStorageError(
+          "Não foi possível acessar a tentativa. O envio foi bloqueado por segurança.",
+        );
       }
     } finally {
       locked.current = false;
@@ -391,7 +435,9 @@ export function StockMovement({ stock, onSaved, onClose }) {
           return;
         }
         if (frozen && !saved) {
-          setError("A tentativa desta aba não está mais salva. Consulte o histórico antes de registrar outro movimento.");
+          setError(
+            "A tentativa desta aba não está mais salva. Consulte o histórico antes de registrar outro movimento.",
+          );
           return;
         }
         let payload = saved;
@@ -399,7 +445,9 @@ export function StockMovement({ stock, onSaved, onClose }) {
           const movement = movementPreview(value, currentStock);
           const correction = value.type === "CORRECTION";
           if (correction && movement.difference === 0) {
-            throw new Error("A quantidade contada já corresponde ao estoque atual. Não há correção a registrar.");
+            throw new Error(
+              "A quantidade contada já corresponde ao estoque atual. Não há correção a registrar.",
+            );
           }
           payload = {
             requestId: crypto.randomUUID(),
@@ -423,26 +471,37 @@ export function StockMovement({ stock, onSaved, onClose }) {
           }
           onSaved(movement);
         } catch (issue) {
-          const rejected = [400, 422].includes(issue.status) &&
-            issue.data?.status === issue.status && typeof issue.data?.message === "string";
-          const message = issue.data?.message === "Stock balance changed. Refresh the balance before correcting it."
-            ? "O saldo mudou desde a consulta. Descarte a tentativa rejeitada para atualizar o saldo e revisar a correção."
-            : issue.message;
+          const rejected =
+            [400, 422].includes(issue.status) &&
+            issue.data?.status === issue.status &&
+            typeof issue.data?.message === "string";
+          const message =
+            issue.data?.message ===
+            "Stock balance changed. Refresh the balance before correcting it."
+              ? "O saldo mudou desde a consulta. Descarte a tentativa rejeitada para atualizar o saldo e revisar a correção."
+              : issue.message;
           if (rejected) {
             setRejectedRequestId(payload.requestId);
           } else {
             setRejectedRequestId(null);
           }
-          setError(rejected
-            ? `${message} A tentativa foi preservada. Verifique no histórico ou descarte explicitamente a tentativa rejeitada para corrigir os dados.`
-            : `${message} Resultado não confirmado. Repita a mesma tentativa, sem alterar o identificador.`);
+          setError(
+            rejected
+              ? `${message} A tentativa foi preservada. Verifique no histórico ou descarte explicitamente a tentativa rejeitada para corrigir os dados.`
+              : `${message} Resultado não confirmado. Repita a mesma tentativa, sem alterar o identificador.`,
+          );
         }
       });
     } catch (issue) {
       setError(issue.message);
-      if (issue.name === "SecurityError" || issue.name === "QuotaExceededError" ||
-          issue.message.includes("tentativa de estoque salva")) {
-        setStorageError("Não foi possível acessar ou salvar a tentativa. O envio foi bloqueado por segurança.");
+      if (
+        issue.name === "SecurityError" ||
+        issue.name === "QuotaExceededError" ||
+        issue.message.includes("tentativa de estoque salva")
+      ) {
+        setStorageError(
+          "Não foi possível acessar ou salvar a tentativa. O envio foi bloqueado por segurança.",
+        );
       }
     } finally {
       locked.current = false;
@@ -451,12 +510,27 @@ export function StockMovement({ stock, onSaved, onClose }) {
   };
   return (
     <Modal title="Movimentar estoque" onClose={close} busy={busy} wide className="stock-dialog">
-      <div className="customer-detail-title"><h3>{stock.product.name}</h3></div>
+      <div className="customer-detail-title">
+        <h3>{stock.product.name}</h3>
+      </div>
       <dl className="customer-details">
-        <div><dt>SKU</dt><dd>{stock.product.sku}</dd></div>
-        <div><dt>Depósito</dt><dd>{stock.warehouse.name}</dd></div>
-        <div><dt>Unidade BASE</dt><dd>{stock.product.unit || "Unidade pendente"}</dd></div>
+        <div>
+          <dt>SKU</dt>
+          <dd>{stock.product.sku}</dd>
+        </div>
+        <div>
+          <dt>Depósito</dt>
+          <dd>{stock.warehouse.name}</dd>
+        </div>
+        <div>
+          <dt>Unidade BASE</dt>
+          <dd>{stock.product.unit || "Unidade pendente"}</dd>
+        </div>
       </dl>
+      <BarcodeScanner disabled={busy || Boolean(frozen)} onResolved={product => {
+        if(product.id !== stock.product.id) throw new Error("O código pertence a outro SKU. Feche o ajuste e selecione o produto correto no estoque.");
+        setError("");
+      }} />
       <form className="customer-form stock-movement-form" onSubmit={submit}>
         <ErrorAlert message={storageError || error} />
         {frozen ? (
@@ -466,33 +540,58 @@ export function StockMovement({ stock, onSaved, onClose }) {
               identificador e os mesmos dados, mesmo após fechar o navegador.
             </p>
             <dl className="customer-details">
-              <div><dt>Identificador</dt><dd>{frozen.requestId}</dd></div>
+              <div>
+                <dt>Identificador</dt>
+                <dd>{frozen.requestId}</dd>
+              </div>
               <div>
                 <dt>Operação</dt>
-                <dd>{frozen.expectedQuantity != null ? "Corrigir saldo" : movementLabels[frozen.type]}</dd>
+                <dd>
+                  {frozen.expectedQuantity != null ? "Corrigir saldo" : movementLabels[frozen.type]}
+                </dd>
               </div>
               <div>
                 <dt>{frozen.type === "ADJUSTMENT" ? "Diferença a aplicar" : "Quantidade"}</dt>
-                <dd>{quantity(frozen.quantity)} {stock.product.unit || "BASE"}</dd>
+                <dd>
+                  {quantity(frozen.quantity)} {stock.product.unit || "BASE"}
+                </dd>
               </div>
               {frozen.expectedQuantity != null && (
                 <>
-                  <div><dt>Saldo usado no cálculo</dt><dd>{quantity(frozen.expectedQuantity)}</dd></div>
+                  <div>
+                    <dt>Saldo usado no cálculo</dt>
+                    <dd>{quantity(frozen.expectedQuantity)}</dd>
+                  </div>
                   <div>
                     <dt>Quantidade contada</dt>
-                    <dd>{quantity(Number(scaledQuantity(frozen.expectedQuantity) + scaledQuantity(frozen.quantity)) / 10)}</dd>
+                    <dd>
+                      {quantity(
+                        Number(
+                          scaledQuantity(frozen.expectedQuantity) + scaledQuantity(frozen.quantity),
+                        ) / 10,
+                      )}
+                    </dd>
                   </div>
                 </>
               )}
-              <div><dt>Observação</dt><dd>{frozen.notes || "—"}</dd></div>
+              <div>
+                <dt>Observação</dt>
+                <dd>{frozen.notes || "—"}</dd>
+              </div>
             </dl>
           </>
         ) : (
-          <fieldset disabled={busy || Boolean(storageError) || !has("stock.adjust")} className="customer-form-fields">
+          <fieldset
+            disabled={busy || Boolean(storageError) || !has("stock.adjust")}
+            className="customer-form-fields"
+          >
             <div className="form-grid">
               <label>
                 Operação
-                <FilterSelect value={value.type} onChange={(event) => setValue((old) => ({ ...old, type: event.target.value }))}>
+                <FilterSelect
+                  value={value.type}
+                  onChange={(event) => setValue((old) => ({ ...old, type: event.target.value }))}
+                >
                   <option value="INBOUND">Entrada manual</option>
                   <option value="OUTBOUND">Saída manual</option>
                   <option value="CORRECTION">Corrigir saldo</option>
@@ -501,8 +600,14 @@ export function StockMovement({ stock, onSaved, onClose }) {
               <label>
                 {value.type === "CORRECTION" ? "Quantidade contada" : "Quantidade"}
                 {` (${stock.product.unit || "unidade pendente"})`}
-                <input required inputMode="decimal" value={value.quantity}
-                  onChange={(event) => setValue((old) => ({ ...old, quantity: event.target.value }))} />
+                <input
+                  required
+                  inputMode="decimal"
+                  value={value.quantity}
+                  onChange={(event) =>
+                    setValue((old) => ({ ...old, quantity: event.target.value }))
+                  }
+                />
               </label>
               <p className="field-hint span-all">
                 {value.type === "CORRECTION"
@@ -513,9 +618,18 @@ export function StockMovement({ stock, onSaved, onClose }) {
               </p>
               <div className="stock-movement-preview span-all" aria-live="polite">
                 <dl>
-                  <div><dt>Estoque atual</dt><dd>{quantity(currentStock.quantity)}</dd></div>
-                  <div><dt>Reservado</dt><dd>{quantity(currentStock.reservedQuantity)}</dd></div>
-                  <div><dt>Saldo após a operação</dt><dd>{preview ? quantity(preview.next) : "—"}</dd></div>
+                  <div>
+                    <dt>Estoque atual</dt>
+                    <dd>{quantity(currentStock.quantity)}</dd>
+                  </div>
+                  <div>
+                    <dt>Reservado</dt>
+                    <dd>{quantity(currentStock.reservedQuantity)}</dd>
+                  </div>
+                  <div>
+                    <dt>Saldo após a operação</dt>
+                    <dd>{preview ? quantity(preview.next) : "—"}</dd>
+                  </div>
                 </dl>
                 {previewError && <p>{previewError}</p>}
                 {preview && value.type === "CORRECTION" && (
@@ -528,8 +642,11 @@ export function StockMovement({ stock, onSaved, onClose }) {
               </div>
               <label className="span-all">
                 Observação (opcional)
-                <textarea rows={3} value={value.notes}
-                  onChange={(event) => setValue((old) => ({ ...old, notes: event.target.value }))} />
+                <textarea
+                  rows={3}
+                  value={value.notes}
+                  onChange={(event) => setValue((old) => ({ ...old, notes: event.target.value }))}
+                />
               </label>
             </div>
           </fieldset>
@@ -539,21 +656,35 @@ export function StockMovement({ stock, onSaved, onClose }) {
             {frozen ? "Fechar e retomar depois" : "Cancelar"}
           </button>
           {frozen && (
-            <button type="button" className="secondary" onClick={verifyMovement}
-              disabled={busy || Boolean(storageError)}>
+            <button
+              type="button"
+              className="secondary"
+              onClick={verifyMovement}
+              disabled={busy || Boolean(storageError)}
+            >
               {busy ? "Consultando…" : "Verificar no histórico"}
             </button>
           )}
           {frozen && rejectedRequestId === frozen.requestId && (
-            <button type="button" className="secondary" onClick={discardRejected}
-              disabled={busy || Boolean(storageError)}>
+            <button
+              type="button"
+              className="secondary"
+              onClick={discardRejected}
+              disabled={busy || Boolean(storageError)}
+            >
               Descartar tentativa rejeitada
             </button>
           )}
           <button
-            disabled={busy || Boolean(storageError) || !has("stock.adjust") ||
-              (!frozen && (!preview || Boolean(previewError) ||
-                (value.type === "CORRECTION" && preview.difference === 0)))}
+            disabled={
+              busy ||
+              Boolean(storageError) ||
+              !has("stock.adjust") ||
+              (!frozen &&
+                (!preview ||
+                  Boolean(previewError) ||
+                  (value.type === "CORRECTION" && preview.difference === 0)))
+            }
           >
             {busy ? "Registrando…" : frozen ? "Repetir a mesma tentativa" : "Registrar movimento"}
           </button>

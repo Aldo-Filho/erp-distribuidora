@@ -23,7 +23,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/auth/login'
+  - url: '{{ _.base_url }}/auth/sessions'
     name: Entrar
     meta:
       id: req_ddc541d083424d36ad5549c3d83d5628
@@ -41,7 +41,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/auth/session'
+  - url: '{{ _.base_url }}/auth/sessions/current'
     name: Consultar sessão
     meta:
       id: req_db7079931e964bad9eefbd5530f34f97
@@ -61,7 +61,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/auth/sessionReplacement'
+  - url: '{{ _.base_url }}/auth/session-replacements'
     name: Substituir sessão (409 após senha válida)
     meta:
       id: req_706f9d6d77be4bacab9e5ac44b3353c9
@@ -79,7 +79,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/auth/activity'
+  - url: '{{ _.base_url }}/auth/session-activities'
     name: Sinal de atividade interativa
     meta:
       id: req_613e61b2cc404f5ba878d4cf076ea422
@@ -92,12 +92,12 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/auth/logout'
+  - url: '{{ _.base_url }}/auth/sessions/current'
     name: Sair
     meta:
       id: req_69b28d38cf5c4532aba28e85e6183a04
       isPrivate: true
-    method: POST
+    method: DELETE
     headers:
     - name: X-CSRF-TOKEN
       value: '{{ _.csrf_token }}'
@@ -105,7 +105,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/auth/passwordRecovery'
+  - url: '{{ _.base_url }}/auth/password-recoveries'
     name: Solicitar recuperação
     meta:
       id: req_2a44c33c126741cda84a91d2138c23f4
@@ -123,7 +123,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/auth/passwordReset'
+  - url: '{{ _.base_url }}/auth/password-resets'
     name: Redefinir senha
     meta:
       id: req_8dae4013df47462d9bf0716c97695f8a
@@ -141,7 +141,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/auth/invitationAcceptance'
+  - url: '{{ _.base_url }}/auth/invitation-acceptances'
     name: Aceitar convite
     meta:
       id: req_ffa885cd3f1e499990c6edd02a9f3119
@@ -169,7 +169,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/invitation/search'
+  - url: '{{ _.base_url }}/user-invitations'
     name: Listar convites
     meta:
       id: req_5270bf7edbe24e34afafd6b6f5c052df
@@ -187,7 +187,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/invitation'
+  - url: '{{ _.base_url }}/user-invitations'
     name: Convidar funcionário
     meta:
       id: req_18365d36d23a4a31879be57e6c4600f2
@@ -205,7 +205,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/security/audit/search'
+  - url: '{{ _.base_url }}/security/audit-events'
     name: Auditoria
     meta:
       id: req_2994c9901f91434fbb543c25ab5d5cd8
@@ -276,7 +276,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/invitation/{{ _.invitation_id }}/resend'
+  - url: '{{ _.base_url }}/user-invitations/{{ _.invitation_id }}/deliveries'
     name: 'Reenviar convite'
     meta:
       id: req_91da1fe2d97b487a88b15ab6076a248e
@@ -290,7 +290,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/invitation/{{ _.invitation_id }}'
+  - url: '{{ _.base_url }}/user-invitations/{{ _.invitation_id }}'
     name: 'Cancelar convite'
     meta:
       id: req_888fbac8df044dbbab2417e488c5fe3b
@@ -334,7 +334,7 @@ collection:
     sortKey: 50
     description: 'Novos funcionários entram por convite. Sem senha padrão ou cadastro direto por POST /user. Preencha user_id com um ID real. Escritas exigem CSRF.'
   children:
-  - url: '{{ _.base_url }}/user/search'
+  - url: '{{ _.base_url }}/users'
     name: 'Buscar funcionários'
     meta:
       id: req_c9b5766c0d924a8d8293dd5cf1f9696c
@@ -358,7 +358,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/{{ _.user_id }}'
+  - url: '{{ _.base_url }}/users/{{ _.user_id }}'
     name: 'Consultar funcionário por ID'
     meta:
       id: req_328623a731f645a18c675275c99a5a25
@@ -369,7 +369,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/{{ _.user_id }}'
+  - url: '{{ _.base_url }}/users/{{ _.user_id }}'
     name: 'Atualizar funcionário'
     meta:
       id: req_8470fb2efc4f4ba696b86024b044eae8
@@ -392,7 +392,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/{{ _.user_id }}'
+  - url: '{{ _.base_url }}/users/{{ _.user_id }}'
     name: 'Excluir funcionário'
     meta:
       id: req_844407a9af8f4aefbcfbd1b606a10985
@@ -406,7 +406,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/{{ _.user_id }}/passwordRecovery'
+  - url: '{{ _.base_url }}/users/{{ _.user_id }}/password-recoveries'
     name: 'Enviar recuperação de senha ao funcionário'
     meta:
       id: req_a0ffb9e79d6741f2bbee3632ad81e0e1
@@ -420,7 +420,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/{{ _.user_id }}/sessions'
+  - url: '{{ _.base_url }}/users/{{ _.user_id }}/sessions'
     name: 'Listar sessões do funcionário'
     meta:
       id: req_c3d1debd01624707a543bd1b1ac8a64f
@@ -436,7 +436,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/user/{{ _.user_id }}/sessions/{{ _.public_session_id }}'
+  - url: '{{ _.base_url }}/users/{{ _.user_id }}/sessions/{{ _.public_session_id }}'
     name: 'Encerrar sessão do funcionário'
     meta:
       id: req_2bae92166c0e42fc9ea066dc548a39ae
@@ -456,7 +456,7 @@ collection:
     sortKey: 100
     description: 'Gerenciamento com access.roles.manage. Catálogo de permissões somente leitura. Preencha IDs reais e mantenha cookies/CSRF.'
   children:
-  - url: '{{ _.base_url }}/role/search'
+  - url: '{{ _.base_url }}/roles'
     name: 'Buscar cargos'
     meta:
       id: req_769f75959e0f4b8ab149a337a6a9fcae
@@ -474,7 +474,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/role/{{ _.role_id }}'
+  - url: '{{ _.base_url }}/roles/{{ _.role_id }}'
     name: 'Consultar cargo por ID'
     meta:
       id: req_66f7e2016ff64b5992ec65189431e6d9
@@ -485,7 +485,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/role'
+  - url: '{{ _.base_url }}/roles'
     name: 'Criar cargo'
     meta:
       id: req_36b639a2da6447d7a188cd7f1951bb1a
@@ -509,7 +509,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/role/{{ _.role_id }}'
+  - url: '{{ _.base_url }}/roles/{{ _.role_id }}'
     name: 'Atualizar cargo'
     meta:
       id: req_abbf72ee4e83425b9b0754f607e4bae7
@@ -532,7 +532,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/role/{{ _.role_id }}'
+  - url: '{{ _.base_url }}/roles/{{ _.role_id }}'
     name: 'Excluir cargo'
     meta:
       id: req_6d87829de97c457eb060779a7b633f70
@@ -546,7 +546,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/permission/search'
+  - url: '{{ _.base_url }}/permissions'
     name: 'Consultar catálogo de permissões'
     meta:
       id: req_8804f99730cf4c0cb59a6ec32a96227b
@@ -567,7 +567,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/permission/{{ _.permission_id }}'
+  - url: '{{ _.base_url }}/permissions/{{ _.permission_id }}'
     name: 'Consultar permissão por ID'
     meta:
       id: req_4f034de3915846ceb21ee013ada08060
@@ -578,7 +578,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/role/{{ _.role_id }}/permissions'
+  - url: '{{ _.base_url }}/roles/{{ _.role_id }}/permissions'
     name: 'Listar permissões do cargo'
     meta:
       id: req_5c4de350c0b84b50821f44c2a27c69f0
@@ -589,7 +589,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/role/{{ _.role_id }}/permissions'
+  - url: '{{ _.base_url }}/roles/{{ _.role_id }}/permissions'
     name: 'Conceder permissão ao cargo'
     meta:
       id: req_ee607abe968347dcb26d1a917003b5e8
@@ -611,7 +611,7 @@ collection:
       cookies:
         send: true
         store: true
-  - url: '{{ _.base_url }}/role/{{ _.role_id }}/permissions/{{ _.permission_id }}'
+  - url: '{{ _.base_url }}/roles/{{ _.role_id }}/permissions/{{ _.permission_id }}'
     name: 'Remover permissão do cargo'
     meta:
       id: req_f72ecdd056344d6eaaf9a65094efcfe4
@@ -633,7 +633,7 @@ collection:
     sortKey: 200
     description: Endpoints do módulo de Produtos (com.pi.erp.product). brandId é obrigatório no cadastro; categoryId é opcional.
   children:
-  - url: '{{ _.base_url }}/product/{{ _.product_id }}'
+  - url: '{{ _.base_url }}/products/{{ _.product_id }}'
     name: Remover produto
     meta:
       id: req_727ef4eee3dd49a8b8e42e593361c909
@@ -654,7 +654,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/product/{{ _.product_id }}'
+  - url: '{{ _.base_url }}/products/{{ _.product_id }}'
     name: Atualizar produto (patch)
     meta:
       id: req_75c45edf065446349a32f800317bfc41
@@ -681,7 +681,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/product/{{ _.product_id }}'
+  - url: '{{ _.base_url }}/products/{{ _.product_id }}'
     name: Remover categoria do produto
     meta:
       id: req_30005aa712c0412b901d9eacc6aeeb48
@@ -707,7 +707,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/product/search'
+  - url: '{{ _.base_url }}/products'
     name: Buscar produtos (filtros)
     meta:
       id: req_78effb61bdd14d71a14a4f34ac290a94
@@ -742,7 +742,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/product/{{ _.product_id }}'
+  - url: '{{ _.base_url }}/products/{{ _.product_id }}'
     name: Buscar produto para edição
     meta:
       id: req_7136b1084eb546789d04b2cc4fd967f9
@@ -760,7 +760,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/product'
+  - url: '{{ _.base_url }}/products'
     name: Cadastrar produto
     meta:
       id: req_98f04da27bf84ea29d8487ecbafd0bfe
@@ -791,7 +791,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/product'
+  - url: '{{ _.base_url }}/products'
     name: Cadastrar produto com estoque inicial
     meta:
       id: req_c5b40326a28b4b2cbfc5dfc134ff5650
@@ -828,7 +828,7 @@ collection:
       sortKey: 700
       description: Endpoints do submódulo de Marcas (com.pi.erp.product.brand).
     children:
-    - url: '{{ _.base_url }}/brand/{{ _.brand_id }}'
+    - url: '{{ _.base_url }}/brands/{{ _.brand_id }}'
       name: Buscar marca por ID
       meta:
         id: req_62703c60c92f42a0887e0c193c471a4e
@@ -846,7 +846,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/brand'
+    - url: '{{ _.base_url }}/brands'
       name: Cadastrar marca
       meta:
         id: req_7d08fd3d830e4ec89805172f432e2440
@@ -872,7 +872,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/brand/{{ _.brand_id }}'
+    - url: '{{ _.base_url }}/brands/{{ _.brand_id }}'
       name: Remover marca
       meta:
         id: req_8de77de3ae414ebe8127e6abc8a3d031
@@ -893,7 +893,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/brand'
+    - url: '{{ _.base_url }}/brands'
       name: Listar marcas
       meta:
         id: req_a3abbb4759624e1da8b9d89e9d9aa782
@@ -924,7 +924,7 @@ collection:
       sortKey: 1200
       description: Endpoints do submódulo de Categorias (com.pi.erp.product.category).
     children:
-    - url: '{{ _.base_url }}/category'
+    - url: '{{ _.base_url }}/categories'
       name: Listar categorias
       meta:
         id: req_894572a77f0d4846a87dc45727cce306
@@ -947,7 +947,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/category/{{ _.category_id }}'
+    - url: '{{ _.base_url }}/categories/{{ _.category_id }}'
       name: Remover categoria
       meta:
         id: req_8cab7a106dff4304a8c29ac4808028c3
@@ -968,7 +968,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/category'
+    - url: '{{ _.base_url }}/categories'
       name: Cadastrar categoria
       meta:
         id: req_9571dd6f965e408d93bb12ee3e4af066
@@ -995,7 +995,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/category/{{ _.category_id }}'
+    - url: '{{ _.base_url }}/categories/{{ _.category_id }}'
       name: Buscar categoria por ID
       meta:
         id: req_feb7dc4f039140e39ad277b0460e9084
@@ -1021,7 +1021,7 @@ collection:
     sortKey: 1700
     description: Endpoints do módulo de Armazéns (com.pi.erp.warehouse).
   children:
-  - url: '{{ _.base_url }}/warehouse/{{ _.warehouse_id }}'
+  - url: '{{ _.base_url }}/warehouses/{{ _.warehouse_id }}'
     name: Atualizar armazém (patch)
     meta:
       id: req_5f238d044d724385b84933d55c15763d
@@ -1047,7 +1047,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/warehouse/search'
+  - url: '{{ _.base_url }}/warehouses'
     name: Buscar armazéns
     meta:
       id: req_5feb38acacf243868a612bf32b4646a1
@@ -1070,7 +1070,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/warehouse'
+  - url: '{{ _.base_url }}/warehouses'
     name: Cadastrar armazém
     meta:
       id: req_919c2b796f374325b80a90a006215283
@@ -1097,7 +1097,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/warehouse/{{ _.warehouse_id }}'
+  - url: '{{ _.base_url }}/warehouses/{{ _.warehouse_id }}'
     name: Remover armazém
     meta:
       id: req_dbb5a7f33d3e4766a7c5a9644279a413
@@ -1127,7 +1127,7 @@ collection:
       description: CRUD de endereços de armazéns implementado. Complemento é obrigatório. Configure warehouse_id e warehouse_address_id
         no ambiente.
     children:
-    - url: '{{ _.base_url }}/warehouseAddress/search'
+    - url: '{{ _.base_url }}/warehouse-addresses'
       name: Buscar Endereço de Armazém
       meta:
         id: req_88634665ac4a4404aaf873aeb8d6da3c
@@ -1178,7 +1178,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/warehouseAddress/{{ _.warehouse_address_id }}'
+    - url: '{{ _.base_url }}/warehouse-addresses/{{ _.warehouse_address_id }}'
       name: Buscar endereço de armazém por ID
       meta:
         id: req_975e5b48b60a4fefa05c6b3e5183d6c4
@@ -1196,7 +1196,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/warehouseAddress'
+    - url: '{{ _.base_url }}/warehouse-addresses'
       name: Cadastrar Endereço
       meta:
         id: req_d45f8b802a5844dcb3c38335bbcd5943
@@ -1226,7 +1226,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/warehouseAddress/{{ _.warehouse_address_id }}'
+    - url: '{{ _.base_url }}/warehouse-addresses/{{ _.warehouse_address_id }}'
       name: Atualizar Endereço
       meta:
         id: req_3e427eae370146918415de45d4efe079
@@ -1253,7 +1253,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/warehouseAddress/{{ _.warehouse_address_id }}'
+    - url: '{{ _.base_url }}/warehouse-addresses/{{ _.warehouse_address_id }}'
       name: Remover Endereço
       meta:
         id: req_604984dd25c6441d9bd767b609272587
@@ -1284,7 +1284,7 @@ collection:
     sortKey: -1788832215680
     description: ''
   children:
-  - url: '{{ _.base_url }}/stockItem/search'
+  - url: '{{ _.base_url }}/stock-items'
     name: Buscar item de estoque
     meta:
       id: req_f10b62a7df92444a83f225f8fec5d3f7
@@ -1309,7 +1309,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/stockItem'
+  - url: '{{ _.base_url }}/stock-items'
     name: Cadastrar item de estoque
     meta:
       id: req_aa5c133a7b374c26b78096d04d628190
@@ -1338,7 +1338,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/stockItem'
+  - url: '{{ _.base_url }}/stock-items'
     name: Cadastrar estoque sem máximo
     meta:
       id: req_8425f49fb13e4055b1aec6729be76185
@@ -1365,7 +1365,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/stockItem/{{ _.stock_item_id }}'
+  - url: '{{ _.base_url }}/stock-items/{{ _.stock_item_id }}'
     name: Remover item de estoque
     meta:
       id: req_f33354035b5147ffb7f8060456236011
@@ -1386,7 +1386,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/stockItem/{{ _.stock_item_id }}'
+  - url: '{{ _.base_url }}/stock-items/{{ _.stock_item_id }}'
     name: Atualizar item de estoque
     meta:
       id: req_43ea8f749bb4459faf3e9827d1e42c2e
@@ -1414,7 +1414,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/stockItem/{{ _.stock_item_id }}'
+  - url: '{{ _.base_url }}/stock-items/{{ _.stock_item_id }}'
     name: Remover quantidade máxima
     meta:
       id: req_8ccd5b5faaf849c585c01dea9ae9a178
@@ -1453,7 +1453,7 @@ collection:
       DELETE de cliente permanece na API, mas não é oferecido pela tela (somente ativar/inativar).
       Exclusão de endereço é separada, com customers.delete.
   children:
-  - url: '{{ _.base_url }}/customer/search'
+  - url: '{{ _.base_url }}/customers'
     name: Buscar clientes
     meta:
       id: req_a8faafe3da1d4050aa4a2afbe79e44a1
@@ -1523,7 +1523,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+  - url: '{{ _.base_url }}/customers/{{ _.customer_id }}'
     name: Atualizar cliente
     meta:
       id: req_3ab9c43b6d334fe5bc08f0b1c618064b
@@ -1551,7 +1551,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+  - url: '{{ _.base_url }}/customers/{{ _.customer_id }}'
     name: Remover tabela de preço do cliente
     meta:
       id: req_9794849cea5a429ea32e3eb2a2ee6940
@@ -1577,7 +1577,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+  - url: '{{ _.base_url }}/customers/{{ _.customer_id }}'
     name: Remover nascimento do cliente
     meta:
       id: req_customer_remove_birth_date_20261029
@@ -1603,7 +1603,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+  - url: '{{ _.base_url }}/customers/{{ _.customer_id }}'
     name: Remover cliente
     meta:
       id: req_955c9a1cd14345fdbbac72dd1fefedbc
@@ -1624,7 +1624,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/customer/{{ _.customer_id }}'
+  - url: '{{ _.base_url }}/customers/{{ _.customer_id }}'
     name: Buscar cliente por ID
     meta:
       id: req_a800166f86eb464298dab36684aed273
@@ -1642,7 +1642,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/customer'
+  - url: '{{ _.base_url }}/customers'
     name: Cadastrar cliente
     meta:
       id: req_ed6607e9bda441848234da4c04dd5e3e
@@ -1680,7 +1680,7 @@ collection:
       sortKey: 600
       description: 'Um cliente pode ter um endereço de cada tipo: MAIN, BILLING e SHIPPING.'
     children:
-    - url: '{{ _.base_url }}/customerAddress/{{ _.customer_address_id }}'
+    - url: '{{ _.base_url }}/customer-addresses/{{ _.customer_address_id }}'
       name: Remover endereço de cliente
       meta:
         id: req_33e8e9835eca45779150cd2e909acb94
@@ -1701,7 +1701,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/customerAddress/{{ _.customer_address_id }}'
+    - url: '{{ _.base_url }}/customer-addresses/{{ _.customer_address_id }}'
       name: Atualizar endereço de cliente
       meta:
         id: req_45c4c0bf4f63473e85a100c3120fa509
@@ -1727,7 +1727,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/customerAddress'
+    - url: '{{ _.base_url }}/customer-addresses'
       name: Cadastrar endereço de cliente
       meta:
         id: req_a1bfe306163947c69a7dc596b18d04d2
@@ -1755,7 +1755,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/customerAddress/search'
+    - url: '{{ _.base_url }}/customer-addresses'
       name: Buscar endereços de clientes
       meta:
         id: req_ea6b2f8a905d4ebdb9eed1a35c777f22
@@ -1801,7 +1801,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/customerAddress/{{ _.customer_address_id }}'
+    - url: '{{ _.base_url }}/customer-addresses/{{ _.customer_address_id }}'
       name: Buscar endereço de cliente por ID
       meta:
         id: req_964f5ce3aad94353a099c4973d30302f
@@ -1819,7 +1819,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-  - url: '{{ _.base_url }}/customer'
+  - url: '{{ _.base_url }}/customers'
     name: Cadastrar cliente com endereço inicial
     meta:
       id: req_a88e67851d354abd9635632560f222b8
@@ -1860,7 +1860,7 @@ collection:
     sortKey: -1790129000000
     description: Endpoints do módulo de tabelas de preço.
   children:
-  - url: '{{ _.base_url }}/price-table/{{ _.price_table_id }}'
+  - url: '{{ _.base_url }}/price-tables/{{ _.price_table_id }}'
     name: Atualizar tabela de preço
     meta:
       id: req_1817f596cec14a48afa0ff4bb6b761c9
@@ -1888,7 +1888,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/price-table/search'
+  - url: '{{ _.base_url }}/price-tables'
     name: Buscar tabelas de preço
     meta:
       id: req_729e7f83a95642bc89cd8f4c85f1f590
@@ -1919,7 +1919,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/price-table/{{ _.price_table_id }}'
+  - url: '{{ _.base_url }}/price-tables/{{ _.price_table_id }}'
     name: Remover tabela de preço
     meta:
       id: req_7a0f37b9b82b4a1ea6f18957a98631c2
@@ -1940,7 +1940,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/price-table'
+  - url: '{{ _.base_url }}/price-tables'
     name: Cadastrar tabela de preço
     meta:
       id: req_939a87e7b7364c439b452225a15d63ef
@@ -1969,7 +1969,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/price-table/{{ _.price_table_id }}'
+  - url: '{{ _.base_url }}/price-tables/{{ _.price_table_id }}'
     name: Buscar tabela de preço por ID
     meta:
       id: req_a317bd89f7604d66b6a007146a827329
@@ -1997,7 +1997,7 @@ collection:
       com registros existentes. Copie o ID do vínculo de produto para supplier_product_id e o do endereço para supplier_address_id.
       Execute exclusões por último.
   children:
-  - url: '{{ _.base_url }}/supplier/search'
+  - url: '{{ _.base_url }}/suppliers'
     name: Buscar fornecedores (filtros)
     meta:
       id: req_5bbd248250d44ff6b41d6b5e195fc8f1
@@ -2063,7 +2063,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}'
+  - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}'
     name: Buscar fornecedor por ID
     meta:
       id: req_33644a4e4e564d628f2d0a2b09926171
@@ -2081,7 +2081,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/supplier'
+  - url: '{{ _.base_url }}/suppliers'
     name: Cadastrar fornecedor com endereço
     meta:
       id: req_daabfaae212d44e68363a0a4ad434dd7
@@ -2115,7 +2115,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/supplier'
+  - url: '{{ _.base_url }}/suppliers'
     name: Cadastrar fornecedor sem endereço
     meta:
       id: req_8536efbf2e564c4495ab372e3a1927ce
@@ -2144,7 +2144,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}'
+  - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}'
     name: Atualizar fornecedor (patch)
     meta:
       id: req_698e3761a1964e0fabdf0fd041c1920a
@@ -2174,7 +2174,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}'
+  - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}'
     name: Remover fornecedor
     meta:
       id: req_88ad955a36e54eb7bf3b569c63f18f6f
@@ -2205,7 +2205,7 @@ collection:
       description: Cadastre endereços junto com o fornecedor ou separadamente. Um fornecedor pode ter vários endereços. Os
         IDs de fornecedor e endereço são independentes.
     children:
-    - url: '{{ _.base_url }}/supplierAddress/search'
+    - url: '{{ _.base_url }}/supplier-addresses'
       name: Buscar endereços de fornecedores (filtros)
       meta:
         id: req_fd6bc20188ed46ea9b72f61b50d811d9
@@ -2255,7 +2255,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}'
+    - url: '{{ _.base_url }}/supplier-addresses/{{ _.supplier_address_id }}'
       name: Buscar endereço de fornecedor por ID
       meta:
         id: req_3621528499804dbca5f02723d978da49
@@ -2273,7 +2273,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/supplierAddress'
+    - url: '{{ _.base_url }}/supplier-addresses'
       name: Cadastrar endereço de fornecedor
       meta:
         id: req_eb6d0b7e9bbc4c3486822aa1a5452b38
@@ -2303,7 +2303,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}'
+    - url: '{{ _.base_url }}/supplier-addresses/{{ _.supplier_address_id }}'
       name: Atualizar endereço de fornecedor (patch)
       meta:
         id: req_4c8c95148b4a4b19a9cfc582863c664b
@@ -2331,7 +2331,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/supplierAddress/{{ _.supplier_address_id }}'
+    - url: '{{ _.base_url }}/supplier-addresses/{{ _.supplier_address_id }}'
       name: Remover endereço de fornecedor
       meta:
         id: req_c17a077b5f47454ca617adf3ef66a982
@@ -2361,7 +2361,7 @@ collection:
       description: Cadastre antes o fornecedor e o produto. Configure supplier_id e product_id. Depois do POST, copie o ID
         do vínculo para supplier_product_id; ele é diferente de product_id.
     children:
-    - url: '{{ _.base_url }}/productSupplier/search'
+    - url: '{{ _.base_url }}/product-suppliers'
       name: Buscar produtos do fornecedor (filtros)
       meta:
         id: req_10a1282c36fd7d51b5acecb400000001
@@ -2414,7 +2414,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/productSupplier/{{ _.supplier_product_id }}'
+    - url: '{{ _.base_url }}/product-suppliers/{{ _.supplier_product_id }}'
       name: Buscar vínculo de produto por ID
       meta:
         id: req_10a1282c36fd7d51b5acecb400000002
@@ -2432,7 +2432,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/productSupplier'
+    - url: '{{ _.base_url }}/product-suppliers'
       name: Vincular produto ao fornecedor
       meta:
         id: req_10a1282c36fd7d51b5acecb400000003
@@ -2461,7 +2461,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/productSupplier/{{ _.supplier_product_id }}'
+    - url: '{{ _.base_url }}/product-suppliers/{{ _.supplier_product_id }}'
       name: Atualizar vínculo de produto (patch)
       meta:
         id: req_10a1282c36fd7d51b5acecb400000004
@@ -2489,7 +2489,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/productSupplier/{{ _.supplier_product_id }}'
+    - url: '{{ _.base_url }}/product-suppliers/{{ _.supplier_product_id }}'
       name: Remover vínculo de produto
       meta:
         id: req_10a1282c36fd7d51b5acecb400000005
@@ -2519,7 +2519,7 @@ collection:
       description: Use supplier_id e brand_id de registros existentes. Estes endpoints administram os vínculos em supplier_brands,
         separados do cadastro de marcas.
     children:
-    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/brands'
+    - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}/brands'
       name: Listar marcas do fornecedor
       meta:
         id: req_10a1282c36fd7d51b5acecb400000007
@@ -2538,7 +2538,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/brands'
+    - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}/brands'
       name: Vincular marca ao fornecedor
       meta:
         id: req_10a1282c36fd7d51b5acecb400000008
@@ -2565,7 +2565,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/brands/{{ _.brand_id }}'
+    - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}/brands/{{ _.brand_id }}'
       name: Remover vínculo de marca
       meta:
         id: req_10a1282c36fd7d51b5acecb400000009
@@ -2596,7 +2596,7 @@ collection:
       description: Use supplier_id e category_id de registros existentes. Estes endpoints administram os vínculos em supplier_categories,
         separados do cadastro de categorias.
     children:
-    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/categories'
+    - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}/categories'
       name: Listar categorias do fornecedor
       meta:
         id: req_10a1282c36fd7d51b5acecb40000000b
@@ -2615,7 +2615,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/categories'
+    - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}/categories'
       name: Vincular categoria ao fornecedor
       meta:
         id: req_10a1282c36fd7d51b5acecb40000000c
@@ -2642,7 +2642,7 @@ collection:
           send: true
           store: true
         rebuildPath: true
-    - url: '{{ _.base_url }}/supplier/{{ _.supplier_id }}/categories/{{ _.category_id }}'
+    - url: '{{ _.base_url }}/suppliers/{{ _.supplier_id }}/categories/{{ _.category_id }}'
       name: Remover vínculo de categoria
       meta:
         id: req_10a1282c36fd7d51b5acecb40000000d
@@ -2673,7 +2673,7 @@ collection:
       meta:
         id: fld_catalog_20261111
       children:
-      - url: '{{ _.base_url }}/productCatalog/search'
+      - url: '{{ _.base_url }}/product-catalogs'
         name: Buscar catálogos
         method: GET
         parameters:
@@ -2682,49 +2682,49 @@ collection:
         - name: size
           value: '{{ _.page_size }}'
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productCatalog/{{ _.catalog_id }}'
+      - url: '{{ _.base_url }}/product-catalogs/{{ _.catalog_id }}'
         name: Consultar catálogo
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productCatalog'
+      - url: '{{ _.base_url }}/product-catalogs'
         name: Criar catálogo
         method: POST
         body: { mimeType: application/json, text: '{"name":"Catálogo de teste","brandId":{{ _.brand_id }},"categoryId":{{ _.category_id }},"unit":"UN","type":"SIMPLE","active":true}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productCatalog/{{ _.catalog_id }}'
+      - url: '{{ _.base_url }}/product-catalogs/{{ _.catalog_id }}'
         name: Atualizar catálogo
         method: PATCH
         body: { mimeType: application/json, text: '{"name":"Catálogo atualizado","active":true}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productCatalog/{{ _.catalog_id }}/items/search'
+      - url: '{{ _.base_url }}/product-catalogs/{{ _.catalog_id }}/items'
         name: Buscar itens do catálogo
         method: GET
         parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productCatalog/{{ _.catalog_id }}/items'
+      - url: '{{ _.base_url }}/product-catalogs/{{ _.catalog_id }}/items'
         name: Criar item no catálogo
         method: POST
         body: { mimeType: application/json, text: '{"cost":10,"price":15,"active":true}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productPresentation/search'
+      - url: '{{ _.base_url }}/product-presentations'
         name: Buscar apresentações
         method: GET
         parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productPresentation/{{ _.presentation_id }}'
+      - url: '{{ _.base_url }}/product-presentations/{{ _.presentation_id }}'
         name: Consultar apresentação
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productPresentation'
+      - url: '{{ _.base_url }}/product-presentations'
         name: Criar apresentação
         method: POST
         body: { mimeType: application/json, text: '{"productId":{{ _.product_id }},"name":"Caixa","baseFactor":12,"price":180,"active":true}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productPresentation/{{ _.presentation_id }}'
+      - url: '{{ _.base_url }}/product-presentations/{{ _.presentation_id }}'
         name: Atualizar apresentação
         method: PATCH
         body: { mimeType: application/json, text: '{"name":"Caixa atualizada","baseFactor":12,"active":true}' }
@@ -2733,22 +2733,22 @@ collection:
     - name: Opções de fornecedor
       meta: { id: fld_supplier_options_20261111 }
       children:
-      - url: '{{ _.base_url }}/productSupplierOption/search'
+      - url: '{{ _.base_url }}/product-supplier-options'
         name: Buscar opções de fornecedor
         method: GET
         parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productSupplierOption/{{ _.supplier_option_id }}'
+      - url: '{{ _.base_url }}/product-supplier-options/{{ _.supplier_option_id }}'
         name: Consultar opção de fornecedor
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productSupplierOption'
+      - url: '{{ _.base_url }}/product-supplier-options'
         name: Criar opção de fornecedor
         method: POST
         body: { mimeType: application/json, text: '{"productSupplierId":{{ _.supplier_product_id }},"name":"Unidade","baseFactor":1,"basePresentation":true,"cost":10,"active":true}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/productSupplierOption/{{ _.supplier_option_id }}'
+      - url: '{{ _.base_url }}/product-supplier-options/{{ _.supplier_option_id }}'
         name: Atualizar opção de fornecedor
         method: PATCH
         body: { mimeType: application/json, text: '{"name":"Unidade atualizada","baseFactor":1,"active":true}' }
@@ -2757,63 +2757,75 @@ collection:
     - name: Pedidos
       meta: { id: fld_orders_20261111 }
       children:
-      - url: '{{ _.base_url }}/order/search'
+      - url: '{{ _.base_url }}/orders'
         name: Buscar pedidos
         method: GET
         parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/order/{{ _.order_id }}'
+      - url: '{{ _.base_url }}/orders/{{ _.order_id }}'
         name: Consultar pedido
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/order/{{ _.order_id }}/price'
+      - url: '{{ _.base_url }}/orders/{{ _.order_id }}/price'
         name: Consultar preço do pedido
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/order'
+      - url: '{{ _.base_url }}/orders'
         name: Criar pedido
         method: POST
         body: { mimeType: application/json, text: '{"customerId":{{ _.customer_id }}}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/order/{{ _.order_id }}'
+      - url: '{{ _.base_url }}/orders/{{ _.order_id }}'
         name: Atualizar pedido
         method: PATCH
         body: { mimeType: application/json, text: '{"paymentMethod":"CASH"}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/order/{{ _.order_id }}'
+      - url: '{{ _.base_url }}/orders/{{ _.order_id }}/confirmations'
+        name: Confirmar pedido
+        method: POST
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+
+      - url: '{{ _.base_url }}/orders/{{ _.order_id }}/cancellations'
+        name: Cancelar pedido
+        method: POST
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+
+      - url: '{{ _.base_url }}/orders/{{ _.order_id }}'
         name: Excluir pedido
         method: DELETE
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/order/{{ _.order_id }}/dispatch'
+      - url: '{{ _.base_url }}/orders/{{ _.order_id }}/dispatches'
         name: Despachar pedido
         method: POST
         body: { mimeType: application/json, text: '{"notes":"Teste pelo Insomnia"}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/orderItem/search'
+      - url: '{{ _.base_url }}/order-items'
         name: Buscar itens de pedido
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/orderItem/{{ _.order_item_id }}'
+      - url: '{{ _.base_url }}/order-items/{{ _.order_item_id }}'
         name: Consultar item de pedido
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/orderItem'
+      - url: '{{ _.base_url }}/order-items'
         name: Criar item de pedido
         method: POST
         body: { mimeType: application/json, text: '{"orderId":{{ _.order_id }},"productId":{{ _.product_id }},"warehouseId":{{ _.warehouse_id }},"quantity":1}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/orderItem/{{ _.order_item_id }}'
+      - url: '{{ _.base_url }}/order-items/{{ _.order_item_id }}'
         name: Atualizar item de pedido
         method: PATCH
         body: { mimeType: application/json, text: '{"quantity":2}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/orderItem/{{ _.order_item_id }}'
+      - url: '{{ _.base_url }}/order-items/{{ _.order_item_id }}'
         name: Excluir item de pedido
         method: DELETE
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
@@ -2821,96 +2833,114 @@ collection:
     - name: Compras e recebimentos
       meta: { id: fld_purchases_20261111 }
       children:
-      - url: '{{ _.base_url }}/purchase/search'
+      - url: '{{ _.base_url }}/purchases'
         name: Buscar compras
         method: GET
         parameters: [{ name: page, value: '{{ _.page }}' }, { name: size, value: '{{ _.page_size }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}'
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}'
         name: Consultar compra
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchase'
+      - url: '{{ _.base_url }}/purchases'
         name: Criar compra
         method: POST
         body: { mimeType: application/json, text: '{"supplierId":{{ _.supplier_id }},"userId":{{ _.user_id }}}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}'
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}'
         name: Atualizar compra
         method: PATCH
         body: { mimeType: application/json, text: '{"expectedDeliveryDate":"2026-12-01"}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}'
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}/submissions'
+        name: Enviar compra
+        method: POST
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}/confirmations'
+        name: Confirmar compra
+        method: POST
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}/cancellations'
+        name: Cancelar compra
+        method: POST
+        headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
+        settings: { cookies: { send: true, store: true } }
+
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}'
         name: Excluir compra
         method: DELETE
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchaseItem/search'
+      - url: '{{ _.base_url }}/purchase-items'
         name: Buscar itens de compra
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchaseItem/{{ _.purchase_item_id }}'
+      - url: '{{ _.base_url }}/purchase-items/{{ _.purchase_item_id }}'
         name: Consultar item de compra
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchaseItem'
+      - url: '{{ _.base_url }}/purchase-items'
         name: Criar item de compra
         method: POST
         body: { mimeType: application/json, text: '{"purchaseId":{{ _.purchase_id }},"productId":{{ _.product_id }},"warehouseId":{{ _.warehouse_id }},"quantity":1}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchaseItem/{{ _.purchase_item_id }}'
+      - url: '{{ _.base_url }}/purchase-items/{{ _.purchase_item_id }}'
         name: Atualizar item de compra
         method: PATCH
         body: { mimeType: application/json, text: '{"quantity":2}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchaseItem/{{ _.purchase_item_id }}'
+      - url: '{{ _.base_url }}/purchase-items/{{ _.purchase_item_id }}'
         name: Excluir item de compra
         method: DELETE
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}/receive'
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}/receipts'
         name: Receber compra
         method: POST
         body: { mimeType: application/json, text: '{"requestId":"{{ _.request_id }}","notes":"Teste pelo Insomnia","items":[{"purchaseItemId":{{ _.purchase_item_id }},"quantity":1}]}' }
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }, { name: Content-Type, value: application/json }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}/receipts'
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}/receipts'
         name: Listar recebimentos da compra
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/purchase/{{ _.purchase_id }}/receipts/{{ _.receipt_id }}'
+      - url: '{{ _.base_url }}/purchases/{{ _.purchase_id }}/receipts/{{ _.receipt_id }}'
         name: Consultar recebimento
         method: GET
         settings: { cookies: { send: true, store: true } }
     - name: Endpoints somente leitura/contrato
       meta: { id: fld_readonly_contracts_20261111 }
       children:
-      - url: '{{ _.base_url }}/user'
+      - url: '{{ _.base_url }}/users'
         name: Criar funcionário diretamente (retorna 405)
         meta:
           description: 'Endpoint mantido pelo controller para informar que novos funcionários devem ser criados por convite.'
         method: POST
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/permission'
+      - url: '{{ _.base_url }}/permissions'
         name: Criar permissão (retorna 405)
         meta:
           description: 'O catálogo de permissões é somente leitura.'
         method: POST
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/permission/{{ _.permission_id }}'
+      - url: '{{ _.base_url }}/permissions/{{ _.permission_id }}'
         name: Atualizar permissão (retorna 405)
         meta:
           description: 'O catálogo de permissões é somente leitura.'
         method: PATCH
         headers: [{ name: X-CSRF-TOKEN, value: '{{ _.csrf_token }}' }]
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/permission/{{ _.permission_id }}'
+      - url: '{{ _.base_url }}/permissions/{{ _.permission_id }}'
         name: Excluir permissão (retorna 405)
         meta:
           description: 'O catálogo de permissões é somente leitura.'
@@ -2920,19 +2950,19 @@ collection:
     - name: Estoque
       meta: { id: fld_stock_movements_20261111 }
       children:
-      - url: '{{ _.base_url }}/warehouse/{{ _.warehouse_id }}'
+      - url: '{{ _.base_url }}/warehouses/{{ _.warehouse_id }}'
         name: Consultar depósito
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/stockMovement/search'
+      - url: '{{ _.base_url }}/stock-movements'
         name: Buscar movimentações de estoque
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/stockMovement/{{ _.stock_movement_id }}'
+      - url: '{{ _.base_url }}/stock-movements/{{ _.stock_movement_id }}'
         name: Consultar movimentação de estoque
         method: GET
         settings: { cookies: { send: true, store: true } }
-      - url: '{{ _.base_url }}/stockMovement'
+      - url: '{{ _.base_url }}/stock-movements'
         name: Criar movimentação de estoque
         method: POST
         body: { mimeType: application/json, text: '{"requestId":"{{ _.request_id }}","stockItemId":{{ _.stock_item_id }},"type":"IN","reason":"ADJUSTMENT","quantity":1,"notes":"Teste pelo Insomnia"}' }

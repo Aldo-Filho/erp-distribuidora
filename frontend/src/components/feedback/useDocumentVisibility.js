@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useAuth from "../../auth/useAuth";
 
 export default function useDocumentVisibility(scope) {
@@ -9,14 +9,14 @@ export default function useDocumentVisibility(scope) {
     "security.settings.manage",
   ].every(has);
   const key = JSON.stringify([session.userId, session.roleId, scope]);
-  const [revealedFor, setRevealedFor] = useState(null);
-  useEffect(() => setRevealedFor(null), [key]);
-  const visible = administrator || revealedFor === key;
+  const [revelation, setRevelation] = useState({ key, visible: false });
+  if (revelation.key !== key) setRevelation({ key, visible: false });
+  const visible = administrator || (revelation.key === key && revelation.visible);
 
   return {
     visible,
     canToggle: !administrator,
-    toggle: () => setRevealedFor((current) => (current === key ? null : key)),
+    toggle: () => setRevelation((current) => ({ key, visible: !current.visible })),
     display: (value) => {
       if (value == null || String(value).trim() === "") return "—";
       if (visible) return value;

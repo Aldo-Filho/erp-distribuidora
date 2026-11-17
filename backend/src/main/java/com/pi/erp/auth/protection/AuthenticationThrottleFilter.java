@@ -50,7 +50,7 @@ public class AuthenticationThrottleFilter extends OncePerRequestFilter {
             return;
         }
         // Only the socket peer is trusted. Forwarded headers must not choose a limiter key.
-        boolean recovery = path.equals("/auth/passwordRecovery");
+        boolean recovery = path.equals("/auth/password-recoveries");
         int maximum = recovery
             ? properties.getRecoveryPerIpPerHour()
             : properties.getLoginPerIpPerMinute();

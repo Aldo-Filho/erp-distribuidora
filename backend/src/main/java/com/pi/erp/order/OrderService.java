@@ -38,6 +38,9 @@ public class OrderService {
     private OrderRepository repository;
 
     @Autowired
+    private com.pi.erp.financial.FinancialService financialService;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
@@ -89,6 +92,34 @@ public class OrderService {
             );
         }
 
+        if (filter.number() != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("id"), filter.number()));
+        }
+        if (filter.query() != null && !filter.query().isBlank()) {
+            String text = filter.query().trim().toLowerCase(java.util.Locale.ROOT);
+            if (text.length() > 120) throw new IllegalArgumentException(
+                "A busca deve ter até 120 caracteres."
+            );
+            String pattern =
+                "%" + text.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+            spec = spec.and((root, query, cb) ->
+                cb.or(
+                    cb.like(cb.lower(root.get("customer").get("legalName")), pattern, '!'),
+                    cb.like(cb.lower(root.get("customer").get("tradeName")), pattern, '!')
+                )
+            );
+        }
+        if (
+            filter.createdFrom() != null &&
+            filter.createdTo() != null &&
+            filter.createdFrom().isAfter(filter.createdTo())
+        ) throw new IllegalArgumentException("A data inicial não pode ser posterior à final.");
+        if (filter.createdFrom() != null) spec = spec.and((root, query, cb) ->
+            cb.greaterThanOrEqualTo(root.get("createdAt"), filter.createdFrom())
+        );
+        if (filter.createdTo() != null) spec = spec.and((root, query, cb) ->
+            cb.lessThanOrEqualTo(root.get("createdAt"), filter.createdTo())
+        );
         return repository.findAll(spec, pageable);
     }
 
@@ -139,8 +170,24 @@ public class OrderService {
             CurrentUser.require("orders.cancel");
         }
 
+        // Confirmation retries compare the supplied financial contract before returning.
+        if (order.getStatus() == OrderStatus.CONFIRMED && status == OrderStatus.CONFIRMED
+            && data.status() == OrderStatus.CONFIRMED && data.customerId() == null && data.userId() == null) {
+            if ((data.paymentMethod() != null && data.paymentMethod() != order.getPaymentMethod()) ||
+                (data.paymentDueDate() != null && !data.paymentDueDate().equals(order.getPaymentDueDate())))
+                throw new IllegalArgumentException("A venda já foi confirmada com outros dados financeiros.");
+            return order;
+        }
+        boolean confirming = order.getStatus() != status && status == OrderStatus.CONFIRMED;
+        PaymentMethod selectedMethod = data.paymentMethod() == null ? order.getPaymentMethod() : data.paymentMethod();
+        if (confirming && data.paymentDueDate() != null && selectedMethod != null &&
+            selectedMethod != PaymentMethod.CREDIT_CARD && selectedMethod != PaymentMethod.BOLETO &&
+            !data.paymentDueDate().equals(LocalDate.now())) {
+            throw new IllegalArgumentException("Este método vence no dia da confirmação.");
+        }
         boolean hasCommercialChanges =
-            data.customerId() != null || data.paymentMethod() != null || data.userId() != null;
+            data.customerId() != null || data.paymentMethod() != null || data.userId() != null ||
+            data.paymentDueDate() != null;
 
         if (hasCommercialChanges) {
             validateEditableOrder(order);
@@ -174,12 +221,16 @@ public class OrderService {
             if (status == OrderStatus.CONFIRMED) {
                 stockReservationService.reserve(order);
             } else if (status == OrderStatus.CANCELED) {
+                financialService.cancelOrder(order);
                 stockReservationService.release(order);
             }
         }
 
         if (data.paymentMethod() != null) {
             order.setPaymentMethod(data.paymentMethod());
+        }
+        if (data.paymentDueDate() != null) {
+            order.setPaymentDueDate(data.paymentDueDate());
         }
         if (data.status() != null) {
             order.setStatus(data.status());
@@ -191,6 +242,10 @@ public class OrderService {
             order.setUser(user);
         }
 
+        if (confirming) {
+            if (order.getConfirmedAt() == null) order.setConfirmedAt(java.time.LocalDateTime.now(java.time.ZoneId.of("America/Sao_Paulo")));
+            financialService.confirmOrder(order);
+        }
         return repository.save(order);
     }
 
@@ -254,7 +309,7 @@ public class OrderService {
         }
         if (
             currentStatus == OrderStatus.PENDING &&
-                (status == OrderStatus.CONFIRMED || status == OrderStatus.CANCELED)
+            (status == OrderStatus.CONFIRMED || status == OrderStatus.CANCELED)
         ) {
             return;
         }
@@ -345,8 +400,8 @@ public class OrderService {
             BigDecimal discount =
                 orderItem.getDiscountType() == DiscountType.PERCENTAGE
                     ? gross
-                    .multiply(orderItem.getDiscount())
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
+                          .multiply(orderItem.getDiscount())
+                          .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
                     : orderItem.getDiscount();
             totalAmount = totalAmount.add(gross.subtract(discount));
         }
@@ -376,7 +431,7 @@ public class OrderService {
         );
         if (
             orderItem.getBaseQuantity() == null ||
-                expectedBase.compareTo(orderItem.getBaseQuantity()) != 0
+            expectedBase.compareTo(orderItem.getBaseQuantity()) != 0
         ) {
             throw new IllegalArgumentException(
                 "Order item base quantity is inconsistent with its contract."

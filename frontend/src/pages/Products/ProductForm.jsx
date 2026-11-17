@@ -105,7 +105,7 @@ export default function ProductForm({
       characteristics: value.type === "SIMPLE" ? [] : value.characteristics,
     };
     const items = (value.type === "SIMPLE" ? value.items.slice(0, 1) : value.items).map((entry) =>
-      itemPayload(entry, current, null, has("stock.configure") && has("warehouses.read")),
+      itemPayload(entry, current, null, has("stock.configure") && has("warehouses.read"), has("stock.adjust")),
     );
     const identities = items.map((entry) => variantIdentity(entry.attributes || {}));
     if (!items.length || new Set(identities).size !== identities.length)

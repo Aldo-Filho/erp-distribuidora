@@ -1,3 +1,4 @@
+import BarcodeScanner from "../../components/feedback/BarcodeScanner";
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import useAuth from "../../auth/useAuth";
@@ -5,7 +6,7 @@ import { products } from "../../services/products";
 import { productSuppliers } from "../../services/productSuppliers";
 import { useCatalogPage, useProductResource } from "../Products/useProductResource";
 import { ProductLoad, ProductPageFooter } from "../Products/ProductControls";
-import { skuName } from "./OperationSelectors";
+import { skuName } from "./operationLabels.js";
 
 export default function PurchaseProductCatalog(props) {
   const { has } = useAuth();
@@ -23,12 +24,15 @@ export default function PurchaseProductCatalog(props) {
 function Catalog({ supplierId, disabled, onSelect, editor, selectedCatalogId }) {
   const list = useCatalogPage(products.search, { query: "", active: "true" });
   const [expanded, setExpanded] = useState(null);
+  const [scanned,setScanned]=useState(null);
   return (
     <section
       className="panel order-entry-catalog"
       id="purchase-catalog"
       aria-label="Catálogo para compra"
     >
+      <BarcodeScanner disabled={disabled || !supplierId} onResolved={product => setScanned(product)} />
+      {scanned && <section><h3>SKU localizado pelo código</h3><Options key={`${supplierId}:${scanned.id}`} product={scanned} supplierId={supplierId} disabled={disabled} onSelect={onSelect}/></section>}
       <div className="order-entry-section-title">
         <h2>Adicionar produtos</h2>
         <span className="field-hint">
@@ -179,11 +183,27 @@ function Options({ product, supplierId, disabled, onSelect }) {
                   product,
                   supplierOption: option,
                   quantity: amount,
+                  mode: "add",
                   key: `${product.id}:${option.id}`,
                 })
               }
             >
               <Plus size={16} /> Adicionar
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={disabled || !option.conversionConfirmed}
+              onClick={() =>
+                onSelect({
+                  product,
+                  supplierOption: option,
+                  quantity: amount,
+                  key: `${product.id}:${option.id}`,
+                })
+              }
+            >
+              Configurar
             </button>
           </div>
         ))}

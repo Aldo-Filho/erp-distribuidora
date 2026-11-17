@@ -7,6 +7,10 @@ public final class PermissionKey {
     private PermissionKey() {}
 
     public static final Set<String> ALL = Set.of(
+        "finance.read",
+        "finance.configure",
+        "finance.settle",
+        "finance.reverse",
         "customers.read",
         "customers.create",
         "customers.update",
@@ -39,6 +43,7 @@ public final class PermissionKey {
         "orders.dispatch",
         "orders.manualPrice",
         "orders.discount",
+        "purchases.suggest",
         "purchases.read",
         "purchases.create",
         "purchases.update",
@@ -51,6 +56,7 @@ public final class PermissionKey {
         "access.roles.manage",
         "security.settings.manage",
         "security.sessions.manage",
+        "company.appearance.manage",
         "security.audit.read"
     );
 }

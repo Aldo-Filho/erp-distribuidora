@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { OrderHeaderForm } from "./OrdersPage";
-import { WarehouseSelect, partyName } from "./OperationSelectors";
+import { WarehouseSelect } from "./OperationSelectors";
+import { partyName } from "./operationLabels.js";
 
 const payments = {
   CASH: "Dinheiro",
@@ -59,6 +60,8 @@ export default function OrderEntryHeader({
         <strong>{payments[order.paymentMethod] || "Não informado"}</strong>
       </div>
       <WarehouseSelect
+        label="Depósito padrão para novos itens"
+        autoSelectUnique
         value={defaultWarehouseId}
         onChange={(event) => onWarehouseChange(event.target.value)}
         disabled={disabled}

@@ -9,6 +9,7 @@ import ProductNumberInput from "./ProductNumberInput";
 export default function ProductItemFields({ value, onChange, catalog, item, disabled }) {
   const { has } = useAuth();
   const canStock = !item && has("stock.configure") && has("warehouses.read");
+  const canAdjustStock = has("stock.adjust");
   const warehouses = useProductResource(
     (options) => products.warehouses(options),
     [],
@@ -99,6 +100,7 @@ export default function ProductItemFields({ value, onChange, catalog, item, disa
           <p className="muted span-all">
             Quantidades na unidade base. O reservado inicial deve ser zero; as reservas são geradas
             pelos pedidos.
+            {!canAdjustStock && " Sem permissão para movimentar estoque, informe saldo inicial zero."}
           </p>
           <div className="span-all">
             <ErrorAlert message={warehouses.error} retry={warehouses.reload} />

@@ -3,6 +3,8 @@ package com.pi.erp.purchase.item;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -44,6 +46,22 @@ public interface PurchaseItemRepository
     )
     @Override
     List<PurchaseItem> findAll(Specification<PurchaseItem> spec);
+
+    @EntityGraph(
+        type = EntityGraph.EntityGraphType.LOAD,
+        attributePaths = {
+            "product.catalog.brand",
+            "product.catalog.category",
+            "supplierOption.productSupplier.product.catalog.brand",
+            "supplierOption.productSupplier.product.catalog.category",
+            "supplierOption.productSupplier.supplier",
+            "warehouse",
+            "purchase.supplier",
+            "purchase.user.role",
+        }
+    )
+    @Override
+    Page<PurchaseItem> findAll(Specification<PurchaseItem> spec, Pageable pageable);
 
     @Query("SELECT item.purchase.id FROM PurchaseItem item WHERE item.id = :id")
     Optional<Long> findPurchaseIdByItemId(@Param("id") Long id);

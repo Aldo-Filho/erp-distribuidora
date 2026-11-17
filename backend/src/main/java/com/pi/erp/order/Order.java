@@ -23,11 +23,14 @@ public class Order {
     private Long id;
 
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
-    private BigDecimal totalAmount = BigDecimal.ZERO;
+    private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 20)
     private PaymentMethod paymentMethod;
+
+    @Column(name = "payment_due_date")
+    private java.time.LocalDate paymentDueDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -35,6 +38,9 @@ public class Order {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "confirmed_at")
+    private LocalDateTime confirmedAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
@@ -60,6 +66,7 @@ public class Order {
     public Order(RequestOrderDTO data, Customer customer, User user) {
         this.totalAmount = BigDecimal.ZERO;
         this.paymentMethod = data.paymentMethod();
+        this.paymentDueDate = data.paymentDueDate();
         this.status = OrderStatus.PENDING;
         this.customer = customer;
         this.user = user;

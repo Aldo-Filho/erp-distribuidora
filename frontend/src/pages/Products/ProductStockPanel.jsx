@@ -7,7 +7,7 @@ import { ProductLoad } from "./ProductControls";
 import { quantity } from "./productFormData";
 import { StockConfiguration, StockMovement } from "../Operations/StockActions";
 import StockHistory from "../Operations/StockHistory";
-import { available } from "../Operations/StockPage";
+import { available } from "../Operations/stockBalance.js";
 
 export default function ProductStockPanel({ item, onChanged }) {
   const { has } = useAuth();

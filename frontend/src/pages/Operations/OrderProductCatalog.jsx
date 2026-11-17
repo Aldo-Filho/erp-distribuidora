@@ -1,5 +1,6 @@
+import BarcodeScanner from "../../components/feedback/BarcodeScanner";
 import { useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import useAuth from "../../auth/useAuth";
 import FilterSelect from "../../components/feedback/FilterSelect";
 import Pagination from "../../components/feedback/Pagination";
@@ -8,7 +9,7 @@ import { orders } from "../../services/operations";
 import { useCatalogPage, useProductResource } from "../Products/useProductResource";
 import { ProductLoad } from "../Products/ProductControls";
 import { money } from "../Products/productFormData";
-import { skuName } from "./OperationSelectors";
+import { skuName } from "./operationLabels.js";
 
 let activeQuotes = 0;
 const quoteQueue = [];
@@ -56,7 +57,7 @@ function Catalog({ order, onSelect, disabled, editor, selectedCatalogId }) {
   const [quantities, setQuantities] = useState({});
   const cache = useRef(new Map());
   const lock = useRef(false);
-  const select = async (catalog) => {
+  const select = async (catalog, mode = "configure") => {
     if (lock.current || disabled) return;
     if (catalog.type !== "SIMPLE") {
       setExpanded(expanded === catalog.id ? null : catalog.id);
@@ -75,7 +76,7 @@ function Catalog({ order, onSelect, disabled, editor, selectedCatalogId }) {
         if (cache.current.size >= 50) cache.current.clear();
         cache.current.set(catalog.id, item);
       }
-      await onSelect(item, null, quantities[catalog.id] ?? "1");
+      await onSelect(item, null, quantities[catalog.id] ?? "1", mode);
     } catch (issue) {
       setError(issue.message);
       cache.current.delete(catalog.id);
@@ -90,6 +91,7 @@ function Catalog({ order, onSelect, disabled, editor, selectedCatalogId }) {
       id="order-entry-products"
       aria-label="Catálogo para venda"
     >
+      <BarcodeScanner disabled={disabled || !order} onResolved={product => onSelect(product, null, "1", "configure")} />
       <div className="order-entry-section-title">
         <h2>Adicionar produtos</h2>
         <span className="field-hint">
@@ -154,15 +156,24 @@ function Catalog({ order, onSelect, disabled, editor, selectedCatalogId }) {
                     />
                   </label>
                 )}
+                {catalog.type === "SIMPLE" && (
+                  <button
+                    type="button"
+                    disabled={disabled || selecting !== null || !order || !has("orders.create")}
+                    onClick={() => select(catalog, "add")}
+                  >
+                    Adicionar
+                  </button>
+                )}
                 <button
                   type="button"
-                  className="secondary icon-button"
-                  aria-label={`${catalog.type === "SIMPLE" ? "Selecionar" : "Ver variações de"} ${catalog.name}`}
+                  className="secondary"
+                  aria-label={`${catalog.type === "SIMPLE" ? "Configurar" : "Ver variações de"} ${catalog.name}`}
                   disabled={disabled || selecting !== null || !order || !has("orders.create")}
                   onClick={() => select(catalog)}
                 >
                   {catalog.type === "SIMPLE" ? (
-                    <Plus size={18} />
+                    "Configurar"
                   ) : expanded === catalog.id ? (
                     <ChevronUp size={18} />
                   ) : (
@@ -212,16 +223,24 @@ function CatalogSkus({ catalog, onSelect, disabled }) {
     <div className="order-entry-skus">
       <ProductLoad state={state} empty="Nenhuma variação ativa.">
         {state.data?.content.map((item) => (
-          <button
-            key={item.id}
-            className="secondary"
-            type="button"
-            disabled={disabled}
-            onClick={() => onSelect(item)}
-          >
+          <div key={item.id} className="order-entry-product-heading">
             <span>{skuName(item)}</span>
-            <small>Selecionar apresentação e quantidade</small>
-          </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => onSelect(item, null, 1, "add")}
+            >
+              Adicionar
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={disabled}
+              onClick={() => onSelect(item)}
+            >
+              Configurar
+            </button>
+          </div>
         ))}
       </ProductLoad>
       <Pagination page={page} totalPages={state.data?.totalPages} change={setPage} />

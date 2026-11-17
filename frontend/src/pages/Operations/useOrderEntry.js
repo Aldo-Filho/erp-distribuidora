@@ -24,7 +24,9 @@ export default function useOrderEntry(id) {
   const [writePending, setWritePending] = useState(false);
   const [attempt, setAttempt] = useDraft(`order-entry-attempt:${session.userId}:${id}`, null);
   const attemptRef = useRef(attempt);
-  attemptRef.current = attempt;
+  useEffect(() => {
+    attemptRef.current = attempt;
+  }, [attempt]);
   const lock = useRef(false);
   const live = useRef(true);
   const generation = useRef(0);

@@ -5,7 +5,8 @@ import { validId } from "../../routes/navigation";
 import { customers } from "../../services/customers";
 import { useProductResource } from "../Products/useProductResource";
 import { ProductLoad } from "../Products/ProductControls";
-import CustomerDetailsContent, { customerSections } from "./CustomerDetailsContent";
+import CustomerDetailsContent from "./CustomerDetailsContent";
+import { customerSections } from "./customerSections.js";
 import "./customerDetails.css";
 import "../Products/products.css";
 

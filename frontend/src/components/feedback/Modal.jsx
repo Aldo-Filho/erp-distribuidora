@@ -12,7 +12,9 @@ export default function Modal({
 }) {
   const dialog = useRef(null);
   const current = useRef({ onClose, busy });
-  current.current = { onClose, busy };
+  useEffect(() => {
+    current.current = { onClose, busy };
+  }, [onClose, busy]);
   const titleId = useId();
 
   useEffect(() => {

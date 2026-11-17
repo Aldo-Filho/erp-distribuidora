@@ -17,8 +17,9 @@ import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +53,7 @@ public class OrderItemService {
     @Autowired
     private EntityManager entityManager;
 
-    public List<OrderItem> search(OrderItemFilter filter) {
+    public Page<OrderItem> search(OrderItemFilter filter, Pageable pageable) {
         Specification<OrderItem> spec = Specification.allOf();
 
         if (filter.orderId() != null) {
@@ -71,7 +72,7 @@ public class OrderItemService {
             );
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     @Transactional

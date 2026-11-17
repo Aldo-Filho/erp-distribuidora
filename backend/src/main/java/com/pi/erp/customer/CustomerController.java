@@ -1,5 +1,6 @@
 package com.pi.erp.customer;
 
+import com.pi.erp.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/customer")
+@RequestMapping("/customers")
 public class CustomerController {
 
     @Autowired
@@ -27,7 +28,7 @@ public class CustomerController {
     @Autowired
     private CustomerService service;
 
-    @GetMapping("/search")
+    @GetMapping
     public ResponseEntity<Page<Customer>> search(
         CustomerFilter filter,
         @RequestParam(defaultValue = "0") int page,
@@ -49,13 +50,11 @@ public class CustomerController {
         return repository
             .findById(id)
             .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.noContent().build());
+            .orElseThrow(() -> new ResourceNotFoundException("Resource not found."));
     }
 
     @PostMapping
-    public ResponseEntity<Customer> register(
-        @RequestBody @Valid RequestCustomerDTO data
-    ) {
+    public ResponseEntity<Customer> register(@RequestBody @Valid RequestCustomerDTO data) {
         Customer customer = service.register(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(customer);
     }

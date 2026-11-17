@@ -41,11 +41,10 @@ export default function WarehousesPage() {
     query.trim() !== filter || state.loading ||
       (state.data && (state.data.filter !== filter || state.data.page !== page)),
   );
-  useEffect(() => {
-    if (loading || state.error || !state.data) return;
+  if (!loading && !state.error && state.data) {
     const lastPage = Math.max(0, state.data.records.totalPages - 1);
     if (page > lastPage) setPage(lastPage);
-  }, [loading, state.error, state.data, page]);
+  }
   const records = loading || state.error ? null : state.data?.records?.content;
   const filtered = Boolean(filter);
   return (

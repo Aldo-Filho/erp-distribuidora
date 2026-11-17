@@ -1,8 +1,8 @@
+import { supplierSections } from "./supplierSections.js";
 import RecordMetadata from "../../components/record/RecordMetadata";
 import SupplierAddresses from "./SupplierAddresses";
 import SupplierCatalogLinksContent from "./SupplierCatalogLinksContent";
 
-export const supplierSections = ["general", "addresses", "links", "metadata"];
 export default function SupplierDetailsContent({ supplier, section, onSectionChange, onChanged }) {
   const labels = {
     general: "Dados gerais",

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,7 +34,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(new CsrfView(token.getToken(), token.getHeaderName()));
     }
 
-    @PostMapping("/login")
+    @PostMapping("/sessions")
     public ResponseEntity<Object> login(
         @RequestBody @Valid RequestLoginDTO data,
         HttpServletRequest request,
@@ -43,7 +44,7 @@ public class AuthenticationController {
         return ResponseEntity.status(view instanceof LoginChallengeView ? 409 : 200).body(view);
     }
 
-    @PostMapping("/sessionReplacement")
+    @PostMapping("/session-replacements")
     public ResponseEntity<Object> replace(
         @RequestBody @Valid RequestSessionReplacementDTO data,
         HttpServletRequest request,
@@ -53,18 +54,18 @@ public class AuthenticationController {
         return ResponseEntity.status(view instanceof LoginChallengeView ? 409 : 200).body(view);
     }
 
-    @GetMapping("/session")
+    @GetMapping("/sessions/current")
     public ResponseEntity<SessionView> session(HttpServletRequest request) {
         return ResponseEntity.ok(userSessionService.view(request));
     }
 
-    @PostMapping("/activity")
+    @PostMapping("/session-activities")
     public ResponseEntity<Void> activity(HttpServletRequest request) {
         userSessionService.activity(request);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/logout")
+    @DeleteMapping("/sessions/current")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         userSessionService.logout(request);
         if (request.getSession(false) != null) {

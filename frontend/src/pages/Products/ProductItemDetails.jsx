@@ -1,3 +1,4 @@
+import ProductBarcodes from "./ProductBarcodes";
 import { useState } from "react";
 import useAuth from "../../auth/useAuth";
 import Modal from "../../components/feedback/Modal";
@@ -70,6 +71,7 @@ export function ProductItemContent({
           saldos, sem conversão automática.
         </p>
       )}
+      {tab === "commercial" && <ProductBarcodes key={item.id} productId={item.id} />}
       {tab === "commercial" && (
         <>
           <dl className="customer-details">

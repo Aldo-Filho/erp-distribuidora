@@ -1,5 +1,6 @@
 package com.pi.erp.supplier;
 
+import com.pi.erp.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/supplier")
+@RequestMapping("/suppliers")
 public class SupplierController {
 
     @Autowired
@@ -27,7 +28,7 @@ public class SupplierController {
     @Autowired
     private SupplierService service;
 
-    @GetMapping("/search")
+    @GetMapping
     public ResponseEntity<Page<Supplier>> search(
         @Valid SupplierFilter filter,
         @RequestParam(defaultValue = "0") int page,
@@ -49,13 +50,11 @@ public class SupplierController {
         return repository
             .findById(id)
             .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.noContent().build());
+            .orElseThrow(() -> new ResourceNotFoundException("Resource not found."));
     }
 
     @PostMapping
-    public ResponseEntity<Supplier> register(
-        @RequestBody @Valid RequestSupplierDTO data
-    ) {
+    public ResponseEntity<Supplier> register(@RequestBody @Valid RequestSupplierDTO data) {
         Supplier supplier = service.register(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(supplier);
     }

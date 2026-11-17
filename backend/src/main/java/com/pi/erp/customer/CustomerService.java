@@ -42,7 +42,7 @@ public class CustomerService {
         }
         if (filter.taxId() != null && !filter.taxId().isBlank()) {
             spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("taxId"), filter.taxId())
+                cb.equal(cb.upper(normalizedSearch(cb, root.get("taxId"))), CustomerTaxId.normalize(filter.taxId()))
             );
         }
         if (filter.legalName() != null && !filter.legalName().isBlank()) {
@@ -100,7 +100,8 @@ public class CustomerService {
 
     @Transactional
     public Customer register(RequestCustomerDTO data) {
-        if (repository.existsByTaxId(data.taxId())) {
+        String taxId = CustomerTaxId.requireValid(data.taxId(), data.personType());
+        if (repository.existsByTaxId(taxId)) {
             throw new IllegalArgumentException("Customer already exists.");
         }
 
@@ -120,6 +121,7 @@ public class CustomerService {
         PriceTable priceTable = findPriceTable(data.priceTableId());
 
         Customer customer = new Customer(data, priceTable);
+        customer.setTaxId(taxId);
         Customer savedCustomer = repository.save(customer);
 
         if (data.address() != null) {
@@ -141,6 +143,7 @@ public class CustomerService {
         return savedCustomer;
     }
 
+    @Transactional
     public Customer update(Long id, PatchCustomerDTO data) {
         Customer customer = repository
             .findById(id)
@@ -169,13 +172,11 @@ public class CustomerService {
         }
 
         if (data.taxId() != null) {
-            if (data.taxId().isBlank()) {
-                throw new IllegalArgumentException("Customer tax ID is required.");
-            }
-            if (repository.existsByTaxIdAndIdNot(data.taxId(), id)) {
+            String taxId = CustomerTaxId.requireValid(data.taxId(), customer.getPersonType());
+            if (repository.existsByTaxIdAndIdNot(taxId, id)) {
                 throw new IllegalArgumentException("Customer already exists.");
             }
-            customer.setTaxId(data.taxId());
+            customer.setTaxId(taxId);
         }
 
         if (data.tradeName() != null) {

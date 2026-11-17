@@ -1,3 +1,10 @@
+import DashboardPage from "../pages/Dashboard/DashboardPage";
+import PurchaseSuggestionsPage from "../pages/Operations/PurchaseSuggestionsPage";
+import ReceivablesPage from "../pages/Finance/ReceivablesPage";
+import PayablesPage from "../pages/Finance/PayablesPage";
+import CashFlowPage from "../pages/Finance/CashFlowPage";
+import FinancialCategoriesPage from "../pages/Finance/FinancialCategoriesPage";
+import BankAccountsPage from "../pages/Finance/BankAccountsPage";
 import CustomerEntryPage from "../pages/Customers/CustomerEntryPage";
 import CustomerDetailsPage from "../pages/Customers/CustomerDetailsPage";
 import SupplierEntryPage from "../pages/Suppliers/SupplierEntryPage";
@@ -15,6 +22,7 @@ import InvitationsPage from "../pages/Access/InvitationsPage";
 import SessionsPage from "../pages/Security/SessionsPage";
 import SecuritySettingsPage from "../pages/Security/SecuritySettingsPage";
 import SecurityAuditPage from "../pages/Security/SecurityAuditPage";
+import AppearancePage from "../pages/Settings/AppearancePage";
 import AccountPage from "../pages/Account/AccountPage";
 import SuppliersPage from "../pages/Suppliers/SuppliersPage";
 import CustomersPage from "../pages/Customers/CustomersPage";
@@ -29,14 +37,11 @@ import OrdersPage from "../pages/Operations/OrdersPage";
 import OrderEntryPage from "../pages/Operations/OrderEntryPage";
 import PurchasesPage from "../pages/Operations/PurchasesPage";
 import PurchaseEntryPage from "../pages/Operations/PurchaseEntryPage";
-import PurchaseDetailsPage from "../pages/Operations/PurchaseDetailsPage";
 import useAuth from "../auth/useAuth";
-import { firstRoute } from "./navigation";
 import "../components/layout/operationPages.css";
 
 function Home() {
-  const { session } = useAuth();
-  return <Navigate to={firstRoute(session)} replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 function ProductsEntry() {
@@ -54,10 +59,20 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<Home />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route element={<ProtectedRoute permission="finance.read" />}>
+            <Route path="/finance/receivables" element={<ReceivablesPage />} />
+            <Route path="/finance/payables" element={<PayablesPage />} />
+            <Route path="/finance/cash-flow" element={<CashFlowPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="finance.configure" />}>
+            <Route path="/finance/categories" element={<FinancialCategoriesPage />} />
+            <Route path="/finance/bank-accounts" element={<BankAccountsPage />} />
+          </Route>
           <Route path="/account" element={<AccountPage />} />
           <Route path="/security/sessions" element={<SessionsPage />} />
           <Route element={<ProtectedRoute permission="stock.read" />}>
-            <Route path="/stock" element={<Navigate to="/products" replace />} />
+            <Route path="/stock" element={<StockPage />} />
             <Route path="/stock/history" element={<StockHistoryPage />} />
           </Route>
           <Route element={<ProtectedRoute permission="warehouses.read" />}>
@@ -66,13 +81,15 @@ export default function AppRoutes() {
           <Route element={<ProtectedRoute permission="orders.read" />}>
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/orders/new" element={<OrderEntryPage />} />
+            <Route path="/orders/:id" element={<OrderEntryPage />} />
             <Route path="/orders/:id/edit" element={<OrderEntryPage />} />
           </Route>
           <Route element={<ProtectedRoute permission="purchases.read" />}>
             <Route path="/purchases" element={<PurchasesPage />} />
+            <Route path="/purchase-suggestions" element={<PurchaseSuggestionsPage />} />
             <Route path="/purchases/new" element={<PurchaseEntryPage />} />
             <Route path="/purchases/:id/edit" element={<PurchaseEntryPage />} />
-            <Route path="/purchases/:id" element={<PurchaseDetailsPage />} />
+            <Route path="/purchases/:id" element={<PurchaseEntryPage />} />
           </Route>
           <Route element={<ProtectedRoute anyPermissions={["products.read", "stock.read"]} />}>
             <Route path="/products" element={<ProductsEntry />} />
@@ -104,6 +121,9 @@ export default function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute permission="security.settings.manage" />}>
             <Route path="/security/settings" element={<SecuritySettingsPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="company.appearance.manage" />}>
+            <Route path="/settings/appearance" element={<AppearancePage />} />
           </Route>
           <Route element={<ProtectedRoute permission="security.audit.read" />}>
             <Route path="/security/audit" element={<SecurityAuditPage />} />

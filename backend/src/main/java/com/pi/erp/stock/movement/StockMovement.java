@@ -57,7 +57,7 @@ public class StockMovement {
     @Column(name = "purchase_id")
     private Long purchaseId;
 
-    // The operator is supplied by the caller until authentication is implemented.
+    // The operator is always resolved from the authenticated session.
     @Column(name = "user_id", nullable = false)
     private Long userId;
 

@@ -12,8 +12,9 @@ import com.pi.erp.warehouse.Warehouse;
 import com.pi.erp.warehouse.WarehouseRepository;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +45,7 @@ public class PurchaseItemService {
     @Autowired
     private EntityManager entityManager;
 
-    public List<PurchaseItem> search(PurchaseItemFilter filter) {
+    public Page<PurchaseItem> search(PurchaseItemFilter filter, Pageable pageable) {
         Specification<PurchaseItem> spec = Specification.allOf();
 
         if (filter.purchaseId() != null) {
@@ -62,7 +63,7 @@ public class PurchaseItemService {
                 cb.equal(root.get("warehouse").get("id"), filter.warehouseId())
             );
         }
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     @Transactional

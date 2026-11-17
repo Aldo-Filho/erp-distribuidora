@@ -15,13 +15,12 @@ export default function usePurchaseEntry(id) {
   const [state, setState] = useState({ loading: Boolean(id), data: null, error: "" });
   const attemptKey = `purchase-write:${session.userId}:${id || "new"}`;
   const [uncertain, setUncertain] = useDraft(attemptKey, false);
-  const reload = useCallback(async () => {
+  const load = useCallback(async () => {
     if (!id) return null;
     const version = ++generation.current;
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
-    setState((previous) => ({ ...previous, loading: true, error: "" }));
     try {
       const purchase = await purchases.findOne(id, { signal: controller.signal });
       const data = purchase
@@ -38,13 +37,18 @@ export default function usePurchaseEntry(id) {
       throw issue;
     }
   }, [id]);
+  const reload = useCallback(() => {
+    if (!id) return Promise.resolve(null);
+    setState((previous) => ({ ...previous, loading: true, error: "" }));
+    return load();
+  }, [id, load]);
   useEffect(() => {
-    reload().catch(() => {});
+    load().catch(() => {});
     return () => {
       generation.current += 1;
       request.current?.abort();
     };
-  }, [reload]);
+  }, [load]);
   const write = async (permission, work) => {
     if (!has(permission)) throw new Error("Sem permissão para esta operação.");
     if (
@@ -106,6 +110,7 @@ export default function usePurchaseEntry(id) {
     refreshing: state.loading,
     busy,
     uncertain,
+    markUncertain: () => setUncertain(true),
     reload: () => reload().catch(() => {}),
     acknowledge: () => {
       if (activePurchaseWrites.has(attemptKey)) {

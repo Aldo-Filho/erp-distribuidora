@@ -35,6 +35,8 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -46,6 +48,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 import tools.jackson.databind.ObjectMapper;
 
+@ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
     properties = {
@@ -167,17 +171,24 @@ class AuthenticationAccessIntegrationTests {
     @Order(1)
     void migrationsAndSessionSerializationUseRealPostgres() throws Exception {
         assertEquals(
-            5,
+            2,
             jdbc.queryForObject(
-                "SELECT count(*) FROM flyway_schema_history WHERE success AND version IN ('1','2','3','4','5')",
+                "SELECT count(*) FROM flyway_schema_history WHERE success AND version IN ('1','2')",
                 Integer.class
+            )
+        );
+        assertEquals(
+            List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
+            jdbc.queryForList(
+                "SELECT version FROM flyway_schema_history WHERE success AND version IS NOT NULL ORDER BY installed_rank",
+                String.class
             )
         );
         assertEquals(
             1,
             jdbc.queryForObject("SELECT count(*) FROM security_settings", Integer.class)
         );
-        Reply session = administrator.call("GET", "/auth/session", null);
+        Reply session = administrator.call("GET", "/auth/sessions/current", null);
         status(200, session);
         assertEquals(administratorId, number(session.object(), "userId"));
         assertTrue(array(session.object().get("permissionKeys")).contains("access.roles.manage"));
@@ -212,7 +223,7 @@ class AuthenticationAccessIntegrationTests {
             403,
             anonymous.raw(
                 "POST",
-                "/auth/login",
+                "/auth/sessions",
                 Map.of("email", email("administrator"), "password", password),
                 null
             )
@@ -222,7 +233,7 @@ class AuthenticationAccessIntegrationTests {
             401,
             anonymous.call(
                 "POST",
-                "/auth/login",
+                "/auth/sessions",
                 Map.of("email", email("administrator"), "password", "incorrect")
             )
         );
@@ -230,22 +241,22 @@ class AuthenticationAccessIntegrationTests {
             401,
             anonymous.call(
                 "POST",
-                "/auth/login",
+                "/auth/sessions",
                 Map.of("email", email("missing"), "password", password)
             )
         );
-        status(405, administrator.call("POST", "/user", Map.of()));
-        status(405, administrator.call("POST", "/permission", Map.of()));
+        status(405, administrator.call("POST", "/users", Map.of()));
+        status(405, administrator.call("POST", "/permissions", Map.of()));
         status(
             405,
-            administrator.call("PATCH", "/permission/1", Map.of("permissionKey", "made.up"))
+            administrator.call("PATCH", "/permissions/1", Map.of("permissionKey", "made.up"))
         );
-        status(405, administrator.call("DELETE", "/permission/1", null));
+        status(405, administrator.call("DELETE", "/permissions/1", null));
         status(
             400,
             administrator.call(
                 "PATCH",
-                "/user/" + administratorId,
+                "/users/" + administratorId,
                 Map.of("password", "Forbidden administrative password")
             )
         );
@@ -253,7 +264,7 @@ class AuthenticationAccessIntegrationTests {
         assertEquals(
             "no-store",
             administrator
-                .call("GET", "/auth/session", null)
+                .call("GET", "/auth/sessions/current", null)
                 .response()
                 .headers()
                 .firstValue("Cache-Control")
@@ -278,7 +289,7 @@ class AuthenticationAccessIntegrationTests {
         String staleCsrf = browser.csrfToken;
         Reply login = browser.call(
             "POST",
-            "/auth/login",
+            "/auth/sessions",
             Map.of("email", email("rotation"), "password", password)
         );
         status(200, login);
@@ -320,13 +331,13 @@ class AuthenticationAccessIntegrationTests {
             ),
             "Stale writes must not restore the anonymous session."
         );
-        status(403, browser.raw("POST", "/auth/activity", null, staleCsrf));
+        status(403, browser.raw("POST", "/auth/session-activities", null, staleCsrf));
         browser.csrfToken = null;
         status(
             200,
             browser.call(
                 "POST",
-                "/auth/login",
+                "/auth/sessions",
                 Map.of("email", email("rotation"), "password", password)
             )
         );
@@ -335,15 +346,15 @@ class AuthenticationAccessIntegrationTests {
             400,
             browser.call(
                 "POST",
-                "/auth/login",
+                "/auth/sessions",
                 Map.of("email", email("administrator"), "password", password)
             )
         );
-        status(204, browser.call("POST", "/auth/logout", null));
+        status(204, browser.call("DELETE", "/auth/sessions/current", null));
         browser.csrfToken = null;
-        status(401, browser.call("GET", "/auth/session", null));
+        status(401, browser.call("GET", "/auth/sessions/current", null));
         browser.csrf();
-        status(204, browser.call("POST", "/auth/logout", null));
+        status(204, browser.call("DELETE", "/auth/sessions/current", null));
     }
 
     @Test
@@ -365,7 +376,7 @@ class AuthenticationAccessIntegrationTests {
                     browser -> () ->
                         browser.call(
                             "POST",
-                            "/auth/login",
+                            "/auth/sessions",
                             Map.of("email", email("concurrent"), "password", password)
                         )
                 )
@@ -394,7 +405,7 @@ class AuthenticationAccessIntegrationTests {
         Browser pending = browsers.get(blocked);
         Map<String, Object> challenge = replies.get(blocked).object();
         assertEquals("SESSION_LIMIT_REACHED", challenge.get("code"));
-        status(401, pending.call("GET", "/auth/session", null));
+        status(401, pending.call("GET", "/auth/sessions/current", null));
         Map<String, Object> selected = object(array(challenge.get("sessions")).getFirst());
         String publicId = selected.get("id").toString();
         String token = challenge.get("challengeToken").toString();
@@ -403,7 +414,7 @@ class AuthenticationAccessIntegrationTests {
             400,
             attacker.call(
                 "POST",
-                "/auth/sessionReplacement",
+                "/auth/session-replacements",
                 Map.of("challengeToken", token, "sessionId", publicId)
             )
         );
@@ -411,7 +422,7 @@ class AuthenticationAccessIntegrationTests {
             200,
             pending.call(
                 "POST",
-                "/auth/sessionReplacement",
+                "/auth/session-replacements",
                 Map.of("challengeToken", token, "sessionId", publicId)
             )
         );
@@ -420,7 +431,7 @@ class AuthenticationAccessIntegrationTests {
             400,
             pending.call(
                 "POST",
-                "/auth/sessionReplacement",
+                "/auth/session-replacements",
                 Map.of("challengeToken", token, "sessionId", publicId)
             )
         );
@@ -437,7 +448,7 @@ class AuthenticationAccessIntegrationTests {
         for (int index = 0; index < browsers.size(); index++) {
             if (
                 index != blocked &&
-                browsers.get(index).call("GET", "/auth/session", null).status() == 401
+                browsers.get(index).call("GET", "/auth/sessions/current", null).status() == 401
             ) {
                 invalidated++;
             }
@@ -451,31 +462,31 @@ class AuthenticationAccessIntegrationTests {
         long role = createRole("dynamic");
         long userId = createUser("dynamic", role);
         Browser browser = loginBrowser(email("dynamic"));
-        status(403, browser.call("GET", "/product/search", null));
+        status(403, browser.call("GET", "/products", null));
         long permissionId = permission("products.read");
         status(
             201,
             administrator.call(
                 "POST",
-                "/role/" + role + "/permissions",
+                "/roles/" + role + "/permissions",
                 Map.of("permissionId", permissionId)
             )
         );
-        status(200, browser.call("GET", "/product/search", null));
+        status(200, browser.call("GET", "/products", null));
         assertTrue(
             array(
-                browser.call("GET", "/auth/session", null).object().get("permissionKeys")
+                browser.call("GET", "/auth/sessions/current", null).object().get("permissionKeys")
             ).contains("products.read")
         );
         status(
             204,
-            administrator.call("DELETE", "/role/" + role + "/permissions/" + permissionId, null)
+            administrator.call("DELETE", "/roles/" + role + "/permissions/" + permissionId, null)
         );
-        status(403, browser.call("GET", "/product/search", null));
-        status(200, administrator.call("PATCH", "/role/" + role, Map.of("active", false)));
-        status(401, browser.call("GET", "/auth/session", null));
-        status(200, administrator.call("PATCH", "/role/" + role, Map.of("active", true)));
-        status(401, browser.call("GET", "/auth/session", null));
+        status(403, browser.call("GET", "/products", null));
+        status(200, administrator.call("PATCH", "/roles/" + role, Map.of("active", false)));
+        status(401, browser.call("GET", "/auth/sessions/current", null));
+        status(200, administrator.call("PATCH", "/roles/" + role, Map.of("active", true)));
+        status(401, browser.call("GET", "/auth/sessions/current", null));
         assertEquals(0, activeSessions(userId));
     }
 
@@ -487,22 +498,22 @@ class AuthenticationAccessIntegrationTests {
         Browser owner = loginBrowser(email("owner"));
         Browser other = loginBrowser(email("other-owner"));
         String ownerSession = owner
-            .call("GET", "/auth/session", null)
+            .call("GET", "/auth/sessions/current", null)
             .object()
             .get("publicSessionId")
             .toString();
         status(204, other.call("DELETE", "/auth/sessions/" + ownerSession, null));
-        status(200, owner.call("GET", "/auth/session", null));
+        status(200, owner.call("GET", "/auth/sessions/current", null));
         status(
             204,
-            administrator.call("DELETE", "/user/" + otherId + "/sessions/" + ownerSession, null)
+            administrator.call("DELETE", "/users/" + otherId + "/sessions/" + ownerSession, null)
         );
-        status(200, owner.call("GET", "/auth/session", null));
+        status(200, owner.call("GET", "/auth/sessions/current", null));
         status(
             204,
-            administrator.call("DELETE", "/user/" + ownerId + "/sessions/" + ownerSession, null)
+            administrator.call("DELETE", "/users/" + ownerId + "/sessions/" + ownerSession, null)
         );
-        status(401, owner.call("GET", "/auth/session", null));
+        status(401, owner.call("GET", "/auth/sessions/current", null));
         assertEquals(1, activeSessions(otherId));
     }
 
@@ -516,7 +527,7 @@ class AuthenticationAccessIntegrationTests {
             idleId
         );
         status(200, administrator.call("PATCH", "/security/settings", Map.of("idleMinutes", 120)));
-        status(401, idle.call("GET", "/auth/session", null));
+        status(401, idle.call("GET", "/auth/sessions/current", null));
         assertEquals(0, activeSessions(idleId));
         long absoluteId = createUser("absolute", operatorRoleId);
         Browser absolute = loginBrowser(email("absolute"));
@@ -528,7 +539,7 @@ class AuthenticationAccessIntegrationTests {
             200,
             administrator.call("PATCH", "/security/settings", Map.of("absoluteMinutes", 1440))
         );
-        status(401, absolute.call("GET", "/auth/session", null));
+        status(401, absolute.call("GET", "/auth/sessions/current", null));
         assertEquals(0, activeSessions(absoluteId));
         status(400, administrator.call("PATCH", "/security/settings", Map.of("idleMinutes", 241)));
         status(400, administrator.call("PATCH", "/security/settings", Map.of("maxSessions", 0)));
@@ -563,20 +574,20 @@ class AuthenticationAccessIntegrationTests {
             "SELECT last_activity_at, authenticated_at FROM user_sessions WHERE user_id = ?",
             id
         );
-        status(200, browser.call("GET", "/auth/session", null));
+        status(200, browser.call("GET", "/auth/sessions/current", null));
         var polled = jdbc.queryForMap(
             "SELECT last_activity_at, authenticated_at FROM user_sessions WHERE user_id = ?",
             id
         );
         assertEquals(before, polled);
-        status(204, browser.call("POST", "/auth/activity", null));
+        status(204, browser.call("POST", "/auth/session-activities", null));
         var after = jdbc.queryForMap(
             "SELECT last_activity_at, authenticated_at FROM user_sessions WHERE user_id = ?",
             id
         );
         assertEquals(before.get("authenticated_at"), after.get("authenticated_at"));
         assertNotEquals(before.get("last_activity_at"), after.get("last_activity_at"));
-        status(204, browser.call("POST", "/auth/activity", null));
+        status(204, browser.call("POST", "/auth/session-activities", null));
         assertEquals(
             after,
             jdbc.queryForMap(
@@ -592,7 +603,7 @@ class AuthenticationAccessIntegrationTests {
         String recipient = email("invited");
         Reply created = administrator.call(
             "POST",
-            "/user/invitation",
+            "/user-invitations",
             Map.of(
                 "name",
                 "Invited employee",
@@ -607,18 +618,18 @@ class AuthenticationAccessIntegrationTests {
         assertEquals(recipient, created.object().get("email"));
         assertFalse(created.text().contains("token"));
         String oldToken = smtp.token(recipient, 0);
-        status(429, administrator.call("POST", "/user/invitation/" + id + "/resend", null));
+        status(429, administrator.call("POST", "/user-invitations/" + id + "/deliveries", null));
         resetThrottle();
         status(
             409,
             administrator.call(
                 "POST",
-                "/user/invitation",
+                "/user-invitations",
                 Map.of("name", "Duplicate invitation", "email", recipient, "roleId", operatorRoleId)
             )
         );
         resetThrottle();
-        status(202, administrator.call("POST", "/user/invitation/" + id + "/resend", null));
+        status(202, administrator.call("POST", "/user-invitations/" + id + "/deliveries", null));
         String newToken = smtp.token(recipient, 1);
         assertFalse(oldToken.equals(newToken), "Resend must rotate the token.");
         Browser accept = new Browser();
@@ -626,7 +637,7 @@ class AuthenticationAccessIntegrationTests {
             400,
             accept.call(
                 "POST",
-                "/auth/invitationAcceptance",
+                "/auth/invitation-acceptances",
                 Map.of("token", oldToken, "password", password)
             )
         );
@@ -639,13 +650,13 @@ class AuthenticationAccessIntegrationTests {
                     () ->
                         accept.call(
                             "POST",
-                            "/auth/invitationAcceptance",
+                            "/auth/invitation-acceptances",
                             Map.of("token", newToken, "password", password)
                         ),
                     () ->
                         parallel.call(
                             "POST",
-                            "/auth/invitationAcceptance",
+                            "/auth/invitation-acceptances",
                             Map.of("token", newToken, "password", password)
                         )
                 )
@@ -674,7 +685,7 @@ class AuthenticationAccessIntegrationTests {
                 recipient
             )
         );
-        status(401, accept.call("GET", "/auth/session", null));
+        status(401, accept.call("GET", "/auth/sessions/current", null));
         loginBrowser(recipient);
     }
 
@@ -686,18 +697,18 @@ class AuthenticationAccessIntegrationTests {
         String recipient = email("inactive-invitation");
         Reply created = administrator.call(
             "POST",
-            "/user/invitation",
+            "/user-invitations",
             Map.of("name", "Inactive target", "email", recipient, "roleId", role)
         );
         status(201, created);
         String token = smtp.token(recipient, 0);
-        status(200, administrator.call("PATCH", "/role/" + role, Map.of("active", false)));
+        status(200, administrator.call("PATCH", "/roles/" + role, Map.of("active", false)));
         Browser browser = new Browser();
         status(
             400,
             browser.call(
                 "POST",
-                "/auth/invitationAcceptance",
+                "/auth/invitation-acceptances",
                 Map.of("token", token, "password", password)
             )
         );
@@ -713,12 +724,12 @@ class AuthenticationAccessIntegrationTests {
             "UPDATE user_invitations SET expires_at = now() - interval '1 minute' WHERE email = ?",
             recipient
         );
-        status(200, administrator.call("PATCH", "/role/" + role, Map.of("active", true)));
+        status(200, administrator.call("PATCH", "/roles/" + role, Map.of("active", true)));
         status(
             400,
             browser.call(
                 "POST",
-                "/auth/invitationAcceptance",
+                "/auth/invitation-acceptances",
                 Map.of("token", token, "password", password)
             )
         );
@@ -727,7 +738,7 @@ class AuthenticationAccessIntegrationTests {
             String failedEmail = email("smtp-failure");
             Reply failed = administrator.call(
                 "POST",
-                "/user/invitation",
+                "/user-invitations",
                 Map.of("name", "SMTP target", "email", failedEmail, "roleId", operatorRoleId)
             );
             status(201, failed);
@@ -762,12 +773,12 @@ class AuthenticationAccessIntegrationTests {
         Browser publicBrowser = new Browser();
         Reply known = publicBrowser.call(
             "POST",
-            "/auth/passwordRecovery",
+            "/auth/password-recoveries",
             Map.of("email", email("recovery"))
         );
         Reply unknown = publicBrowser.call(
             "POST",
-            "/auth/passwordRecovery",
+            "/auth/password-recoveries",
             Map.of("email", email("absent-recovery"))
         );
         status(202, known);
@@ -778,7 +789,7 @@ class AuthenticationAccessIntegrationTests {
             400,
             publicBrowser.call(
                 "POST",
-                "/auth/passwordReset",
+                "/auth/password-resets",
                 Map.of("token", token, "newPassword", "short")
             )
         );
@@ -787,7 +798,7 @@ class AuthenticationAccessIntegrationTests {
             204,
             publicBrowser.call(
                 "POST",
-                "/auth/passwordReset",
+                "/auth/password-resets",
                 Map.of("token", token, "newPassword", replacement)
             )
         );
@@ -795,13 +806,13 @@ class AuthenticationAccessIntegrationTests {
             400,
             publicBrowser.call(
                 "POST",
-                "/auth/passwordReset",
+                "/auth/password-resets",
                 Map.of("token", token, "newPassword", replacement)
             )
         );
-        status(401, active.call("GET", "/auth/session", null));
-        status(401, second.call("GET", "/auth/session", null));
-        status(401, publicBrowser.call("GET", "/auth/session", null));
+        status(401, active.call("GET", "/auth/sessions/current", null));
+        status(401, second.call("GET", "/auth/sessions/current", null));
+        status(401, publicBrowser.call("GET", "/auth/sessions/current", null));
         assertEquals(0, activeSessions(id));
         assertTrue(
             encoder.matches(
@@ -818,7 +829,7 @@ class AuthenticationAccessIntegrationTests {
             200,
             restored.call(
                 "POST",
-                "/auth/login",
+                "/auth/sessions",
                 Map.of("email", email("recovery"), "password", replacement)
             )
         );
@@ -847,15 +858,15 @@ class AuthenticationAccessIntegrationTests {
                 Map.of("currentPassword", password, "newPassword", spaced)
             )
         );
-        status(401, browser.call("GET", "/auth/session", null));
-        status(401, second.call("GET", "/auth/session", null));
+        status(401, browser.call("GET", "/auth/sessions/current", null));
+        status(401, second.call("GET", "/auth/sessions/current", null));
         assertEquals(0, activeSessions(id));
         Browser changed = new Browser();
         status(
             401,
             changed.call(
                 "POST",
-                "/auth/login",
+                "/auth/sessions",
                 Map.of("email", email("password"), "password", spaced.trim())
             )
         );
@@ -863,7 +874,7 @@ class AuthenticationAccessIntegrationTests {
             200,
             changed.call(
                 "POST",
-                "/auth/login",
+                "/auth/sessions",
                 Map.of("email", email("password"), "password", spaced)
             )
         );
@@ -879,30 +890,30 @@ class AuthenticationAccessIntegrationTests {
                 401,
                 browser.call(
                     "POST",
-                    "/auth/login",
+                    "/auth/sessions",
                     Map.of("email", email("nonexistent-throttle"), "password", password)
                 )
             );
         }
         Reply blocked = browser.call(
             "POST",
-            "/auth/login",
+            "/auth/sessions",
             Map.of("email", email("nonexistent-throttle"), "password", password)
         );
         status(429, blocked);
         assertTrue(blocked.response().headers().firstValue("Retry-After").isPresent());
-        status(400, administrator.call("GET", "/security/audit/search?size=101", null));
+        status(400, administrator.call("GET", "/security/audit-events?size=101", null));
         status(
             400,
             administrator.call(
                 "GET",
-                "/security/audit/search?from=2026-02-01T00:00:00Z&to=2026-01-01T00:00:00Z",
+                "/security/audit-events?from=2026-02-01T00:00:00Z&to=2026-01-01T00:00:00Z",
                 null
             )
         );
         Reply audit = administrator.call(
             "GET",
-            "/security/audit/search?size=25&action=LOGIN_FAILED",
+            "/security/audit-events?size=25&action=LOGIN_FAILED",
             null
         );
         status(200, audit);
@@ -928,14 +939,14 @@ class AuthenticationAccessIntegrationTests {
         );
         Reply purchase = administrator.call(
             "POST",
-            "/purchase",
+            "/purchases",
             Map.of("supplierId", link.get("supplier_id"), "userId", administratorId)
         );
         status(201, purchase);
         long purchaseId = number(purchase.object(), "id");
         Reply item = administrator.call(
             "POST",
-            "/purchaseItem",
+            "/purchase-items",
             Map.of(
                 "purchaseId",
                 purchaseId,
@@ -953,11 +964,11 @@ class AuthenticationAccessIntegrationTests {
         long itemId = number(item.object(), "id");
         status(
             200,
-            administrator.call("PATCH", "/purchase/" + purchaseId, Map.of("status", "SENT"))
+            administrator.call("POST", "/purchases/" + purchaseId + "/submissions", Map.of())
         );
         status(
             200,
-            administrator.call("PATCH", "/purchase/" + purchaseId, Map.of("status", "CONFIRMED"))
+            administrator.call("POST", "/purchases/" + purchaseId + "/confirmations", Map.of())
         );
         String requestId = UUID.randomUUID().toString();
         Map<String, Object> payload = Map.of(
@@ -972,7 +983,7 @@ class AuthenticationAccessIntegrationTests {
             400,
             first.call(
                 "POST",
-                "/purchase/" + purchaseId + "/receive",
+                "/purchases/" + purchaseId + "/receipts",
                 Map.of(
                     "requestId",
                     requestId,
@@ -983,12 +994,12 @@ class AuthenticationAccessIntegrationTests {
                 )
             )
         );
-        Reply received = first.call("POST", "/purchase/" + purchaseId + "/receive", payload);
+        Reply received = first.call("POST", "/purchases/" + purchaseId + "/receipts", payload);
         status(201, received);
         long receiptId = number(received.object(), "id");
-        status(200, administrator.call("PATCH", "/user/" + firstId, Map.of("active", false)));
-        status(401, first.call("GET", "/auth/session", null));
-        Reply replay = second.call("POST", "/purchase/" + purchaseId + "/receive", payload);
+        status(200, administrator.call("PATCH", "/users/" + firstId, Map.of("active", false)));
+        status(401, first.call("GET", "/auth/sessions/current", null));
+        Reply replay = second.call("POST", "/purchases/" + purchaseId + "/receipts", payload);
         status(200, replay);
         assertEquals(receiptId, number(replay.object(), "id"));
         assertEquals(firstId, number(object(replay.object().get("operator")), "id"));
@@ -1004,7 +1015,7 @@ class AuthenticationAccessIntegrationTests {
             400,
             second.call(
                 "POST",
-                "/purchase/" + purchaseId + "/receive",
+                "/purchases/" + purchaseId + "/receipts",
                 Map.of(
                     "requestId",
                     requestId,
@@ -1031,7 +1042,7 @@ class AuthenticationAccessIntegrationTests {
                 201,
                 administrator.call(
                     "POST",
-                    "/role/" + role + "/permissions",
+                    "/roles/" + role + "/permissions",
                     Map.of("permissionId", permission(key))
                 )
             );
@@ -1040,8 +1051,10 @@ class AuthenticationAccessIntegrationTests {
         Browser scoped = loginBrowser(email("composed-inputs"));
         var stock = jdbc.queryForMap(
             """
-            SELECT s.product_id, s.warehouse_id, p.brand_id FROM stock_items s
-            JOIN products p USING(product_id) WHERE p.active ORDER BY s.stock_item_id LIMIT 1
+            SELECT s.product_id, s.warehouse_id, c.brand_id FROM stock_items s
+            JOIN products p USING(product_id)
+            JOIN product_catalogs c ON c.product_catalog_id = p.catalog_id
+            WHERE p.active ORDER BY s.stock_item_id LIMIT 1
             """
         );
         int products = jdbc.queryForObject("SELECT count(*) FROM products", Integer.class);
@@ -1049,10 +1062,12 @@ class AuthenticationAccessIntegrationTests {
             403,
             scoped.call(
                 "POST",
-                "/product",
+                "/products",
                 Map.of(
                     "name",
                     "Unauthorized initial stock",
+                    "unit",
+                    "UN",
                     "brandId",
                     stock.get("brand_id"),
                     "cost",
@@ -1078,14 +1093,14 @@ class AuthenticationAccessIntegrationTests {
             "SELECT customer_id FROM customers WHERE active ORDER BY customer_id LIMIT 1",
             Long.class
         );
-        Reply order = administrator.call("POST", "/order", Map.of("customerId", customer));
+        Reply order = administrator.call("POST", "/orders", Map.of("customerId", customer));
         status(201, order);
         long orderId = number(order.object(), "id");
         status(
             403,
             scoped.call(
                 "POST",
-                "/orderItem",
+                "/order-items",
                 Map.of(
                     "orderId",
                     orderId,
@@ -1104,7 +1119,7 @@ class AuthenticationAccessIntegrationTests {
             403,
             scoped.call(
                 "POST",
-                "/orderItem",
+                "/order-items",
                 Map.of(
                     "orderId",
                     orderId,
@@ -1119,7 +1134,7 @@ class AuthenticationAccessIntegrationTests {
                 )
             )
         );
-        status(403, scoped.call("PATCH", "/order/" + orderId, Map.of("status", "CONFIRMED")));
+        status(403, scoped.call("POST", "/orders/" + orderId + "/confirmations", Map.of()));
         assertEquals(
             0,
             jdbc.queryForObject(
@@ -1142,12 +1157,12 @@ class AuthenticationAccessIntegrationTests {
         );
         Reply purchase = administrator.call(
             "POST",
-            "/purchase",
+            "/purchases",
             Map.of("supplierId", supplier, "userId", administratorId)
         );
         status(201, purchase);
         long purchaseId = number(purchase.object(), "id");
-        status(403, scoped.call("PATCH", "/purchase/" + purchaseId, Map.of("status", "SENT")));
+        status(403, scoped.call("POST", "/purchases/" + purchaseId + "/submissions", Map.of()));
         assertEquals(
             "DRAFT",
             jdbc.queryForObject(
@@ -1172,10 +1187,10 @@ class AuthenticationAccessIntegrationTests {
                     () ->
                         administrator.call(
                             "PATCH",
-                            "/user/" + administratorId,
+                            "/users/" + administratorId,
                             Map.of("active", false)
                         ),
-                    () -> second.call("PATCH", "/user/" + secondId, Map.of("active", false))
+                    () -> second.call("PATCH", "/users/" + secondId, Map.of("active", false))
                 )
             );
             var statuses = List.of(results.get(0).get().status(), results.get(1).get().status());
@@ -1253,7 +1268,7 @@ class AuthenticationAccessIntegrationTests {
         Browser browser = new Browser();
         status(
             200,
-            browser.call("POST", "/auth/login", Map.of("email", email, "password", password))
+            browser.call("POST", "/auth/sessions", Map.of("email", email, "password", password))
         );
         browser.csrfToken = null;
         return browser;

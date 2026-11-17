@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/orders")
 public class OrderDispatchController {
 
     @Autowired
     private OrderDispatchService service;
 
-    @PostMapping("/{id}/dispatch")
+    @PostMapping("/{id}/dispatches")
     public ResponseEntity<Order> dispatch(
         @PathVariable Long id,
         @RequestBody @Valid RequestOrderDispatchDTO data

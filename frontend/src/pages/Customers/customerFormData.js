@@ -1,4 +1,5 @@
-import { addressKeys, emptyAddress } from "./CustomerAddressFields";
+import { addressKeys, emptyAddress } from "./customerAddressData.js";
+import { normalizeTaxId, validTaxId } from "./customerTaxId.js";
 
 const common = ["legalName", "taxId", "phone", "email", "whatsapp"];
 export function customerValues(customer) {
@@ -27,7 +28,10 @@ export function validateAddress(address) {
   return "";
 }
 
-export function validateCustomer(value, editing) {
+export function validateCustomer(value, customer) {
+  const documentChanged = !customer || normalizeTaxId(value.taxId) !== normalizeTaxId(customer.taxId);
+  if (documentChanged && !validTaxId(value.taxId, value.personType))
+    return value.personType === "PF" ? "Informe um CPF válido." : "Informe um CNPJ válido.";
   if (["legalName", "taxId", "phone"].some((field) => !value[field].trim())) {
     return "Preencha nome, documento e telefone.";
   }
@@ -37,7 +41,7 @@ export function validateCustomer(value, editing) {
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   if (value.personType === "PF" && value.birthDate && value.birthDate > localToday)
     return "Nascimento não pode estar no futuro.";
-  return !editing && value.withAddress ? validateAddress(value.address) : "";
+  return !customer && value.withAddress ? validateAddress(value.address) : "";
 }
 
 export function customerPayload(value, customer, canChangePrice) {
@@ -52,7 +56,7 @@ export function customerPayload(value, customer, canChangePrice) {
     for (const field of fields) {
       if (field === "birthDate") {
         if (value[field]) body[field] = value[field];
-      } else body[field] = value[field];
+      } else body[field] = field === "taxId" ? normalizeTaxId(value[field]) : value[field];
     }
     if (canChangePrice && value.priceTableId) body.priceTableId = Number(value.priceTableId);
     if (value.withAddress)
@@ -62,7 +66,7 @@ export function customerPayload(value, customer, canChangePrice) {
   for (const field of fields) {
     if (value[field] !== (customer[field] || "")) {
       if (field === "birthDate" && !value[field]) body.removeBirthDate = true;
-      else body[field] = value[field];
+      else body[field] = field === "taxId" ? normalizeTaxId(value[field]) : value[field];
     }
   }
   if (canChangePrice && value.priceTableId !== (customer.priceTable?.id?.toString() || "")) {

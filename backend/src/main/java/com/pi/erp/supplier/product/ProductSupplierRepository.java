@@ -2,6 +2,8 @@ package com.pi.erp.supplier.product;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -35,6 +37,18 @@ public interface ProductSupplierRepository
     )
     @Override
     List<ProductSupplier> findAll(Specification<ProductSupplier> spec);
+
+    @EntityGraph(
+        type = EntityGraph.EntityGraphType.LOAD,
+        attributePaths = {
+            "product.catalog.brand",
+            "product.catalog.category",
+            "supplier",
+            "legacyOption",
+        }
+    )
+    @Override
+    Page<ProductSupplier> findAll(Specification<ProductSupplier> spec, Pageable pageable);
 
     Optional<ProductSupplier> findBySupplierIdAndProductId(Long supplierId, Long productId);
 

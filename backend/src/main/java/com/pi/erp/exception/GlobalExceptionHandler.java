@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.BindException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,30 +26,55 @@ import org.springframework.web.server.ResponseStatusException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ResponseErrorDTO> handleAccessDenied(
-        AccessDeniedException exception
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ResponseErrorDTO> handleUploadSize(
+        org.springframework.web.multipart.MaxUploadSizeExceededException exception
     ) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseErrorDTO(
-            403, "Forbidden", "Permission denied.", LocalDateTime.now()
-        ));
+        return ResponseEntity.status(413).body(
+            new ResponseErrorDTO(
+                413,
+                "Payload Too Large",
+                "O logo deve ter até 2 MB.",
+                LocalDateTime.now()
+            )
+        );
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ResponseErrorDTO> handleQueryBinding(BindException exception) {
+        return ResponseEntity.badRequest().body(
+            new ResponseErrorDTO(
+                400,
+                "Bad Request",
+                "Request parameters are missing or invalid.",
+                LocalDateTime.now()
+            )
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ResponseErrorDTO> handleAccessDenied(AccessDeniedException exception) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+            new ResponseErrorDTO(403, "Forbidden", "Permission denied.", LocalDateTime.now())
+        );
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ResponseErrorDTO> handleStatus(
-        ResponseStatusException exception
-    ) {
+    public ResponseEntity<ResponseErrorDTO> handleStatus(ResponseStatusException exception) {
         HttpStatusCode status = exception.getStatusCode();
         HttpStatus value = HttpStatus.resolve(status.value());
         ResponseEntity.BodyBuilder response = ResponseEntity.status(status);
         if (status.value() == 429) {
             response.header("Retry-After", "60");
         }
-        return response.body(new ResponseErrorDTO(
-            status.value(), value == null ? "HTTP Error" : value.getReasonPhrase(),
-            value == null ? "Request could not be processed." : value.getReasonPhrase() + ".",
-            LocalDateTime.now()
-        ));
+        return response.body(
+            new ResponseErrorDTO(
+                status.value(),
+                value == null ? "HTTP Error" : value.getReasonPhrase(),
+                value == null ? "Request could not be processed." : value.getReasonPhrase() + ".",
+                LocalDateTime.now()
+            )
+        );
     }
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
@@ -153,8 +179,8 @@ public class GlobalExceptionHandler {
         while (cause != null) {
             if (
                 cause instanceof ConstraintViolationException violation &&
-                    "23505".equals(violation.getSQLState()) &&
-                    "uk_warehouse_name_normalized".equals(violation.getConstraintName())
+                "23505".equals(violation.getSQLState()) &&
+                "uk_warehouse_name_normalized".equals(violation.getConstraintName())
             ) {
                 return handleIllegalArgument(
                     new IllegalArgumentException("This warehouse name already exists.")

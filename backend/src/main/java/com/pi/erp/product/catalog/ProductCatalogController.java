@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/productCatalog")
+@RequestMapping("/product-catalogs")
 public class ProductCatalogController {
 
     @Autowired
@@ -28,7 +28,7 @@ public class ProductCatalogController {
     @Autowired
     private ProductCatalogRepository repository;
 
-    @GetMapping("/search")
+    @GetMapping
     public ResponseEntity<Page<ProductCatalog>> search(
         ProductCatalogFilter filter,
         @RequestParam(defaultValue = "0") int page,
@@ -64,7 +64,7 @@ public class ProductCatalogController {
         return ResponseEntity.ok(service.update(id, data));
     }
 
-    @GetMapping("/{id}/items/search")
+    @GetMapping("/{id}/products")
     public ResponseEntity<Page<Product>> search(
         @PathVariable Long id,
         @RequestParam(required = false) String query,
@@ -78,7 +78,7 @@ public class ProductCatalogController {
         );
     }
 
-    @PostMapping("/{id}/items")
+    @PostMapping("/{id}/products")
     public ResponseEntity<Product> register(
         @PathVariable Long id,
         @RequestBody @Valid RequestCatalogItemDTO data

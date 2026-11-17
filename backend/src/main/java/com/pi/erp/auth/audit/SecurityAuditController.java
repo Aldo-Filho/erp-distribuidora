@@ -44,7 +44,7 @@ public class SecurityAuditController {
         return PageRequest.of(page, size);
     }
 
-    @GetMapping("/security/audit/search")
+    @GetMapping("/security/audit-events")
     public ResponseEntity<Page<EventView>> search(
         @RequestParam(required = false) Instant from,
         @RequestParam(required = false) Instant to,

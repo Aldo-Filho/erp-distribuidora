@@ -7,6 +7,7 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 import RecordMetadata from "../../components/record/RecordMetadata";
 
 const modules = {
+  finance: "Financeiro",
   customers: "Clientes",
   suppliers: "Fornecedores",
   products: "Produtos",
@@ -20,14 +21,18 @@ const modules = {
   "security.settings": "Política de acesso",
   "security.sessions": "Sessões de terceiros",
   "security.audit": "Auditoria",
+  "company.appearance": "Aparência da empresa",
 };
 const actions = {
+  suggest: "Gerar sugestões de compra",
   read: "Consultar",
   create: "Cadastrar",
   update: "Editar",
   delete: "Excluir",
   manage: "Administrar",
-  configure: "Configurar saldos",
+  configure: "Configurar",
+  settle: "Registrar baixa integral",
+  reverse: "Registrar estorno",
   adjust: "Movimentar / ajustar",
   confirm: "Confirmar",
   cancel: "Cancelar",

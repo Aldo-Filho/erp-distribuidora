@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/productSupplierOption")
+@RequestMapping("/product-supplier-options")
 public class ProductSupplierOptionController {
 
     @Autowired
@@ -27,7 +27,7 @@ public class ProductSupplierOptionController {
     @Autowired
     private ProductSupplierOptionRepository repository;
 
-    @GetMapping("/search")
+    @GetMapping
     public ResponseEntity<Page<ProductSupplierOption>> search(
         ProductSupplierOptionFilter filter,
         @RequestParam(defaultValue = "0") int page,

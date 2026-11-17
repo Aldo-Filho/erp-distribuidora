@@ -1,15 +1,15 @@
-import { api } from "./api";
+import { api, allPages } from "./api";
 import { queryString } from "./suppliers";
 
 export const productSuppliers = {
-  search: (filter, options) => api("/productSupplier/search?" + queryString(filter), options),
-  register: (body) => api("/productSupplier", { method: "POST", body }),
-  update: (id, body) => api(`/productSupplier/${id}`, { method: "PATCH", body }),
+  search: (filter, options) => allPages("/product-suppliers?" + queryString(filter), options),
+  register: (body) => api("/product-suppliers", { method: "POST", body }),
+  update: (id, body) => api(`/product-suppliers/${id}`, { method: "PATCH", body }),
   options: (productSupplierId, filter, page = 0, size = 25, options) =>
     api(
-      "/productSupplierOption/search?" + queryString({ ...filter, productSupplierId, page, size }),
+      "/product-supplier-options?" + queryString({ ...filter, productSupplierId, page, size }),
       options,
     ),
-  registerOption: (body) => api("/productSupplierOption", { method: "POST", body }),
-  updateOption: (id, body) => api(`/productSupplierOption/${id}`, { method: "PATCH", body }),
+  registerOption: (body) => api("/product-supplier-options", { method: "POST", body }),
+  updateOption: (id, body) => api(`/product-supplier-options/${id}`, { method: "PATCH", body }),
 };

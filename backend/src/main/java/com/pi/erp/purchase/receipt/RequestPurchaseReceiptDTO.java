@@ -13,5 +13,13 @@ public record RequestPurchaseReceiptDTO(
     String notes,
     @NotEmpty @Valid List<ItemDTO> items
 ) {
-    public record ItemDTO(@NotNull Long purchaseItemId, @NotNull BigDecimal quantity) {}
+    public record ItemDTO(
+        @NotNull Long purchaseItemId,
+        BigDecimal quantity,
+        BigDecimal commercialQuantity
+    ) {
+        public ItemDTO(Long purchaseItemId, BigDecimal quantity) {
+            this(purchaseItemId, quantity, null);
+        }
+    }
 }

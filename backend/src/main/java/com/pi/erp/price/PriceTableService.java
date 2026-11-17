@@ -3,8 +3,9 @@ package com.pi.erp.price;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.price.item.PriceTableItemRepository;
 import java.time.LocalDate;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +19,7 @@ public class PriceTableService {
     @Autowired
     private PriceTableItemRepository priceTableItemRepository;
 
-    public List<PriceTable> search(PriceTableFilter filter) {
+    public Page<PriceTable> search(PriceTableFilter filter, Pageable pageable) {
         Specification<PriceTable> spec = Specification.allOf();
 
         if (filter.name() != null && !filter.name().isBlank()) {
@@ -32,17 +33,13 @@ public class PriceTableService {
             );
         }
         if (filter.endDate() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("endDate"), filter.endDate())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("endDate"), filter.endDate()));
         }
         if (filter.active() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("active"), filter.active())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), filter.active()));
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     public PriceTable register(RequestPriceTableDTO data) {
@@ -72,9 +69,8 @@ public class PriceTableService {
             throw new IllegalArgumentException("Price table already exists.");
         }
 
-        LocalDate startDate = data.startDate() != null
-            ? data.startDate()
-            : priceTable.getStartDate();
+        LocalDate startDate =
+            data.startDate() != null ? data.startDate() : priceTable.getStartDate();
         LocalDate endDate = data.endDate() != null ? data.endDate() : priceTable.getEndDate();
         validatePeriod(startDate, endDate);
 

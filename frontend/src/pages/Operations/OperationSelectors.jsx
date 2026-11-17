@@ -1,3 +1,4 @@
+import { partyName, skuName } from "./operationLabels.js";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
 import Modal from "../../components/feedback/Modal";
@@ -9,18 +10,8 @@ import { products } from "../../services/products";
 import { orders } from "../../services/operations";
 import { useCatalogPage, useProductResource } from "../Products/useProductResource";
 import { ProductLoad, ProductPageFooter, ProductFilters } from "../Products/ProductControls";
-import { characteristics, money } from "../Products/productFormData";
+import { money } from "../Products/productFormData";
 
-export const partyName = (record) => record?.tradeName || record?.legalName || "—";
-export const skuName = (item) =>
-  `${item.sku} · ${item.name}${
-    Object.entries(item.attributes || {}).length
-      ? " · " +
-        Object.entries(item.attributes)
-          .map(([key, value]) => `${characteristics[key] || key}: ${value}`)
-          .join(" / ")
-      : ""
-  }`;
 const readCustomers = (filter, page, size, options) =>
   customers.search({ ...filter, searchField: "NAME", active: true }, page, size, options);
 const readSuppliers = (filter, page, size, options) =>
@@ -300,6 +291,7 @@ function SkuSalePrice({ item, orderId }) {
 
 export function WarehouseSelect({
   value,
+  label = "Depósito",
   onChange,
   disabled = false,
   allowedIds,
@@ -330,7 +322,7 @@ export function WarehouseSelect({
   return (
     <div>
       <label>
-        Depósito
+        {label}
         <FilterSelect
           value={value}
           required

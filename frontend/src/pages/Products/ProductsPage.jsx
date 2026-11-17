@@ -1,3 +1,4 @@
+import BarcodeScanner from "../../components/feedback/BarcodeScanner";
 import useListReturn from "../../hooks/useListReturn";
 import { useState } from "react";
 import { Eye, History, Package, Pencil, Plus, Power } from "lucide-react";
@@ -57,6 +58,10 @@ export default function ProductsPage() {
   };
   return (
     <div className="customers-page products-page">
+      <BarcodeScanner onResolved={async product => {
+        const catalog = await products.findOne(product.catalogId);
+        listReturn.open(`/products/${product.catalogId}${catalog.type === "VARIANT" ? `/variants/${product.id}` : ""}?section=${has("stock.read") ? "stock" : "commercial"}`);
+      }} />
       <div className="page-title">
         <PageHeading
           title="Produtos"

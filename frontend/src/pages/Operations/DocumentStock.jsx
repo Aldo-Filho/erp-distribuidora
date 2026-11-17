@@ -3,7 +3,7 @@ import { productStock } from "../../services/productStock";
 import { useProductResource } from "../Products/useProductResource";
 import { ProductLoad } from "../Products/ProductControls";
 import { quantity } from "../Products/productFormData";
-import { available } from "./StockPage";
+import { available } from "./stockBalance.js";
 import "./stock.css";
 
 export default function DocumentStock({ items, revision, onClose }) {

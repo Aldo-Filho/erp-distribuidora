@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+@ActiveProfiles("test")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
     properties = {
@@ -97,9 +99,9 @@ class ProductCatalogIntegrationTests {
         );
         assertEquals(
             200,
-            call("POST", "/auth/login", Map.of("email", email, "password", password)).statusCode()
+            call("POST", "/auth/sessions", Map.of("email", email, "password", password)).statusCode()
         );
-        brandId = created("/brand", Map.of("name", "Brand " + UUID.randomUUID()))
+        brandId = created("/brands", Map.of("name", "Brand " + UUID.randomUUID()))
             .path("id")
             .asLong();
     }
@@ -148,7 +150,7 @@ class ProductCatalogIntegrationTests {
     }
 
     private JsonNode item(long catalogId) throws Exception {
-        var response = call("GET", "/productCatalog/" + catalogId + "/items/search", null);
+        var response = call("GET", "/product-catalogs/" + catalogId + "/products", null);
         assertEquals(200, response.statusCode(), response.body());
         return json.readTree(response.body()).path("content").get(0);
     }
@@ -156,18 +158,18 @@ class ProductCatalogIntegrationTests {
     @Test
     void simpleRegistrationAndList() throws Exception {
         JsonNode root = created(
-            "/productCatalog",
+            "/product-catalogs",
             catalog("UN", Map.of("cost", 0, "price", 0, "color", "", "size", ""))
         );
         JsonNode sku = item(root.path("id").asLong());
         assertTrue(sku.path("sku").asText().startsWith("PRD-"));
         assertEquals(0, sku.path("price").asDouble());
-        var search = call("GET", "/productCatalog/search?query=" + sku.path("sku").asText(), null);
+        var search = call("GET", "/product-catalogs?query=" + sku.path("sku").asText(), null);
         assertEquals(200, search.statusCode(), search.body());
         assertEquals(1, json.readTree(search.body()).path("totalElements").asInt());
         var patch = call(
             "PATCH",
-            "/product/" + sku.path("id").asLong(),
+            "/products/" + sku.path("id").asLong(),
             Map.of("name", "Edited " + suffix, "price", 2)
         );
         assertEquals(200, patch.statusCode(), patch.body());
@@ -177,7 +179,7 @@ class ProductCatalogIntegrationTests {
     @Test
     void variantRegistration() throws Exception {
         JsonNode root = created(
-            "/productCatalog",
+            "/product-catalogs",
             Map.of(
                 "name",
                 "Variant " + suffix,
@@ -212,7 +214,7 @@ class ProductCatalogIntegrationTests {
         );
         var response = call(
             "GET",
-            "/productCatalog/" + root.path("id").asLong() + "/items/search",
+            "/product-catalogs/" + root.path("id").asLong() + "/products",
             null
         );
         assertEquals(200, response.statusCode(), response.body());
@@ -224,13 +226,13 @@ class ProductCatalogIntegrationTests {
         );
         var duplicate = call(
             "POST",
-            "/productCatalog/" + root.path("id").asLong() + "/items",
+            "/product-catalogs/" + root.path("id").asLong() + "/products",
             Map.of("cost", 1, "price", 2, "attributes", Map.of("COLOR", " azul ", "SIZE", "m"))
         );
         assertEquals(400, duplicate.statusCode(), duplicate.body());
         var patch = call(
             "PATCH",
-            "/product/" + page.path("content").get(0).path("id").asLong(),
+            "/products/" + page.path("content").get(0).path("id").asLong(),
             Map.of("attributes", Map.of("COLOR", "Verde", "SIZE", "P"))
         );
         assertEquals(200, patch.statusCode(), patch.body());
@@ -238,11 +240,11 @@ class ProductCatalogIntegrationTests {
 
     @Test
     void initialStockAndPresentation() throws Exception {
-        long warehouseId = created("/warehouse", Map.of("name", "Warehouse " + suffix))
+        long warehouseId = created("/warehouses", Map.of("name", "Warehouse " + suffix))
             .path("id")
             .asLong();
         JsonNode root = created(
-            "/productCatalog",
+            "/product-catalogs",
             catalog(
                 "KG",
                 Map.of(
@@ -267,17 +269,17 @@ class ProductCatalogIntegrationTests {
             )
         );
         long skuId = item(root.path("id").asLong()).path("id").asLong();
-        var stocks = call("GET", "/stockItem/search?productId=" + skuId, null);
+        var stocks = call("GET", "/stock-items?productId=" + skuId, null);
         assertEquals(200, stocks.statusCode(), stocks.body());
         assertEquals(1.5, json.readTree(stocks.body()).path("content").get(0).path("quantity").asDouble());
         assertEquals(0, json.readTree(stocks.body()).path("content").get(0).path("reservedQuantity").asDouble());
         JsonNode presentation = created(
-            "/productPresentation",
+            "/product-presentations",
             Map.of("productId", skuId, "name", "Pack", "baseFactor", 1.5, "price", 0)
         );
         var patch = call(
             "PATCH",
-            "/productPresentation/" + presentation.path("id").asLong(),
+            "/product-presentations/" + presentation.path("id").asLong(),
             Map.of("removePrice", true)
         );
         assertEquals(200, patch.statusCode(), patch.body());
@@ -286,12 +288,12 @@ class ProductCatalogIntegrationTests {
 
     @Test
     void initialReservationIsRejected() throws Exception {
-        long warehouseId = created("/warehouse", Map.of("name", "Reservation " + suffix))
+        long warehouseId = created("/warehouses", Map.of("name", "Reservation " + suffix))
             .path("id")
             .asLong();
         var response = call(
             "POST",
-            "/productCatalog",
+            "/product-catalogs",
             catalog(
                 "UN",
                 Map.of(
@@ -327,13 +329,13 @@ class ProductCatalogIntegrationTests {
 
     @Test
     void invalidQuantityRollsBackCatalog() throws Exception {
-        long warehouseId = created("/warehouse", Map.of("name", "Invalid quantity " + suffix))
+        long warehouseId = created("/warehouses", Map.of("name", "Invalid quantity " + suffix))
             .path("id")
             .asLong();
         for (String unit : List.of("UN", "KG")) {
             var response = call(
                 "POST",
-                "/productCatalog",
+                "/product-catalogs",
                 catalog(
                     unit,
                     Map.of(

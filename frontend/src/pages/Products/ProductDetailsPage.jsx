@@ -4,7 +4,8 @@ import useListReturn from "../../hooks/useListReturn";
 import { validId } from "../../routes/navigation";
 import { ProductLoad } from "./ProductControls";
 import useProductPage from "./useProductPage";
-import ProductDetailsContent, { productSections } from "./ProductDetailsContent";
+import ProductDetailsContent from "./ProductDetailsContent";
+import { productSections } from "./productSections.js";
 import "./products.css";
 
 export default function ProductDetailsPage() {

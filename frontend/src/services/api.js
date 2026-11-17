@@ -47,7 +47,8 @@ export async function loadCsrf() {
 
 export async function api(path, { method = "GET", body, publicRequest = false, signal } = {}) {
   const headers = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const multipart = typeof FormData !== "undefined" && body instanceof FormData;
+  if (body !== undefined && !multipart) headers["Content-Type"] = "application/json";
   if (!["GET", "HEAD"].includes(method)) {
     const token = csrf || (await loadCsrf());
     headers[token.headerName] = token.token;
@@ -59,7 +60,7 @@ export async function api(path, { method = "GET", body, publicRequest = false, s
       headers,
       credentials: "same-origin",
       cache: "no-store",
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
       signal,
     });
   } catch (error) {
@@ -75,4 +76,31 @@ export async function api(path, { method = "GET", body, publicRequest = false, s
     throw new ApiError(response.status, data);
   }
   return data;
+}
+
+// Explicit bulk reads for reference selectors and complete document editors.
+// Each HTTP response remains bounded by the API's pagination contract.
+export async function allPages(path, options) {
+  const [resource, query = ""] = path.split("?");
+  const params = new URLSearchParams(query);
+  params.set("size", "100");
+  const records = [];
+  let page = 0;
+  let totalPages;
+  do {
+    params.set("page", String(page));
+    const result = await api(`${resource}?${params}`, options);
+    totalPages = result?.totalPages;
+    if (
+      !Array.isArray(result?.content) ||
+      !Number.isSafeInteger(totalPages) ||
+      totalPages < 0 ||
+      totalPages > 100001
+    ) {
+      throw new Error("Resposta paginada inválida do servidor.");
+    }
+    records.push(...result.content);
+    page += 1;
+  } while (page < totalPages);
+  return records;
 }

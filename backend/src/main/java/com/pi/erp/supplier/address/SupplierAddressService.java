@@ -3,8 +3,9 @@ package com.pi.erp.supplier.address;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.supplier.Supplier;
 import com.pi.erp.supplier.SupplierRepository;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +19,7 @@ public class SupplierAddressService {
     @Autowired
     private SupplierRepository supplierRepository;
 
-    public List<SupplierAddress> search(SupplierAddressFilter filter) {
+    public Page<SupplierAddress> search(SupplierAddressFilter filter, Pageable pageable) {
         Specification<SupplierAddress> spec = Specification.allOf();
 
         if (filter.supplierId() != null) {
@@ -78,27 +79,28 @@ public class SupplierAddressService {
             );
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     @Transactional
     public SupplierAddress register(RequestSupplierAddressDTO data) {
         Supplier supplier = findSupplier(data.supplierId());
-        String complement = data.complement() != null && data.complement().isBlank()
-            ? null
-            : data.complement();
+        String complement =
+            data.complement() != null && data.complement().isBlank() ? null : data.complement();
 
-        if (repository.existsDuplicateAddress(
-            data.supplierId(),
-            data.addressType().name(),
-            data.country(),
-            data.state(),
-            data.city(),
-            data.street(),
-            data.zipCode(),
-            data.number(),
-            complement
-        )) {
+        if (
+            repository.existsDuplicateAddress(
+                data.supplierId(),
+                data.addressType().name(),
+                data.country(),
+                data.state(),
+                data.city(),
+                data.street(),
+                data.zipCode(),
+                data.number(),
+                complement
+            )
+        ) {
             throw new IllegalArgumentException("Supplier address already exists.");
         }
 
@@ -135,9 +137,8 @@ public class SupplierAddressService {
             throw new IllegalArgumentException("Zip code is required.");
         }
 
-        AddressType addressType = data.addressType() != null
-            ? data.addressType()
-            : address.getAddressType();
+        AddressType addressType =
+            data.addressType() != null ? data.addressType() : address.getAddressType();
         String country = data.country() != null ? data.country() : address.getCountry();
         String state = data.state() != null ? data.state() : address.getState();
         String city = data.city() != null ? data.city() : address.getCity();
@@ -150,18 +151,20 @@ public class SupplierAddressService {
             complement = data.complement().isBlank() ? null : data.complement();
         }
 
-        if (repository.existsDuplicateAddressAndIdNot(
-            address.getSupplier().getId(),
-            addressType != null ? addressType.name() : null,
-            country,
-            state,
-            city,
-            street,
-            zipCode,
-            number,
-            complement,
-            id
-        )) {
+        if (
+            repository.existsDuplicateAddressAndIdNot(
+                address.getSupplier().getId(),
+                addressType != null ? addressType.name() : null,
+                country,
+                state,
+                city,
+                street,
+                zipCode,
+                number,
+                complement,
+                id
+            )
+        ) {
             throw new IllegalArgumentException("Supplier address already exists.");
         }
 

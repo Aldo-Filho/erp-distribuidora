@@ -126,6 +126,10 @@ public class SecurityAuditService {
                 "INVITATION_CANCELED",
                 "ACCESS_EMAIL" -> "INVITATION";
             case "SESSION_POLICY_UPDATED" -> "POLICY";
+            case
+                "COMPANY_APPEARANCE_UPDATED",
+                "COMPANY_LOGO_UPDATED",
+                "COMPANY_LOGO_REMOVED" -> "APPEARANCE";
             default -> null;
         };
     }

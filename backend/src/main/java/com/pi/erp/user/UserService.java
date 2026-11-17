@@ -6,8 +6,9 @@ import com.pi.erp.auth.mail.AccessMailService;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.user.config.role.Role;
 import com.pi.erp.user.config.role.RoleRepository;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,7 @@ public class UserService {
     @Autowired
     private RoleRepository roleRepository;
 
-    public List<User> search(UserFilter filter) {
+    public Page<User> search(UserFilter filter, Pageable pageable) {
         Specification<User> spec = Specification.allOf();
 
         if (filter.name() != null && !filter.name().isBlank()) {
@@ -49,12 +50,10 @@ public class UserService {
             );
         }
         if (filter.active() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("active"), filter.active())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), filter.active()));
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     public User register(RequestUserDTO data) {
@@ -97,8 +96,11 @@ public class UserService {
             user.setActive(data.active());
         }
 
-        if (!oldEmail.equals(email) || !Boolean.TRUE.equals(user.getActive())
-            || !Boolean.TRUE.equals(role.getActive())) {
+        if (
+            !oldEmail.equals(email) ||
+            !Boolean.TRUE.equals(user.getActive()) ||
+            !Boolean.TRUE.equals(role.getActive())
+        ) {
             user.setCredentialVersion(user.getCredentialVersion() + 1);
             accessAdministrationService.invalidate(id);
         }

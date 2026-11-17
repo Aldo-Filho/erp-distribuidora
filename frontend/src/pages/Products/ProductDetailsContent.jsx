@@ -1,16 +1,9 @@
+import { productSections } from "./productSections.js";
 import useAuth from "../../auth/useAuth";
 import RecordMetadata from "../../components/record/RecordMetadata";
 import ProductVariants from "./ProductVariants";
 import { ProductItemContent } from "./ProductItemDetails";
 
-export const productSections = [
-  "general",
-  "commercial",
-  "variants",
-  "presentations",
-  "suppliers",
-  "stock",
-];
 export default function ProductDetailsContent({
   catalog,
   item,

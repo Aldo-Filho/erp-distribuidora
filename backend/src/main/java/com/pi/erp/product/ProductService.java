@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +33,7 @@ public class ProductService {
     @Autowired
     private ProductPresentationRepository productPresentationRepository;
 
-    public List<Product> search(ProductFilter filter) {
+    public Page<Product> search(ProductFilter filter, Pageable pageable) {
         Specification<Product> spec = Specification.allOf();
 
         if (filter.name() != null && !filter.name().isBlank()) {
@@ -72,7 +74,7 @@ public class ProductService {
                 cb.equal(root.get("catalog").get("id"), filter.catalogId())
             );
         }
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     @Transactional

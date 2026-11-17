@@ -28,16 +28,18 @@ export default function CustomerForm({ customer, onSaved, onClose, embedded = fa
   const confirm = useConfirm();
   const { session, has } = useAuth();
   const key = `customer:${session.userId}:${customer?.id || "new"}`;
-  const initial = useRef(customerValues(customer)).current;
+  const [initial] = useState(() => customerValues(customer));
   const [value, setValue] = useDraft(key, initial);
   const [saving, setSaving] = useState(false);
   useDirtyUnload(saving || JSON.stringify(value) !== JSON.stringify(initial));
   const locked = useRef(false);
   const live = useRef(true);
   const [error, setError] = useState("");
-  const [priceState, setPriceState] = useState({ loading: true });
+  const [priceResult, setPriceResult] = useState(null);
   const [priceRevision, setPriceRevision] = useState(0);
   const canReadPrice = has("prices.read");
+  const priceState = !canReadPrice ? {} : priceResult?.revision === priceRevision
+    ? priceResult.state : { loading: true };
   const canWrite = has(customer ? "customers.update" : "customers.create");
   useEffect(() => {
     live.current = true;
@@ -48,17 +50,13 @@ export default function CustomerForm({ customer, onSaved, onClose, embedded = fa
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
-    if (!canReadPrice) {
-      setPriceState({});
-      return;
-    }
-    setPriceState({ loading: true });
+    if (!canReadPrice) return;
     prices.search({ active: true }, { signal: controller.signal }).then(
       (tables) => {
-        if (active) setPriceState({ tables });
+        if (active) setPriceResult({ revision: priceRevision, state: { tables } });
       },
       (issue) => {
-        if (active) setPriceState({ error: issue.message });
+        if (active) setPriceResult({ revision: priceRevision, state: { error: issue.message } });
       },
     );
     return () => {
@@ -97,7 +95,7 @@ export default function CustomerForm({ customer, onSaved, onClose, embedded = fa
   const submit = async (event) => {
     event.preventDefault();
     if (locked.current || !canWrite) return;
-    const failure = validateCustomer(value, !!customer);
+    const failure = validateCustomer(value, customer);
     if (failure) {
       setError(failure);
       return;

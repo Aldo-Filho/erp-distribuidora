@@ -1,11 +1,16 @@
 package com.pi.erp.stock;
 
 import com.pi.erp.exception.ResourceNotFoundException;
+import com.pi.erp.auth.CurrentUser;
 import com.pi.erp.product.Product;
 import com.pi.erp.product.ProductQuantity;
 import com.pi.erp.product.ProductRepository;
 import com.pi.erp.product.catalog.ProductCatalogRepository;
 import com.pi.erp.stock.reservation.StockReservationRepository;
+import com.pi.erp.stock.movement.StockMovement;
+import com.pi.erp.stock.movement.StockMovementRepository;
+import com.pi.erp.stock.movement.StockMovementReason;
+import com.pi.erp.stock.movement.StockMovementType;
 import com.pi.erp.warehouse.Warehouse;
 import com.pi.erp.warehouse.WarehouseRepository;
 import jakarta.persistence.EntityManager;
@@ -37,6 +42,9 @@ public class StockItemService {
     private StockReservationRepository stockReservationRepository;
 
     @Autowired
+    private StockMovementRepository stockMovementRepository;
+
+    @Autowired
     private ProductCatalogRepository productCatalogRepository;
 
     @Autowired
@@ -56,11 +64,18 @@ public class StockItemService {
             );
         }
 
+        if (Boolean.TRUE.equals(filter.lowStock())) {
+            spec = spec.and((root, query, cb) -> cb.lessThan(
+                cb.diff(root.<BigDecimal>get("quantity"), root.<BigDecimal>get("reservedQuantity")),
+                root.<BigDecimal>get("minQuantity")));
+        }
         return repository.findAll(spec, pageable);
     }
 
     @Transactional
     public StockItem register(RequestStockItemDTO data) {
+        CurrentUser.require("stock.configure");
+        Long operatorId = CurrentUser.requireId();
         validateQuantities(
             data.quantity(),
             data.reservedQuantity(),
@@ -87,7 +102,23 @@ public class StockItemService {
             data.maxQuantity()
         );
         StockItem stockItem = new StockItem(data, warehouse, product);
-        return repository.save(stockItem);
+        if (data.quantity().signum() > 0) {
+            CurrentUser.require("stock.adjust");
+        }
+        repository.save(stockItem);
+        if (data.quantity().signum() > 0) {
+            StockMovement movement = new StockMovement();
+            movement.setStockItem(stockItem);
+            movement.setType(StockMovementType.INBOUND);
+            movement.setReason(StockMovementReason.MANUAL_ADJUSTMENT);
+            movement.setQuantity(data.quantity());
+            movement.setPreviousBalance(BigDecimal.ZERO);
+            movement.setNewBalance(data.quantity());
+            movement.setUserId(operatorId);
+            movement.setNotes("Initial stock balance.");
+            stockMovementRepository.save(movement);
+        }
+        return stockItem;
     }
 
     @Transactional
@@ -130,6 +161,14 @@ public class StockItemService {
             data.warehouseId() != null ? data.warehouseId() : stockItem.getWarehouse().getId();
         Long productId =
             data.productId() != null ? data.productId() : stockItem.getProduct().getId();
+
+        if ((!warehouseId.equals(stockItem.getWarehouse().getId()) ||
+            !productId.equals(stockItem.getProduct().getId())) &&
+            (stockItem.getQuantity().signum() != 0 || stockItem.getReservedQuantity().signum() != 0)) {
+            throw new IllegalArgumentException(
+                "Cannot change the product or warehouse of a stock item with a balance."
+            );
+        }
 
         if (
             (!warehouseId.equals(stockItem.getWarehouse().getId()) ||
@@ -208,6 +247,9 @@ public class StockItemService {
 
         if (!stockItem.getProduct().getId().equals(originalProductId)) {
             throw new IllegalArgumentException("Stock item changed. Retry the operation.");
+        }
+        if (stockItem.getQuantity().signum() != 0 || stockItem.getReservedQuantity().signum() != 0) {
+            throw new IllegalArgumentException("Cannot delete a stock item with a balance.");
         }
         if (stockReservationRepository.existsByStockItemId(id)) {
             throw new IllegalArgumentException("Cannot delete a stock item with reservations.");

@@ -5,8 +5,9 @@ import com.pi.erp.product.category.Category;
 import com.pi.erp.product.category.CategoryRepository;
 import com.pi.erp.supplier.Supplier;
 import com.pi.erp.supplier.SupplierRepository;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,9 +23,9 @@ public class SupplierCategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    public List<SupplierCategory> search(Long supplierId) {
+    public Page<SupplierCategory> search(Long supplierId, Pageable pageable) {
         findSupplier(supplierId);
-        return repository.findAllBySupplierId(supplierId);
+        return repository.findAllBySupplierId(supplierId, pageable);
     }
 
     @Transactional

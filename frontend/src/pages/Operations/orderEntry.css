@@ -64,7 +64,7 @@
   border-bottom: 1px solid var(--border);
 }
 .order-entry-product.is-selected .order-entry-product-heading strong {
-  color: #087b77;
+  color: var(--accent);
 }
 .order-entry-product-heading {
   display: flex;
@@ -84,7 +84,7 @@
 .order-entry-cart-line > small {
   display: block;
   margin-top: 4px;
-  color: #61747e;
+  color: var(--muted);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -118,7 +118,7 @@
   gap: 6px 12px;
   margin: 10px 0;
   font-size: 12px;
-  color: #61747e;
+  color: var(--muted);
 }
 .order-entry-total {
   display: flex;
@@ -129,7 +129,7 @@
 }
 .order-entry-total > strong {
   font-size: 24px;
-  color: #102f39;
+  color: var(--sidebar-bg);
 }
 .order-entry-cart-actions {
   display: grid;
@@ -149,11 +149,11 @@
 }
 .order-entry-metadata > summary {
   cursor: pointer;
-  color: #61747e;
+  color: var(--muted);
   font-size: 12px;
 }
 .order-entry-editor {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 18px;
@@ -210,5 +210,60 @@
   }
   .order-entry-editor .order-selected-product > button {
     width: 100%;
+  }
+}
+
+.document-progress {
+  margin-bottom: 16px;
+}
+.document-progress ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.document-progress li {
+  color: var(--muted);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.document-progress li[aria-current="step"] {
+  color: var(--text);
+  font-weight: 700;
+  border-color: currentColor;
+}
+.document-progress .is-complete {
+  color: var(--success-fg);
+}
+.document-progress p {
+  margin-bottom: 0;
+  font-size: 13px;
+}
+.order-entry-cart .product-warning {
+  overflow-wrap: anywhere;
+}
+.order-entry-product-heading,
+.purchase-option {
+  flex-wrap: wrap;
+}
+[aria-invalid="true"] {
+  border-color: var(--danger-fg);
+  outline-color: var(--danger-fg);
+}
+.purchase-receipt-line select {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .document-progress ol {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .order-entry-product-heading > button,
+  .purchase-option > button {
+    flex: 1 1 auto;
   }
 }

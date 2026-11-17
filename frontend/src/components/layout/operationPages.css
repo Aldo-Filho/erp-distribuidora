@@ -22,7 +22,7 @@
 .operation-page .customer-address-card {
   padding: 14px;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--page-bg);
   margin: 12px 0;
   overflow-wrap: anywhere;
 }

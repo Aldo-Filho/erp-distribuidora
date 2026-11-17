@@ -15,7 +15,7 @@ export default function SupplierForm({ supplier, onSaved, onClose, embedded = fa
   const confirm = useConfirm();
   const { session, has } = useAuth();
   const key = `supplier:${session.userId}:${supplier?.id || "new"}`;
-  const initial = useRef(supplierValues(supplier)).current;
+  const [initial] = useState(() => supplierValues(supplier));
   const [value, setValue] = useDraft(key, initial);
   const [saving, setSaving] = useState(false);
   useDirtyUnload(saving || JSON.stringify(value) !== JSON.stringify(initial));

@@ -3,8 +3,9 @@ package com.pi.erp.warehouse.address;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.warehouse.Warehouse;
 import com.pi.erp.warehouse.WarehouseRepository;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +19,7 @@ public class WarehouseAddressService {
     @Autowired
     private WarehouseRepository warehouseRepository;
 
-    public List<WarehouseAddress> search(WarehouseAddressFilter filter) {
+    public Page<WarehouseAddress> search(WarehouseAddressFilter filter, Pageable pageable) {
         Specification<WarehouseAddress> spec = Specification.allOf();
 
         if (filter.warehouseId() != null) {
@@ -68,7 +69,7 @@ public class WarehouseAddressService {
             );
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     public WarehouseAddress register(RequestWarehouseAddressDTO data) {
@@ -88,14 +89,16 @@ public class WarehouseAddressService {
             throw new IllegalArgumentException("Warehouse already has an address.");
         }
 
-        if (repository.existsDuplicateAddress(
-            data.state(),
-            data.city(),
-            data.street(),
-            data.zipCode(),
-            data.number(),
-            data.complement()
-        )) {
+        if (
+            repository.existsDuplicateAddress(
+                data.state(),
+                data.city(),
+                data.street(),
+                data.zipCode(),
+                data.number(),
+                data.complement()
+            )
+        ) {
             throw new IllegalArgumentException("Warehouse address already exists.");
         }
 
@@ -151,22 +154,22 @@ public class WarehouseAddressService {
         String street = data.street() != null ? data.street() : address.getStreet();
         String zipCode = data.zipCode() != null ? data.zipCode() : address.getZipCode();
         String number = data.number() != null ? data.number() : address.getNumber();
-        String complement = data.complement() != null
-            ? data.complement()
-            : address.getComplement();
+        String complement = data.complement() != null ? data.complement() : address.getComplement();
 
         if (repository.existsByWarehouseIdAndIdNot(warehouse.getId(), id)) {
             throw new IllegalArgumentException("Warehouse already has an address.");
         }
-        if (repository.existsDuplicateAddressAndIdNot(
-            state,
-            city,
-            street,
-            zipCode,
-            number,
-            complement,
-            id
-        )) {
+        if (
+            repository.existsDuplicateAddressAndIdNot(
+                state,
+                city,
+                street,
+                zipCode,
+                number,
+                complement,
+                id
+            )
+        ) {
             throw new IllegalArgumentException("Warehouse address already exists.");
         }
 

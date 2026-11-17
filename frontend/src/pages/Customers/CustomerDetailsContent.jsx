@@ -1,8 +1,8 @@
+import { customerSections } from "./customerSections.js";
 import useAuth from "../../auth/useAuth";
 import RecordMetadata from "../../components/record/RecordMetadata";
 import CustomerAddresses from "./CustomerAddresses";
 
-export const customerSections = ["general", "addresses", "prices", "metadata"];
 export default function CustomerDetailsContent({ customer, section, onSectionChange, onChanged }) {
   const { has } = useAuth();
   const labels = {

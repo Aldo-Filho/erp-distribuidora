@@ -1,11 +1,12 @@
 package com.pi.erp.order;
 
+import com.pi.erp.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/orders")
 public class OrderController {
 
     @Autowired
@@ -28,17 +29,17 @@ public class OrderController {
     @Autowired
     private OrderService service;
 
-    @GetMapping("/search")
+    @GetMapping
     public ResponseEntity<Page<Order>> search(
         OrderFilter filter,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size
+        @RequestParam(defaultValue = "25") int size
     ) {
         if (page < 0 || page > 100000 || size < 1 || size > 100) {
             throw new IllegalArgumentException("Invalid order pagination limits.");
         }
         return ResponseEntity.ok(
-            service.search(filter, PageRequest.of(page, size, Sort.by("id").ascending()))
+            service.search(filter, PageRequest.of(page, size, Sort.by("id").descending()))
         );
     }
 
@@ -47,7 +48,7 @@ public class OrderController {
         return repository
             .findById(id)
             .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.noContent().build());
+            .orElseThrow(() -> new ResourceNotFoundException("Resource not found."));
     }
 
     @GetMapping("/{id}/price")
@@ -67,8 +68,28 @@ public class OrderController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Order> update(@PathVariable Long id, @RequestBody PatchOrderDTO data) {
+        if (data.status() != null) {
+            throw new IllegalArgumentException(
+                "Use confirmations or cancellations to change order status."
+            );
+        }
         Order order = service.update(id, data);
         return ResponseEntity.ok(order);
+    }
+
+    @PostMapping("/{id}/confirmations")
+    public ResponseEntity<Order> confirm(@PathVariable Long id,
+        @RequestBody(required = false) ConfirmOrderDTO data) {
+        return ResponseEntity.ok(service.update(id, new PatchOrderDTO(
+            data == null ? null : data.paymentMethod(), OrderStatus.CONFIRMED, null, null,
+            data == null ? null : data.paymentDueDate())));
+    }
+
+    @PostMapping("/{id}/cancellations")
+    public ResponseEntity<Order> cancel(@PathVariable Long id) {
+        return ResponseEntity.ok(
+            service.update(id, new PatchOrderDTO(null, OrderStatus.CANCELED, null, null))
+        );
     }
 
     @DeleteMapping("/{id}")

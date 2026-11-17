@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +47,7 @@ public class ProductSupplierService {
     @Autowired
     private EntityManager entityManager;
 
-    public List<ProductSupplier> search(ProductSupplierFilter filter) {
+    public Page<ProductSupplier> search(ProductSupplierFilter filter, Pageable pageable) {
         if (
             filter.minCost() != null &&
             filter.maxCost() != null &&
@@ -135,7 +137,7 @@ public class ProductSupplierService {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), filter.active()));
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     @Transactional

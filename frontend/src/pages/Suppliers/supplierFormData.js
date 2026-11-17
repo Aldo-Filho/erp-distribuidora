@@ -1,4 +1,4 @@
-import { supplierAddressKeys, emptySupplierAddress } from "./SupplierAddressFields";
+import { supplierAddressKeys, emptySupplierAddress } from "./supplierAddressData.js";
 
 const fields = ["legalName", "taxId", "tradeName", "phone", "email", "whatsapp"];
 export function supplierValues(supplier) {

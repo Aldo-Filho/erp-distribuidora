@@ -1,8 +1,9 @@
 package com.pi.erp.product.brand;
 
 import com.pi.erp.exception.ResourceNotFoundException;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +14,7 @@ public class BrandService {
     @Autowired
     private BrandRepository repository;
 
-    public List<Brand> search(BrandFilter filter) {
+    public Page<Brand> search(BrandFilter filter, Pageable pageable) {
         Specification<Brand> spec = Specification.allOf();
 
         if (filter.name() != null && !filter.name().isBlank()) {
@@ -22,7 +23,7 @@ public class BrandService {
             );
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     public Brand register(RequestBrandDTO data) {

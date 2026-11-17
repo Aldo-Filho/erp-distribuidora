@@ -1,0 +1,12 @@
+.finance-page { display: grid; gap: 1rem; }
+.finance-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: end; }
+.finance-page label, .finance-form label { display: grid; gap: .4rem; }
+.finance-form { display: grid; gap: 1rem; }
+.finance-form fieldset { display: grid; gap: 1rem; border: 0; padding: 0; min-width: 0; }
+.finance-page td small { display: block; }
+.finance-summary { display: flex; gap: 1rem; flex-wrap: wrap; }
+.finance-summary > p { flex: 1; min-width: 180px; }
+.finance-history { display: grid; gap: .75rem; }
+.finance-history article { padding: 1rem; border: 1px solid var(--border); border-radius: .6rem; }
+.finance-link { display: block; margin-block: .75rem; }
+@media (max-width: 600px) { .finance-filters { grid-template-columns: 1fr; } }

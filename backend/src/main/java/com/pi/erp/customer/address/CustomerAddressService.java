@@ -3,8 +3,9 @@ package com.pi.erp.customer.address;
 import com.pi.erp.customer.Customer;
 import com.pi.erp.customer.CustomerRepository;
 import com.pi.erp.exception.ResourceNotFoundException;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +19,7 @@ public class CustomerAddressService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    public List<CustomerAddress> search(CustomerAddressFilter filter) {
+    public Page<CustomerAddress> search(CustomerAddressFilter filter, Pageable pageable) {
         Specification<CustomerAddress> spec = Specification.allOf();
 
         if (filter.customerId() != null) {
@@ -48,7 +49,10 @@ public class CustomerAddressService {
         }
         if (filter.neighborhood() != null && !filter.neighborhood().isBlank()) {
             spec = spec.and((root, query, cb) ->
-                cb.like(cb.lower(root.get("neighborhood")), "%" + filter.neighborhood().toLowerCase() + "%")
+                cb.like(
+                    cb.lower(root.get("neighborhood")),
+                    "%" + filter.neighborhood().toLowerCase() + "%"
+                )
             );
         }
         if (filter.number() != null && !filter.number().isBlank()) {
@@ -58,7 +62,10 @@ public class CustomerAddressService {
         }
         if (filter.complement() != null && !filter.complement().isBlank()) {
             spec = spec.and((root, query, cb) ->
-                cb.like(cb.lower(root.get("complement")), "%" + filter.complement().toLowerCase() + "%")
+                cb.like(
+                    cb.lower(root.get("complement")),
+                    "%" + filter.complement().toLowerCase() + "%"
+                )
             );
         }
         if (filter.zipCode() != null && !filter.zipCode().isBlank()) {
@@ -67,16 +74,13 @@ public class CustomerAddressService {
             );
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     public CustomerAddress register(RequestCustomerAddressDTO data) {
         Customer customer = findCustomer(data.customerId());
 
-        if (repository.existsByCustomerIdAndAddressType(
-            data.customerId(),
-            data.addressType()
-        )) {
+        if (repository.existsByCustomerIdAndAddressType(data.customerId(), data.addressType())) {
             throw new IllegalArgumentException("Customer already has an address of this type.");
         }
 
@@ -90,18 +94,17 @@ public class CustomerAddressService {
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Customer address not found."));
 
-        AddressType addressType = data.addressType() != null
-            ? data.addressType()
-            : address.getAddressType();
+        AddressType addressType =
+            data.addressType() != null ? data.addressType() : address.getAddressType();
 
-        if (repository.existsByCustomerIdAndAddressTypeAndIdNot(
-            address.getCustomer().getId(),
-            addressType,
-            id
-        )) {
-            throw new IllegalArgumentException(
-                "Customer already has an address of this type."
-            );
+        if (
+            repository.existsByCustomerIdAndAddressTypeAndIdNot(
+                address.getCustomer().getId(),
+                addressType,
+                id
+            )
+        ) {
+            throw new IllegalArgumentException("Customer already has an address of this type.");
         }
 
         address.setAddressType(addressType);

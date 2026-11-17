@@ -1,8 +1,10 @@
 package com.pi.erp.customer.address;
 
+import com.pi.erp.api.ApiPagination;
+import com.pi.erp.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,10 +14,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/customerAddress")
+@RequestMapping("/customer-addresses")
 public class CustomerAddressController {
 
     @Autowired
@@ -24,9 +27,13 @@ public class CustomerAddressController {
     @Autowired
     private CustomerAddressService service;
 
-    @GetMapping("/search")
-    public ResponseEntity<List<CustomerAddress>> search(CustomerAddressFilter filter) {
-        return ResponseEntity.ok(service.search(filter));
+    @GetMapping
+    public ResponseEntity<Page<CustomerAddress>> search(
+        CustomerAddressFilter filter,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "25") int size
+    ) {
+        return ResponseEntity.ok(service.search(filter, ApiPagination.pageable(page, size)));
     }
 
     @GetMapping("/{id}")
@@ -34,7 +41,7 @@ public class CustomerAddressController {
         return repository
             .findById(id)
             .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.noContent().build());
+            .orElseThrow(() -> new ResourceNotFoundException("Resource not found."));
     }
 
     @PostMapping

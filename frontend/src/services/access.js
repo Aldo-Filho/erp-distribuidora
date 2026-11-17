@@ -1,24 +1,24 @@
-import { api } from "./api";
+import { api, allPages } from "./api";
 
 export const access = {
-  user: (id, options) => api("/user/" + id, options),
-  users: () => api("/user/search"),
-  updateUser: (id, body) => api("/user/" + id, { method: "PATCH", body }),
-  deleteUser: (id) => api("/user/" + id, { method: "DELETE" }),
-  recoverUser: (id) => api("/user/" + id + "/passwordRecovery", { method: "POST" }),
-  roles: () => api("/role/search"),
-  createRole: (body) => api("/role", { method: "POST", body }),
-  updateRole: (id, body) => api("/role/" + id, { method: "PATCH", body }),
-  deleteRole: (id) => api("/role/" + id, { method: "DELETE" }),
-  permissions: () => api("/permission/search"),
-  grants: (id) => api("/role/" + id + "/permissions"),
+  user: (id, options) => api("/users/" + id, options),
+  users: () => allPages("/users"),
+  updateUser: (id, body) => api("/users/" + id, { method: "PATCH", body }),
+  deleteUser: (id) => api("/users/" + id, { method: "DELETE" }),
+  recoverUser: (id) => api("/users/" + id + "/password-recoveries", { method: "POST" }),
+  roles: () => allPages("/roles"),
+  createRole: (body) => api("/roles", { method: "POST", body }),
+  updateRole: (id, body) => api("/roles/" + id, { method: "PATCH", body }),
+  deleteRole: (id) => api("/roles/" + id, { method: "DELETE" }),
+  permissions: () => allPages("/permissions"),
+  grants: (id) => allPages("/roles/" + id + "/permissions"),
   grant: (id, permissionId) =>
-    api("/role/" + id + "/permissions", { method: "POST", body: { permissionId } }),
+    api("/roles/" + id + "/permissions", { method: "POST", body: { permissionId } }),
   revoke: (id, permissionId) =>
-    api("/role/" + id + "/permissions/" + permissionId, { method: "DELETE" }),
+    api("/roles/" + id + "/permissions/" + permissionId, { method: "DELETE" }),
   invitations: (page = 0, email = "") =>
-    api("/user/invitation/search?" + new URLSearchParams({ page, email })),
-  invite: (body) => api("/user/invitation", { method: "POST", body }),
-  resend: (id) => api("/user/invitation/" + id + "/resend", { method: "POST" }),
-  cancelInvite: (id) => api("/user/invitation/" + id, { method: "DELETE" }),
+    api("/user-invitations?" + new URLSearchParams({ page, email })),
+  invite: (body) => api("/user-invitations", { method: "POST", body }),
+  resend: (id) => api("/user-invitations/" + id + "/deliveries", { method: "POST" }),
+  cancelInvite: (id) => api("/user-invitations/" + id, { method: "DELETE" }),
 };

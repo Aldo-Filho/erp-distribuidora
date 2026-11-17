@@ -32,6 +32,6 @@ public class SecurityAuditConfiguration implements WebMvcConfigurer {
                     }
                 }
             )
-            .addPathPatterns("/auth/**", "/user/**", "/role/**", "/permission/**", "/security/**");
+            .addPathPatterns("/auth/**", "/users/**", "/roles/**", "/permissions/**", "/security/**");
     }
 }

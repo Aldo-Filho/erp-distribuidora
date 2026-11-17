@@ -30,7 +30,7 @@
 .customer-details-address-card {
   padding: 12px;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--page-bg);
   overflow-wrap: anywhere;
   min-width: 0;
 }

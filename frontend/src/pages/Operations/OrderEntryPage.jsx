@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Check, Package, RefreshCw } from "lucide-react";
+import { ArrowLeft, Package, RefreshCw } from "lucide-react";
 import useAuth from "../../auth/useAuth";
 import { removeDraft, useDraft } from "../../auth/drafts";
 import useConfirm from "../../components/feedback/useConfirm";
@@ -10,6 +10,10 @@ import { products } from "../../services/products";
 import { productStock } from "../../services/productStock";
 import useOrderEntry from "./useOrderEntry";
 import OrderEntryHeader from "./OrderEntryHeader";
+import { OrderDetails } from "./OrdersPage";
+import DocumentSteps from "./DocumentSteps";
+import OrderStockCheck, { useOrderStockCheck } from "./OrderStockCheck";
+import { decimal } from "../Products/productFormData";
 import OrderProductCatalog from "./OrderProductCatalog";
 import OrderCart from "./OrderCart";
 import TradeItemForm from "./TradeItemForm";
@@ -37,7 +41,9 @@ function OrderEntry({ id }) {
     location.state?.orderList || null,
   );
   const originWriter = useRef(setSavedOrigin);
-  originWriter.current = setSavedOrigin;
+  useEffect(() => {
+    originWriter.current = setSavedOrigin;
+  }, [setSavedOrigin]);
   useEffect(() => {
     if (location.state?.orderList) originWriter.current(location.state.orderList);
   }, [location.state]);
@@ -58,7 +64,12 @@ function OrderEntry({ id }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [stockOpen, setStockOpen] = useState(false);
-  const [quickKey, setQuickKey] = useState(null);
+  const [reviewing, setReviewing] = useState(() =>
+    Boolean(
+      id &&
+      (!location.pathname.endsWith("/edit") || (!has("orders.update") && !has("orders.create"))),
+    ),
+  );
   const [creationCandidates, setCreationCandidates] = useState([]);
   const [checkingCreation, setCheckingCreation] = useState(false);
   const [stickyCart, setStickyCart] = useState(false);
@@ -73,7 +84,10 @@ function OrderEntry({ id }) {
   const selecting = useRef(false);
   const order = entry.order;
   const editable = order?.status === "PENDING";
-  const busy = entry.writePending || editorState.saving || headerState.saving;
+  const stockCheck = useOrderStockCheck(entry.items, editable);
+  const [detailsBusy, setDetailsBusy] = useState(false);
+  const reportDetails = useCallback((pending) => setDetailsBusy(pending), []);
+  const busy = entry.writePending || editorState.saving || headerState.saving || detailsBusy;
   const blocked = busy || entry.uncertain;
   useEffect(() => {
     const panel = cartSide.current;
@@ -88,7 +102,7 @@ function OrderEntry({ id }) {
       observer.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [editable]);
+  }, [editable, reviewing]);
   const reportEditor = useCallback((saving, dirty) => setEditorState({ saving, dirty }), []);
   const reportHeader = useCallback(
     (saving, dirty, active = true) => setHeaderState({ saving, dirty, active }),
@@ -114,7 +128,10 @@ function OrderEntry({ id }) {
   }, [selection]);
   const back = (viewOrderId) =>
     navigate("/orders", {
-      state: { orderList: location.state?.orderList || savedOrigin, viewOrderId },
+      state: {
+        orderList: location.state?.orderList || savedOrigin,
+        viewOrderId: viewOrderId || order?.id,
+      },
     });
   const leave = async (view = false) => {
     if (busy) return;
@@ -141,7 +158,7 @@ function OrderEntry({ id }) {
     }
     back(view ? order?.id : undefined);
   };
-  const select = async (product, item = null, quantity = 1) => {
+  const select = async (product, item = null, quantity = 1, mode = "configure") => {
     if (blocked || selecting.current || headerState.active || !editable) return;
     selecting.current = true;
     let target = { product, item, warehouseId, quantity, key: crypto.randomUUID() };
@@ -160,12 +177,40 @@ function OrderEntry({ id }) {
         }
         target = { ...target, presentation, warehouseId: depot };
       }
+      if (mode === "add") {
+        if (selection) throw new Error("Salve ou feche a configuração aberta antes de adicionar.");
+        if (!target.presentation || !target.warehouseId)
+          throw new Error("Defina a apresentação e o depósito em Configurar antes de adicionar.");
+        if (
+          entry.items.some(
+            (row) =>
+              row.product.id === product.id &&
+              String(row.warehouse.id) === String(target.warehouseId) &&
+              row.presentation?.id === target.presentation.id,
+          )
+        )
+          throw new Error(
+            "Esta combinação já está no pedido. Ajuste a quantidade na linha existente.",
+          );
+        await entry.addItem({
+          orderId: order.id,
+          productId: product.id,
+          warehouseId: Number(target.warehouseId),
+          presentationId: target.presentation.id,
+          quantity: decimal(quantity, "Quantidade comercial", {
+            positive: true,
+            places: target.presentation.basePresentation && product.unit !== "UN" ? 1 : 0,
+            max: 9999999999999.9,
+          }),
+        });
+        setMessage("Produto adicionado e salvo no pedido.");
+        return;
+      }
       if (selection && editorClose.current) {
         nextSelection.current = target;
         await editorClose.current();
         nextSelection.current = null;
       } else {
-        setQuickKey(target.key);
         setSelection(target);
       }
       setMessage("");
@@ -177,7 +222,6 @@ function OrderEntry({ id }) {
   };
   const closeEditor = () => {
     focusSearch.current = !nextSelection.current;
-    setQuickKey(nextSelection.current?.key || null);
     setSelection(nextSelection.current);
     setEditorState({ saving: false, dirty: false });
   };
@@ -194,11 +238,7 @@ function OrderEntry({ id }) {
         size: 1,
       };
       const first = await orders.search(filter);
-      const last =
-        first.totalPages > 1
-          ? await orders.search({ ...filter, page: first.totalPages - 1 })
-          : first;
-      setCreationAttempt({ ...body, afterId: last.content[0]?.id || 0 });
+      setCreationAttempt({ ...body, afterId: first.content[0]?.id || 0 });
       const created = await orders.register(body);
       setCreationAttempt(null);
       return created;
@@ -245,12 +285,7 @@ function OrderEntry({ id }) {
     });
   const transition = (cancel = false) =>
     runAction(async () => {
-      if (
-        !has("orders.update") ||
-        !has(cancel ? "orders.cancel" : "orders.confirm") ||
-        selection ||
-        headerState.active
-      )
+      if (!has(cancel ? "orders.cancel" : "orders.confirm") || selection || headerState.active)
         return;
       if (
         !(await confirm(
@@ -281,7 +316,11 @@ function OrderEntry({ id }) {
             {order
               ? editable
                 ? "Pendente · sem reserva de estoque"
-                : "Pedido fora de edição"
+                : order.status === "CONFIRMED"
+                  ? "Estoque reservado · próximo passo: despachar"
+                  : order.status === "INVOICED"
+                    ? "Despachado · saída de estoque registrada"
+                    : "Pedido cancelado"
               : "Selecione cliente e pagamento para iniciar."}
           </p>
         </div>
@@ -291,7 +330,7 @@ function OrderEntry({ id }) {
           disabled={busy}
           onClick={() => leave()}
         >
-          <ArrowLeft size={17} /> Vendas
+          <ArrowLeft size={17} /> {id ? "Voltar à lista" : "Voltar às vendas"}
         </button>
       </header>
       <ErrorAlert
@@ -345,13 +384,19 @@ function OrderEntry({ id }) {
           ))}
         </div>
       )}
+      <DocumentSteps
+        status={order?.status}
+        reviewing={reviewing}
+        saving={busy}
+        dirty={editorState.dirty || headerState.dirty}
+      />
       {id && entry.loading ? (
         <p role="status">Carregando pedido…</p>
       ) : id && !order ? (
         <p>{entry.error ? "Não foi possível carregar o pedido." : "Pedido não encontrado."}</p>
       ) : (
         <>
-          {(!id || editable) && (
+          {(!id || (editable && !reviewing)) && (
             <section className="panel order-entry-heading-panel">
               <OrderEntryHeader
                 order={order}
@@ -379,13 +424,15 @@ function OrderEntry({ id }) {
               />
             </section>
           )}
-          {order && !editable ? (
-            <section className="panel">
-              <p>Este pedido já não está pendente. A montagem foi encerrada.</p>
-              <button type="button" className="secondary" onClick={() => back(order.id)}>
-                Consultar pedido, despacho e histórico
-              </button>
-            </section>
+          {order && (!editable || reviewing) ? (
+            <OrderDetails
+              id={order.id}
+              embedded
+              onClose={() => leave()}
+              onChanged={entry.reload}
+              onStateChange={reportDetails}
+              onEdit={() => setReviewing(false)}
+            />
           ) : (
             <>
               <nav className="order-entry-jumps" aria-label="Seções da venda">
@@ -408,7 +455,6 @@ function OrderEntry({ id }) {
                           item={selection.item}
                           existingItems={entry.items}
                           embedded
-                          quickAdd={!selection.item && quickKey === selection.key}
                           initialSelection={selection}
                           writeItem={writeItem}
                           onDuplicate={(item) => select(item.product, item)}
@@ -437,6 +483,10 @@ function OrderEntry({ id }) {
                       onEdit={(item) => select(item.product, item)}
                       onRemove={remove}
                     >
+                      <OrderStockCheck
+                        state={stockCheck}
+                        onAdjust={(item) => select(item.product, item)}
+                      />
                       <div className="order-entry-cart-actions">
                         <button
                           type="button"
@@ -444,35 +494,18 @@ function OrderEntry({ id }) {
                           disabled={blocked}
                           onClick={() => leave()}
                         >
-                          Manter pendente
+                          Voltar à lista
                         </button>
                         {order && (
                           <button
                             type="button"
-                            className="secondary"
-                            disabled={busy}
-                            onClick={() => leave(true)}
+                            disabled={blocked || Boolean(selection) || headerState.active}
+                            onClick={() => setReviewing(true)}
                           >
-                            Concluir edição e consultar
+                            Revisar pedido
                           </button>
                         )}
-                        {has("orders.update") && has("orders.confirm") && (
-                          <button
-                            type="button"
-                            className="customer-icon-label"
-                            disabled={
-                              blocked ||
-                              !order ||
-                              !entry.items.length ||
-                              Boolean(selection) ||
-                              headerState.active
-                            }
-                            onClick={() => transition()}
-                          >
-                            <Check size={17} /> Confirmar e reservar
-                          </button>
-                        )}
-                        {order && has("orders.update") && has("orders.cancel") && (
+                        {order && has("orders.cancel") && (
                           <button
                             type="button"
                             className="order-cancel-action"
@@ -488,12 +521,12 @@ function OrderEntry({ id }) {
                           <button
                             type="button"
                             className="secondary customer-icon-label"
-                            disabled={busy}
+                            disabled={blocked || Boolean(selection) || headerState.active}
                             onClick={() =>
                               entry.reload().catch((issue) => setError(salesError(issue.message)))
                             }
                           >
-                            <RefreshCw size={16} /> Atualizar pedido
+                            <RefreshCw size={16} /> Recarregar dados
                           </button>
                           {has("stock.read") && entry.items.length > 0 && (
                             <button
@@ -542,11 +575,15 @@ function OrderEntry({ id }) {
         size: 100,
       };
       const first = await orders.search(filter);
-      const last =
-        first.totalPages > 1
-          ? await orders.search({ ...filter, page: first.totalPages - 1 })
-          : first;
-      const candidates = last.content.filter((candidate) => candidate.id > creationAttempt.afterId);
+      const candidates = first.content.filter(
+        (candidate) => candidate.id > creationAttempt.afterId,
+      );
+      for (let page = 1; page < first.totalPages && candidates.length === page * 100; page++) {
+        const next = await orders.search({ ...filter, page });
+        candidates.push(
+          ...next.content.filter((candidate) => candidate.id > creationAttempt.afterId),
+        );
+      }
       setCreationCandidates(candidates);
       if (!candidates.length)
         setError(

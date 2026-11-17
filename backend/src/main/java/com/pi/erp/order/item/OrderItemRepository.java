@@ -3,6 +3,8 @@ package com.pi.erp.order.item;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -42,6 +44,21 @@ public interface OrderItemRepository
     )
     @Override
     List<OrderItem> findAll(Specification<OrderItem> spec);
+
+    @EntityGraph(
+        type = EntityGraph.EntityGraphType.LOAD,
+        attributePaths = {
+            "product.catalog.brand",
+            "product.catalog.category",
+            "presentation.product.catalog.brand",
+            "presentation.product.catalog.category",
+            "warehouse",
+            "order.customer.priceTable",
+            "order.user.role",
+        }
+    )
+    @Override
+    Page<OrderItem> findAll(Specification<OrderItem> spec, Pageable pageable);
 
     @Query(
         value = "SELECT * FROM order_items WHERE order_item_id = :id FOR NO KEY UPDATE",

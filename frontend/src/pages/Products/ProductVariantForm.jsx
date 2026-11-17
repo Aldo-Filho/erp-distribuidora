@@ -48,6 +48,7 @@ function VariantForm({ catalog, item, onSaved, onClose }) {
       catalog,
       item,
       has("stock.configure") && has("warehouses.read"),
+      has("stock.adjust"),
     );
     if (item && !Object.keys(body).length) return;
     return item ? products.updateItem(item.id, body) : products.registerItem(catalog.id, body);

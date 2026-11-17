@@ -4,5 +4,10 @@ public record PatchOrderDTO(
     PaymentMethod paymentMethod,
     OrderStatus status,
     Long customerId,
-    Long userId
-) {}
+    Long userId,
+    java.time.LocalDate paymentDueDate
+) {
+    public PatchOrderDTO(PaymentMethod paymentMethod, OrderStatus status, Long customerId, Long userId) {
+        this(paymentMethod, status, customerId, userId, null);
+    }
+}

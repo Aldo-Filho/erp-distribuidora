@@ -4,8 +4,9 @@ import com.pi.erp.auth.AccessAdministrationService;
 import com.pi.erp.exception.ResourceNotFoundException;
 import com.pi.erp.user.UserRepository;
 import com.pi.erp.user.config.RolePermissionRepository;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +26,7 @@ public class RoleService {
     @Autowired
     private RolePermissionRepository rolePermissionRepository;
 
-    public List<Role> search(RoleFilter filter) {
+    public Page<Role> search(RoleFilter filter, Pageable pageable) {
         Specification<Role> spec = Specification.allOf();
 
         if (filter.name() != null && !filter.name().isBlank()) {
@@ -34,12 +35,10 @@ public class RoleService {
             );
         }
         if (filter.active() != null) {
-            spec = spec.and((root, query, cb) ->
-                cb.equal(root.get("active"), filter.active())
-            );
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), filter.active()));
         }
 
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     @Transactional
@@ -97,7 +96,9 @@ public class RoleService {
             throw new IllegalArgumentException("Role is linked to users and cannot be deleted.");
         }
         if (rolePermissionRepository.existsByRoleId(id)) {
-            throw new IllegalArgumentException("Role is linked to permissions and cannot be deleted.");
+            throw new IllegalArgumentException(
+                "Role is linked to permissions and cannot be deleted."
+            );
         }
 
         repository.delete(role);

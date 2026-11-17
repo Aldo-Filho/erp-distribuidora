@@ -26,6 +26,7 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -37,12 +38,14 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /** Real HTTP and PostgreSQL checks. Never run against the habitual database. */
+@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
     "server.address=127.0.0.1",
     "erp.auth.bootstrap-enabled=false",
     "erp.auth.login-per-ip-per-minute=10000",
     "spring.mail.host=127.0.0.1",
-    "spring.mail.port=11026"
+    "spring.mail.port=11026",
+    "erp.appearance.logo-directory=target/verification-logos"
 })
 @ContextConfiguration(initializers = CriticalIntegrityIntegrationTests.DatabaseGuard.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
@@ -90,14 +93,26 @@ class CriticalIntegrityIntegrationTests {
             "INSERT INTO users(name,email,password_hash,role_id,active) VALUES (?,?,?,?,true) RETURNING user_id",
             Long.class, "Critical verification", email, encoder.encode(password), role);
         csrf();
-        status(200, call("POST", "/auth/login", Map.of("email", email, "password", password)));
+        status(200, call("POST", "/auth/sessions", Map.of("email", email, "password", password)));
         csrf();
-        brandId = create("/brand", Map.of("name", UUID.randomUUID().toString()));
-        warehouseId = create("/warehouse", Map.of("name", UUID.randomUUID().toString()));
-        customerId = create("/customer", Map.of("personType", "PF", "taxId", taxId(),
+        brandId = create("/brands", Map.of("name", UUID.randomUUID().toString()));
+        warehouseId = create("/warehouses", Map.of("name", UUID.randomUUID().toString()));
+        customerId = create("/customers", Map.of("personType", "PF", "taxId", cpf(),
             "legalName", "Critical customer", "phone", "11999999999"));
-        supplierId = create("/supplier", Map.of("legalName", "Critical supplier", "tradeName", "Critical supplier",
+        supplierId = create("/suppliers", Map.of("legalName", "Critical supplier", "tradeName", "Critical supplier",
             "taxId", taxId(), "phone", "11999999999"));
+    }
+
+    private String cpf() {
+        String value = Long.toString(java.util.concurrent.ThreadLocalRandom.current()
+            .nextLong(100000000L, 999999999L));
+        for (int end = 9; end <= 10; end++) {
+            int sum = 0;
+            for (int i = 0; i < end; i++) sum += (value.charAt(i) - '0') * (end + 1 - i);
+            int remainder = sum % 11;
+            value += remainder < 2 ? 0 : 11 - remainder;
+        }
+        return value;
     }
 
     private String taxId() {
@@ -134,14 +149,153 @@ class CriticalIntegrityIntegrationTests {
         return status(201, call("POST", path, body)).path("id").asLong();
     }
 
+    @Test
+    void financialSettlementReversalAndCancellationAreAtomicAndIdempotent() throws Exception {
+        for (boolean sale : List.of(true, false)) {
+            Stock stock = stock("UN", 10);
+            long document = sale ? order(3, stock) : purchase(stock);
+            if (sale) {
+                status(200, orderStatus(document, "CONFIRMED"));
+                status(200, orderStatus(document, "CONFIRMED"));
+            }
+            String titles = sale ? "/receivables" : "/payables";
+            JsonNode list = status(200, call("GET", titles + "?documentId=" + document, null));
+            assertEquals(1, list.path("totalElements").asInt());
+            JsonNode title = list.path("content").get(0);
+            String path = titles + "/" + title.path("id").asLong();
+            long bank = create("/bank-accounts", Map.of("name", UUID.randomUUID().toString(),
+                "type", "CASH", "initialBalance", 100));
+            String today = java.time.LocalDate.now().toString();
+            var settlement = Map.of("bankAccountId", bank, "amount", title.path("amount").decimalValue(),
+                "paidAt", today, "paymentMethod", "CASH");
+            var invalid = new java.util.HashMap<String, Object>(settlement);
+            invalid.put("amount", new BigDecimal("0.01"));
+            status(400, call("POST", path + "/settlements", invalid));
+            JsonNode paid = status(200, call("POST", path + "/settlements", settlement));
+            assertEquals(paid.path("id"), status(200, call("POST", path + "/settlements", settlement)).path("id"));
+            status(400, call("PATCH", "/bank-accounts/" + bank, Map.of("initialBalance", 200)));
+            String cancel = (sale ? "/orders/" : "/purchases/") + document + "/cancellations";
+            status(400, call("POST", cancel, Map.of()));
+            assertEquals("PAID", status(200, call("GET", path, null)).path("status").asText());
+            BigDecimal amount = title.path("amount").decimalValue();
+            BigDecimal expected = new BigDecimal("100").add(sale ? amount : amount.negate());
+            assertEquals(0, expected.compareTo(status(200, call("GET", "/cash-flow/balance?bankAccountId=" + bank, null)).path("balance").decimalValue()));
+            status(200, call("PATCH", "/bank-accounts/" + bank, Map.of("active", false)));
+            var reversal = Map.of("reversedAt", today, "reason", "Verification cancellation");
+            String reverse = path + "/settlements/" + paid.path("id").asLong() + "/reversals";
+            JsonNode reversed = status(200, call("POST", reverse, reversal));
+            assertEquals(reversed.path("id"), status(200, call("POST", reverse, reversal)).path("id"));
+            status(400, call("POST", path + "/settlements", settlement));
+            assertEquals(0, new BigDecimal("100").compareTo(status(200, call("GET", "/cash-flow/balance?bankAccountId=" + bank, null)).path("balance").decimalValue()));
+            if (sale) status(400, call("POST", "/orders/" + document + "/dispatches", Map.of("operatorUserId", userId)));
+            status(200, call("POST", cancel, Map.of()));
+            assertEquals("CANCELED", status(200, call("GET", path, null)).path("status").asText());
+            assertEquals(1, status(200, call("GET", path + "/settlements", null)).path("totalElements").asInt());
+            assertEquals(1, status(200, call("GET", reverse, null)).path("totalElements").asInt());
+        }
+    }
+
+    @Test
+    void financialReadPermissionProtectsListsTotalsAndDetails() throws Exception {
+        long role = jdbc.queryForObject("SELECT role_id FROM users WHERE user_id=?", Long.class, userId);
+        jdbc.update("DELETE FROM role_permissions WHERE role_id=? AND permission_id IN (SELECT permission_id FROM permissions WHERE permission_key LIKE 'finance.%')", role);
+        for (String path : List.of("/receivables", "/receivables/summary", "/receivables/1",
+            "/payables", "/payables/summary", "/cash-flow", "/cash-flow/summary", "/cash-flow/balance",
+            "/bank-accounts", "/financial-categories")) {
+            status(403, call("GET", path, null));
+        }
+    }
+
+    @Test
+    void appearancePaletteVersionAndPersonalThemePersist() throws Exception {
+        JsonNode appearance = status(200, call("GET", "/company/appearance", null));
+        long version = appearance.path("version").asLong();
+        status(400, call("PATCH", "/company/appearance", Map.of("palette", "invalid", "version", version)));
+        for (String palette : List.of("jade", "ocean", "violet", "terracotta", "amber", "graphite")) {
+            JsonNode saved = status(200, call("PATCH", "/company/appearance", Map.of("palette", palette, "version", version)));
+            assertEquals(palette, saved.path("palette").asText());
+            version = saved.path("version").asLong();
+            assertEquals(palette, status(200, call("GET", "/company/appearance", null)).path("palette").asText());
+        }
+        status(409, call("PATCH", "/company/appearance", Map.of("palette", "jade", "version", version - 1)));
+        for (String theme : List.of("LIGHT", "DARK")) {
+            status(200, call("PATCH", "/preferences/current", Map.of("theme", theme)));
+            assertEquals(theme, status(200, call("GET", "/preferences/current", null)).path("theme").asText());
+        }
+        status(200, call("PATCH", "/preferences/current", java.util.Collections.singletonMap("theme", null)));
+        assertTrue(status(200, call("GET", "/preferences/current", null)).path("theme").isNull());
+        status(400, call("PATCH", "/preferences/current", Map.of("theme", "INVALID")));
+    }
+
+    @Test
+    void creditDueDateAndFinancialFiltersAgreeWithServerTotals() throws Exception {
+        Stock stock = stock("UN", 10);
+        long document = order(3, stock);
+        String path = "/orders/" + document + "/confirmations";
+        status(400, call("POST", path, Map.of("paymentMethod", "BOLETO")));
+        assertEquals(0, count("accounts_receivable", "order_id", document));
+        balances(stock, "10", "0");
+        String due = java.time.LocalDate.now().plusDays(7).toString();
+        var confirmation = Map.of("paymentMethod", "BOLETO", "paymentDueDate", due);
+        status(200, call("POST", path, confirmation));
+        status(200, call("POST", path, confirmation));
+        status(400, call("POST", path, Map.of("paymentMethod", "CASH")));
+        String query = "?documentId=" + document + "&paymentMethod=BOLETO&status=OPEN&dueFrom=" + due + "&dueTo=" + due;
+        JsonNode list = status(200, call("GET", "/receivables" + query, null));
+        assertEquals(1, list.path("totalElements").asInt());
+        JsonNode summary = status(200, call("GET", "/receivables/summary" + query, null));
+        assertEquals(1, summary.path("count").asInt());
+        assertEquals(0, new BigDecimal("6").compareTo(summary.path("totalAmount").decimalValue()));
+        status(400, call("GET", "/receivables?size=0", null));
+        status(400, call("GET", "/receivables?dueFrom=" + due + "&dueTo=" + java.time.LocalDate.now(), null));
+        status(400, call("GET", "/cash-flow?kind=INVALID", null));
+        balances(stock, "10", "3");
+    }
+
+    @Test
+    void logoUploadReplacementAndRemovalValidateRealImageContent() throws Exception {
+        byte[] image;
+        try (var output = new java.io.ByteArrayOutputStream()) {
+            javax.imageio.ImageIO.write(new java.awt.image.BufferedImage(2, 2,
+                java.awt.image.BufferedImage.TYPE_INT_RGB), "png", output);
+            image = output.toByteArray();
+        }
+        long version = status(200, call("GET", "/company/appearance", null)).path("version").asLong();
+        status(400, uploadLogo(version, "image/png", "invalid".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        status(400, uploadLogo(version, "image/jpeg", image));
+        for (int replacement = 0; replacement < 2; replacement++) {
+            JsonNode uploaded = status(200, uploadLogo(version, "image/png", image));
+            assertFalse(uploaded.path("logoUrl").asText().isBlank());
+            version = uploaded.path("version").asLong();
+            var response = client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/company/appearance/logo"))
+                .GET().build(), HttpResponse.BodyHandlers.ofByteArray());
+            assertEquals(200, response.statusCode());
+            assertEquals("image/png", response.headers().firstValue("Content-Type").orElseThrow());
+            assertNotNull(javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(response.body())));
+        }
+        status(200, call("DELETE", "/company/appearance/logo?version=" + version, null));
+        status(404, call("GET", "/company/appearance/logo", null));
+    }
+
+    private HttpResponse<String> uploadLogo(long version, String mime, byte[] bytes) throws Exception {
+        String boundary = "verify" + UUID.randomUUID();
+        var body = new java.io.ByteArrayOutputStream();
+        body.write(("--" + boundary + "\r\nContent-Disposition: form-data; name=\"file\"; filename=\"logo.png\"\r\nContent-Type: " + mime + "\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        body.write(bytes);
+        body.write(("\r\n--" + boundary + "--\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        return client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/company/appearance/logo?version=" + version))
+            .header(csrfHeader, csrfToken).header("Content-Type", "multipart/form-data; boundary=" + boundary)
+            .PUT(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray())).build(), HttpResponse.BodyHandlers.ofString());
+    }
+
     private record Stock(long product, long id) {}
 
     private Stock stock(String unit, Object quantity) throws Exception {
-        long product = create("/product", Map.of("name", "Critical " + UUID.randomUUID(), "brandId", brandId,
+        long product = create("/products", Map.of("name", "Critical " + UUID.randomUUID(), "brandId", brandId,
             "unit", unit, "cost", 1, "price", 2));
-        long id = create("/stockItem", Map.of("productId", product, "warehouseId", warehouseId,
+        long id = create("/stock-items", Map.of("productId", product, "warehouseId", warehouseId,
             "quantity", quantity, "reservedQuantity", 0, "minQuantity", 0));
-        create("/productSupplier", Map.of("productId", product, "supplierId", supplierId,
+        create("/product-suppliers", Map.of("productId", product, "supplierId", supplierId,
             "option", Map.of("name", "Base", "baseFactor", 1, "basePresentation", true, "cost", 1)));
         return new Stock(product, id);
     }
@@ -173,7 +327,7 @@ class CriticalIntegrityIntegrationTests {
         var rows = jdbc.queryForList(
             "SELECT type,quantity,previous_balance,new_balance FROM stock_movements WHERE stock_item_id=? ORDER BY stock_movement_id",
             stock.id());
-        BigDecimal previous = null;
+        BigDecimal previous = BigDecimal.ZERO;
         for (var row : rows) {
             BigDecimal before = (BigDecimal) row.get("previous_balance");
             BigDecimal after = (BigDecimal) row.get("new_balance");
@@ -212,13 +366,13 @@ class CriticalIntegrityIntegrationTests {
         UUID uuid = UUID.randomUUID();
         var payload = movement(uuid, stock, "INBOUND", 3);
         List<Callable<HttpResponse<String>>> calls = new ArrayList<>();
-        for (int i = 0; i < 8; i++) { calls.add(() -> call("POST", "/stockMovement", payload)); }
+        for (int i = 0; i < 8; i++) { calls.add(() -> call("POST", "/stock-movements", payload)); }
         var replies = simultaneous(calls);
         assertEquals(1, replies.stream().filter(r -> r.statusCode() == 201).count());
         assertEquals(7, replies.stream().filter(r -> r.statusCode() == 200).count(), replies.toString());
         long id = json.readTree(replies.get(0).body()).path("id").asLong();
         for (var reply : replies) { assertEquals(id, json.readTree(reply.body()).path("id").asLong()); }
-        status(200, call("POST", "/stockMovement", payload));
+        status(200, call("POST", "/stock-movements", payload));
         assertEquals(1, count("stock_movements", "request_id", uuid));
         balances(stock, "103", "0");
         history(stock);
@@ -230,15 +384,15 @@ class CriticalIntegrityIntegrationTests {
         Stock second = stock("UN", 100);
         UUID uuid = UUID.randomUUID();
         var replies = simultaneous(List.of(
-            () -> call("POST", "/stockMovement", movement(uuid, first, "INBOUND", 3)),
-            () -> call("POST", "/stockMovement", movement(uuid, second, "INBOUND", 7))));
+            () -> call("POST", "/stock-movements", movement(uuid, first, "INBOUND", 3)),
+            () -> call("POST", "/stock-movements", movement(uuid, second, "INBOUND", 7))));
         assertEquals(List.of(201, 400), replies.stream().map(HttpResponse::statusCode).sorted().toList());
         assertEquals(1, count("stock_movements", "request_id", uuid));
         long chosen = jdbc.queryForObject("SELECT stock_item_id FROM stock_movements WHERE request_id=?", Long.class, uuid);
         balances(first, chosen == first.id() ? "103" : "100", "0");
         balances(second, chosen == second.id() ? "107" : "100", "0");
         Stock winner = chosen == first.id() ? first : second;
-        status(400, call("POST", "/stockMovement", movement(uuid, winner, "INBOUND", 9)));
+        status(400, call("POST", "/stock-movements", movement(uuid, winner, "INBOUND", 9)));
     }
 
     @RepeatedTest(5)
@@ -247,12 +401,13 @@ class CriticalIntegrityIntegrationTests {
         List<Callable<HttpResponse<String>>> calls = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             UUID uuid = UUID.randomUUID();
-            calls.add(() -> call("POST", "/stockMovement", movement(uuid, stock, "OUTBOUND", 3)));
+            calls.add(() -> call("POST", "/stock-movements", movement(uuid, stock, "OUTBOUND", 3)));
         }
         var replies = simultaneous(calls);
         assertEquals(3, replies.stream().filter(r -> r.statusCode() == 201).count(), replies.toString());
         assertEquals(5, replies.stream().filter(r -> r.statusCode() == 400).count());
-        assertEquals(3, count("stock_movements", "stock_item_id", stock.id()));
+        assertEquals(4, count("stock_movements", "stock_item_id", stock.id()),
+            "Initial entry plus three successful movements.");
         balances(stock, "1", "0");
         history(stock);
     }
@@ -261,12 +416,13 @@ class CriticalIntegrityIntegrationTests {
     void invalidManualQuantitiesDoNotChangeStock() throws Exception {
         Stock stock = stock("UN", 10);
         for (Object value : List.of(0, -1, 0.5, 1.23, 11)) {
-            status(400, call("POST", "/stockMovement", movement(UUID.randomUUID(), stock, "OUTBOUND", value)));
+            status(400, call("POST", "/stock-movements", movement(UUID.randomUUID(), stock, "OUTBOUND", value)));
         }
         balances(stock, "10", "0");
-        assertEquals(0, count("stock_movements", "stock_item_id", stock.id()));
+        assertEquals(1, count("stock_movements", "stock_item_id", stock.id()),
+            "Only the initial entry remains.");
         Stock decimal = stock("KG", 1.5);
-        status(201, call("POST", "/stockMovement", movement(UUID.randomUUID(), decimal, "OUTBOUND", 0.2)));
+        status(201, call("POST", "/stock-movements", movement(UUID.randomUUID(), decimal, "OUTBOUND", 0.2)));
         balances(decimal, "1.3", "0");
         history(decimal);
     }
@@ -284,7 +440,7 @@ class CriticalIntegrityIntegrationTests {
                 lock.execute();
             }
             assertThrows(HttpTimeoutException.class, () -> client.send(
-                request("POST", "/stockMovement", payload, Duration.ofMillis(700)),
+                request("POST", "/stock-movements", payload, Duration.ofMillis(700)),
                 HttpResponse.BodyHandlers.ofString()));
             assertTrue(jdbc.queryForObject(
                 "SELECT count(*)>0 FROM pg_stat_activity WHERE datname=current_database() AND wait_event='advisory'",
@@ -292,22 +448,22 @@ class CriticalIntegrityIntegrationTests {
             connection.commit();
         }
         // The original request and this retry may race after the simulated timeout.
-        var reply = call("POST", "/stockMovement", payload);
+        var reply = call("POST", "/stock-movements", payload);
         assertTrue(reply.statusCode() == 200 || reply.statusCode() == 201, reply.body());
-        status(200, call("POST", "/stockMovement", payload));
+        status(200, call("POST", "/stock-movements", payload));
         balances(stock, "103", "0");
         assertEquals(1, count("stock_movements", "request_id", uuid));
         history(stock);
     }
 
     private long purchase(Stock... stocks) throws Exception {
-        long purchase = create("/purchase", Map.of("supplierId", supplierId, "userId", userId));
+        long purchase = create("/purchases", Map.of("supplierId", supplierId, "userId", userId));
         for (Stock stock : stocks) {
-            create("/purchaseItem", Map.of("purchaseId", purchase, "productId", stock.product(),
+            create("/purchase-items", Map.of("purchaseId", purchase, "productId", stock.product(),
                 "warehouseId", warehouseId, "quantity", 10, "unitCost", 1));
         }
-        status(200, call("PATCH", "/purchase/" + purchase, Map.of("status", "SENT")));
-        status(200, call("PATCH", "/purchase/" + purchase, Map.of("status", "CONFIRMED")));
+        status(200, call("POST", "/purchases/" + purchase + "/submissions", Map.of()));
+        status(200, call("POST", "/purchases/" + purchase + "/confirmations", Map.of()));
         return purchase;
     }
 
@@ -330,7 +486,7 @@ class CriticalIntegrityIntegrationTests {
         Stock stock = stock("UN", 0);
         long purchase = purchase(stock);
         var ids = purchaseItems(purchase);
-        String path = "/purchase/" + purchase + "/receive";
+        String path = "/purchases/" + purchase + "/receipts";
         var partial = receipt(UUID.randomUUID(), ids, 4);
         var replies = simultaneous(List.of(() -> call("POST", path, partial), () -> call("POST", path, partial)));
         assertEquals(List.of(200, 201), replies.stream().map(HttpResponse::statusCode).sorted().toList());
@@ -355,16 +511,17 @@ class CriticalIntegrityIntegrationTests {
     }
 
     private long order(Object quantity, Stock... stocks) throws Exception {
-        long order = create("/order", Map.of("customerId", customerId, "userId", userId, "paymentMethod", "CASH"));
+        long order = create("/orders", Map.of("customerId", customerId, "userId", userId, "paymentMethod", "CASH"));
         for (Stock stock : stocks) {
-            create("/orderItem", Map.of("orderId", order, "productId", stock.product(),
+            create("/order-items", Map.of("orderId", order, "productId", stock.product(),
                 "warehouseId", warehouseId, "quantity", quantity, "unitPrice", 2));
         }
         return order;
     }
 
     private HttpResponse<String> orderStatus(long order, String state) throws Exception {
-        return call("PATCH", "/order/" + order, Map.of("status", state));
+        return call("POST", "/orders/" + order +
+            ("CONFIRMED".equals(state) ? "/confirmations" : "/cancellations"), Map.of());
     }
 
     private void orderState(long order, String state) {
@@ -383,9 +540,9 @@ class CriticalIntegrityIntegrationTests {
         orderState(excessive, "PENDING");
         assertEquals(0, count("stock_reservations", "order_item_id", jdbc.queryForObject(
             "SELECT order_item_id FROM order_items WHERE order_id=?", Long.class, excessive)));
-        status(400, call("POST", "/stockMovement", movement(UUID.randomUUID(), stock, "OUTBOUND", 5)));
+        status(400, call("POST", "/stock-movements", movement(UUID.randomUUID(), stock, "OUTBOUND", 5)));
         var dispatch = Map.of("operatorUserId", userId, "notes", "critical dispatch");
-        String path = "/order/" + order + "/dispatch";
+        String path = "/orders/" + order + "/dispatches";
         var replies = simultaneous(List.of(() -> call("POST", path, dispatch), () -> call("POST", path, dispatch)));
         for (var reply : replies) { status(200, reply); }
         status(200, call("POST", path, dispatch));
@@ -398,7 +555,7 @@ class CriticalIntegrityIntegrationTests {
         balances(stock, "4", "3");
         status(200, orderStatus(cancel, "CANCELED"));
         status(200, orderStatus(cancel, "CANCELED"));
-        status(400, call("POST", "/order/" + cancel + "/dispatch", dispatch));
+        status(400, call("POST", "/orders/" + cancel + "/dispatches", dispatch));
         balances(stock, "4", "0");
         assertEquals(0, count("stock_movements", "order_id", cancel));
         history(stock);
@@ -423,7 +580,7 @@ class CriticalIntegrityIntegrationTests {
         Stock stock = stock("UN", 0);
         long purchase = purchase(stock);
         var ids = purchaseItems(purchase);
-        String path = "/purchase/" + purchase + "/receive";
+        String path = "/purchases/" + purchase + "/receipts";
         var replies = simultaneous(List.of(
             () -> call("POST", path, receipt(UUID.randomUUID(), ids, 7)),
             () -> call("POST", path, receipt(UUID.randomUUID(), ids, 7))));
@@ -457,40 +614,42 @@ class CriticalIntegrityIntegrationTests {
         long order = order(5, stock);
         status(200, orderStatus(order, "CONFIRMED"));
         var replies = simultaneous(List.of(
-            () -> call("POST", "/purchase/" + purchase + "/receive", receipt),
-            () -> call("POST", "/order/" + order + "/dispatch", Map.of("operatorUserId", userId)),
-            () -> call("POST", "/stockMovement", movement(UUID.randomUUID(), stock, "INBOUND", 2))));
+            () -> call("POST", "/purchases/" + purchase + "/receipts", receipt),
+            () -> call("POST", "/orders/" + order + "/dispatches", Map.of("operatorUserId", userId)),
+            () -> call("POST", "/stock-movements", movement(UUID.randomUUID(), stock, "INBOUND", 2))));
         status(201, replies.get(0));
         status(200, replies.get(1));
         status(201, replies.get(2));
         balances(stock, "27", "0");
         purchaseStatus(purchase, "RECEIVED");
         orderState(order, "INVOICED");
-        assertEquals(3, count("stock_movements", "stock_item_id", stock.id()));
+        assertEquals(4, count("stock_movements", "stock_item_id", stock.id()),
+            "Initial entry plus three successful movements.");
         history(stock);
     }
 
     @Test
     void invalidCommercialQuantitiesAndPurchaseCancellationHaveNoStockEffect() throws Exception {
         Stock stock = stock("UN", 10);
-        long purchase = create("/purchase", Map.of("supplierId", supplierId, "userId", userId));
-        long order = create("/order", Map.of("customerId", customerId));
+        long purchase = create("/purchases", Map.of("supplierId", supplierId, "userId", userId));
+        long order = create("/orders", Map.of("customerId", customerId));
         for (Object quantity : List.of(0, -1, 0.5, 1.23)) {
-            status(400, call("POST", "/purchaseItem", Map.of("purchaseId", purchase, "productId", stock.product(),
+            status(400, call("POST", "/purchase-items", Map.of("purchaseId", purchase, "productId", stock.product(),
                 "warehouseId", warehouseId, "quantity", quantity, "unitCost", 1)));
-            status(400, call("POST", "/orderItem", Map.of("orderId", order, "productId", stock.product(),
+            status(400, call("POST", "/order-items", Map.of("orderId", order, "productId", stock.product(),
                 "warehouseId", warehouseId, "quantity", quantity, "unitPrice", 2)));
         }
         assertEquals(0, count("purchase_items", "purchase_id", purchase));
         assertEquals(0, count("order_items", "order_id", order));
         long canceled = purchase(stock);
-        status(200, call("PATCH", "/purchase/" + canceled, Map.of("status", "CANCELED")));
-        status(200, call("PATCH", "/purchase/" + canceled, Map.of("status", "CANCELED")));
-        status(400, call("POST", "/purchase/" + canceled + "/receive",
+        status(200, call("POST", "/purchases/" + canceled + "/cancellations", Map.of()));
+        status(200, call("POST", "/purchases/" + canceled + "/cancellations", Map.of()));
+        status(400, call("POST", "/purchases/" + canceled + "/receipts",
             receipt(UUID.randomUUID(), purchaseItems(canceled), 1)));
         purchaseStatus(canceled, "CANCELED");
         balances(stock, "10", "0");
-        assertEquals(0, count("stock_movements", "stock_item_id", stock.id()));
+        assertEquals(1, count("stock_movements", "stock_item_id", stock.id()),
+            "Only the initial entry remains.");
     }
 
     @Test
@@ -512,14 +671,15 @@ class CriticalIntegrityIntegrationTests {
         Stock second = stock("UN", 20);
         var payload = movement(UUID.randomUUID(), first, "INBOUND", 3);
         injectFailure(first);
-        try { status(409, call("POST", "/stockMovement", payload)); }
+        try { status(409, call("POST", "/stock-movements", payload)); }
         finally { removeFailure(); }
         balances(first, "20", "0");
-        assertEquals(0, count("stock_movements", "stock_item_id", first.id()));
-        status(201, call("POST", "/stockMovement", payload));
+        assertEquals(1, count("stock_movements", "stock_item_id", first.id()),
+            "Only the initial entry remains after rollback.");
+        status(201, call("POST", "/stock-movements", payload));
         long purchase = purchase(first, second);
         var receipt = receipt(UUID.randomUUID(), purchaseItems(purchase), 10);
-        String receive = "/purchase/" + purchase + "/receive";
+        String receive = "/purchases/" + purchase + "/receipts";
         injectFailure(second);
         try { status(409, call("POST", receive, receipt)); }
         finally { removeFailure(); }
@@ -536,7 +696,7 @@ class CriticalIntegrityIntegrationTests {
         long order = order(5, first, second);
         status(200, orderStatus(order, "CONFIRMED"));
         injectFailure(second);
-        String dispatch = "/order/" + order + "/dispatch";
+        String dispatch = "/orders/" + order + "/dispatches";
         try { status(409, call("POST", dispatch, Map.of("operatorUserId", userId))); }
         finally { removeFailure(); }
         orderState(order, "CONFIRMED");

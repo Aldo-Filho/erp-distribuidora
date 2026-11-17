@@ -1,3 +1,10 @@
+import {
+  receiptKey,
+  pendingReceipt,
+  savePendingReceipt,
+  clearPendingReceipt,
+  pendingBase,
+} from "./purchaseReceiptStorage.js";
 import { removeDraft, useDraft } from "../../auth/drafts";
 import useDirtyUnload from "../../hooks/useDirtyUnload";
 import { useEffect, useRef, useState } from "react";
@@ -7,48 +14,8 @@ import Modal from "../../components/feedback/Modal";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import useConfirm from "../../components/feedback/useConfirm";
 import { purchases } from "../../services/operations";
-import { baseNumber, quantity } from "../Products/productFormData";
+import { baseNumber, decimal, quantity } from "../Products/productFormData";
 
-export const receiptKey = (userId, purchaseId) => `jamshub:receipt:${userId}:${purchaseId}`;
-
-// Keep the exact request across tab closures. Keys are scoped to the authenticated user and purchase.
-export function pendingReceipt(userId, purchaseId) {
-  const key = receiptKey(userId, purchaseId);
-  try {
-    const saved = localStorage.getItem(key);
-    if (saved) return JSON.parse(saved);
-    // Preserve attempts created before persistent storage was introduced.
-    const previous = sessionStorage.getItem(key);
-    if (!previous) return null;
-    const attempt = JSON.parse(previous);
-    localStorage.setItem(key, previous);
-    sessionStorage.removeItem(key);
-    return attempt;
-  } catch {
-    // Never silently discard an uncertain attempt or generate a new ID on storage failure.
-    throw new Error("Não foi possível acessar a tentativa de recebimento salva neste navegador.");
-  }
-}
-
-export function savePendingReceipt(userId, purchaseId, attempt) {
-  localStorage.setItem(receiptKey(userId, purchaseId), JSON.stringify(attempt));
-}
-
-export function clearPendingReceipt(userId, purchaseId) {
-  const key = receiptKey(userId, purchaseId);
-  localStorage.removeItem(key);
-  sessionStorage.removeItem(key);
-}
-// Display-only subtraction, without converting a commercial amount in the browser.
-export function pendingBase(item) {
-  if (item.baseQuantity == null || item.receivedQuantity == null) return null;
-  const scaled = (value) => {
-    const [whole, fraction = ""] = String(value).split(".");
-    return BigInt(whole) * 10n + BigInt(fraction.padEnd(1, "0"));
-  };
-  const difference = scaled(item.baseQuantity) - scaled(item.receivedQuantity);
-  return `${difference / 10n}${difference % 10n ? "," + String(difference % 10n) : ""}`;
-}
 export default function PurchaseReceiptForm({
   purchase,
   items,
@@ -69,6 +36,7 @@ export default function PurchaseReceiptForm({
   const finish = (receipt) => {
     removeDraft(`purchase-receipt-fields:${session.userId}:${purchase.id}:amounts`);
     removeDraft(`purchase-receipt-fields:${session.userId}:${purchase.id}:notes`);
+    removeDraft(`purchase-receipt-fields:${session.userId}:${purchase.id}:modes`);
     onSaved(receipt);
   };
   const [frozen, setFrozen] = useState(initialAttempt.attempt);
@@ -78,10 +46,27 @@ export default function PurchaseReceiptForm({
     `${draftKey}:amounts`,
     Object.fromEntries(items.map((item) => [item.id, ""])),
   );
+  const [modes, setModes] = useDraft(
+    `${draftKey}:modes`,
+    Object.fromEntries(
+      items
+        .filter((item) => String(amounts[item.id] || "").trim())
+        .map((item) => [item.id, "base"]),
+    ),
+  );
+  const [invalidItem, setInvalidItem] = useState(null);
   const [notes, setNotes] = useDraft(`${draftKey}:notes`, "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useDirtyUnload(busy || !!notes || Object.values(amounts).some(Boolean));
+  useEffect(() => {
+    if (invalidItem && error) document.getElementById(`receipt-amount-${invalidItem}`)?.focus();
+  }, [invalidItem, error]);
+  const formRef = useRef(null);
+  useEffect(() => {
+    formRef.current?.scrollIntoView({ block: "start" });
+    formRef.current?.querySelector("input:not(:disabled)")?.focus({ preventScroll: true });
+  }, []);
   const locked = useRef(false);
   const confirm = useConfirm();
   const lockName = `${receiptKey(session.userId, purchase.id)}:operation`;
@@ -125,6 +110,7 @@ export default function PurchaseReceiptForm({
       return;
     removeDraft(`${draftKey}:amounts`);
     removeDraft(`${draftKey}:notes`);
+    removeDraft(`${draftKey}:modes`);
     onClose();
   };
   useEffect(() => {
@@ -204,17 +190,35 @@ export default function PurchaseReceiptForm({
         if (!payload) {
           const lines = items
             .filter((item) => String(amounts[item.id] ?? "").trim() !== "")
-            .map((item) => ({
-              purchaseItemId: item.id,
-              quantity: baseNumber(
-                amounts[item.id],
-                item.unitSnapshot || item.product.unit,
-                `Quantidade do item #${item.id}`,
-                false,
-                true,
-              ),
-            }));
-          if (!lines.length) throw new Error("Informe ao menos uma quantidade recebida em BASE.");
+            .map((item) => {
+              setInvalidItem(item.id);
+              const baseMode = modes[item.id] === "base";
+              const entered = baseMode
+                ? baseNumber(
+                    amounts[item.id],
+                    item.unitSnapshot || item.product.unit,
+                    `Item #${item.id}: quantidade BASE`,
+                    false,
+                    true,
+                  )
+                : decimal(amounts[item.id], `Item #${item.id}: quantidade de apresentações`, {
+                    positive: true,
+                    places: 0,
+                    max: 9999999999999.9,
+                  });
+              const base = receiptBase(item, entered, baseMode);
+              if (base > scaledReceipt(pendingBase(item)))
+                throw new Error(
+                  `Item #${item.id}: a quantidade informada supera o saldo pendente. Ajuste o recebimento deste item.`,
+                );
+              return {
+                purchaseItemId: item.id,
+                [baseMode ? "quantity" : "commercialQuantity"]: entered,
+              };
+            });
+          setInvalidItem(null);
+          if (!lines.length)
+            throw new Error("Informe a quantidade que chegou em pelo menos um item.");
           payload = {
             requestId: crypto.randomUUID(),
             operatorUserId: session.userId,
@@ -250,13 +254,25 @@ export default function PurchaseReceiptForm({
               return;
             }
             setFrozen(null);
+            setInvalidItem(Number(/Item #(\d+)/.exec(issue.message)?.[1]) || null);
             setAmounts(
               Object.fromEntries(
                 items.map((item) => [
                   item.id,
                   String(
-                    payload.items.find((line) => line.purchaseItemId === item.id)?.quantity ?? "",
+                    payload.items.find((line) => line.purchaseItemId === item.id)
+                      ?.commercialQuantity ??
+                      payload.items.find((line) => line.purchaseItemId === item.id)?.quantity ??
+                      "",
                   ).replace(".", ","),
+                ]),
+              ),
+            );
+            setModes(
+              Object.fromEntries(
+                payload.items.map((line) => [
+                  line.purchaseItemId,
+                  line.commercialQuantity != null ? "commercial" : "base",
                 ]),
               ),
             );
@@ -289,13 +305,13 @@ export default function PurchaseReceiptForm({
   };
   return (
     <Container
-      title={`Receber compra #${purchase.id} · BASE`}
+      title={`Receber compra #${purchase.id}`}
       onClose={close}
       busy={busy}
       wide
       className="purchase-dialog"
     >
-      <form className="customer-form purchase-receipt-form" onSubmit={submit}>
+      <form ref={formRef} className="customer-form purchase-receipt-form" onSubmit={submit}>
         <ErrorAlert message={storageError || error} />
         {frozen ? (
           <>
@@ -313,7 +329,8 @@ export default function PurchaseReceiptForm({
             </dl>
             {frozen.items.map((line) => (
               <p className="purchase-receipt-attempt" key={line.purchaseItemId}>
-                Item #{line.purchaseItemId}: {quantity(line.quantity)} BASE
+                Item #{line.purchaseItemId}: {quantity(line.commercialQuantity ?? line.quantity)}{" "}
+                {line.commercialQuantity != null ? "apresentação(ões) contratada(s)" : "BASE"}
               </p>
             ))}
             <p>{frozen.notes}</p>
@@ -321,8 +338,8 @@ export default function PurchaseReceiptForm({
         ) : (
           <fieldset disabled={busy || !has("purchases.receive")} className="customer-form-fields">
             <p className="field-hint">
-              Informe somente o que chegou agora em unidade BASE. Deixe vazios os itens que não
-              chegaram; o restante continuará pendente.
+              Informe o que chegou agora na apresentação contratada (quantidade inteira), ou escolha
+              BASE para quantidade avulsa. Itens vazios continuam pendentes.
             </p>
             {items.map((item) => (
               <label className="purchase-receipt-line" key={item.id}>
@@ -340,15 +357,41 @@ export default function PurchaseReceiptForm({
                   {pendingBase(item) ?? "Conversão pendente"}{" "}
                   {item.unitSnapshot || item.product.unit}
                 </span>
+                <select
+                  aria-label={`Unidade de recebimento do item ${item.id}`}
+                  value={modes[item.id] || "commercial"}
+                  onChange={(e) => {
+                    setModes((old) => ({ ...old, [item.id]: e.target.value }));
+                    setAmounts((old) => ({ ...old, [item.id]: "" }));
+                  }}
+                >
+                  <option value="commercial">
+                    {item.presentationNameSnapshot || "Apresentação contratada"} (inteiras)
+                  </option>
+                  <option value="base">
+                    BASE · {item.unitSnapshot || item.product.unit} (avulsa)
+                  </option>
+                </select>
                 <input
-                  placeholder="Receber agora em BASE"
-                  aria-label={`Receber item ${item.id} em BASE`}
+                  id={`receipt-amount-${item.id}`}
+                  aria-invalid={invalidItem === item.id}
+                  placeholder={
+                    modes[item.id] === "base"
+                      ? "Receber agora em BASE"
+                      : "Apresentações recebidas agora"
+                  }
+                  aria-label={`Quantidade recebida agora do item ${item.id}`}
                   inputMode="decimal"
                   value={amounts[item.id] ?? ""}
                   disabled={pendingBase(item) === "0" || item.baseQuantity == null}
                   onChange={(event) =>
                     setAmounts((old) => ({ ...old, [item.id]: event.target.value }))
                   }
+                />
+                <ReceiptConversion
+                  item={item}
+                  amount={amounts[item.id]}
+                  baseMode={modes[item.id] === "base"}
                 />
               </label>
             ))}
@@ -374,4 +417,46 @@ export default function PurchaseReceiptForm({
       </form>
     </Container>
   );
+}
+
+// Quantities have at most one decimal in BASE. Keep conversion exact in the preview.
+function scaledReceipt(value) {
+  const raw = String(value ?? "").replace(",", ".");
+  if (!/^\d+(?:\.\d)?$/.test(raw))
+    throw new Error("Conversão BASE indisponível. Confira a quantidade e a unidade do item.");
+  const [whole, fraction = ""] = raw.split(".");
+  return BigInt(whole) * 10n + BigInt(fraction.padEnd(1, "0"));
+}
+function receiptBase(item, entered, baseMode) {
+  if (baseMode) return scaledReceipt(entered);
+  if (item.baseFactorSnapshot == null)
+    throw new Error(
+      `Item #${item.id}: conversão contratada indisponível. Confirme a conversão antes de receber.`,
+    );
+  return BigInt(entered) * scaledReceipt(item.baseFactorSnapshot);
+}
+function ReceiptConversion({ item, amount, baseMode }) {
+  if (!String(amount || "").trim())
+    return (
+      <small>
+        1 {item.presentationNameSnapshot || "apresentação"} = {quantity(item.baseFactorSnapshot)}{" "}
+        {item.unitSnapshot || "BASE"}.
+      </small>
+    );
+  try {
+    const entered = baseMode
+      ? baseNumber(amount, item.unitSnapshot || item.product.unit, "Quantidade", false, true)
+      : decimal(amount, "Apresentações", { positive: true, places: 0, max: 9999999999999.9 });
+    const base = receiptBase(item, entered, baseMode);
+    const remaining = scaledReceipt(pendingBase(item)) - base;
+    const display = (value) => `${value / 10n}${value % 10n ? "," + String(value % 10n) : ""}`;
+    return (
+      <small className={remaining < 0n ? "error-alert" : ""}>
+        Receber agora: {display(base)} {item.unitSnapshot || "BASE"} ·{" "}
+        {remaining < 0n ? "Acima do saldo pendente" : `Restará: ${display(remaining)} BASE`}
+      </small>
+    );
+  } catch (issue) {
+    return <small className="error-alert">{issue.message}</small>;
+  }
 }

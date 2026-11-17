@@ -20,7 +20,7 @@ public class UserInvitationController {
     @Autowired
     private UserInvitationService service;
 
-    @GetMapping("/user/invitation/search")
+    @GetMapping("/user-invitations")
     public ResponseEntity<Page<UserInvitation>> search(
         @RequestParam(required = false) String email,
         @RequestParam(defaultValue = "0") int page,
@@ -31,26 +31,26 @@ public class UserInvitationController {
         );
     }
 
-    @PostMapping("/user/invitation")
+    @PostMapping("/user-invitations")
     public ResponseEntity<UserInvitation> register(
         @RequestBody @Valid RequestUserInvitationDTO data
     ) {
         return ResponseEntity.status(201).body(service.register(data));
     }
 
-    @PostMapping("/user/invitation/{id}/resend")
+    @PostMapping("/user-invitations/{id}/deliveries")
     public ResponseEntity<Void> resend(@PathVariable UUID id) {
         service.resend(id);
         return ResponseEntity.accepted().build();
     }
 
-    @DeleteMapping("/user/invitation/{id}")
+    @DeleteMapping("/user-invitations/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/auth/invitationAcceptance")
+    @PostMapping("/auth/invitation-acceptances")
     public ResponseEntity<Void> accept(@RequestBody @Valid RequestInvitationAcceptanceDTO data) {
         service.accept(data);
         return ResponseEntity.status(201).build();

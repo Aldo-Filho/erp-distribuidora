@@ -9,8 +9,9 @@ import com.pi.erp.product.presentation.ProductPresentation;
 import com.pi.erp.product.presentation.ProductPresentationRepository;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +36,7 @@ public class PriceTableItemService {
     @Autowired
     private ProductPresentationRepository productPresentationRepository;
 
-    public List<PriceTableItem> search(PriceTableItemFilter filter) {
+    public Page<PriceTableItem> search(PriceTableItemFilter filter, Pageable pageable) {
         Specification<PriceTableItem> spec = Specification.allOf();
 
         if (filter.priceTableId() != null) {
@@ -54,7 +55,7 @@ public class PriceTableItemService {
                 cb.equal(root.get("presentation").get("id"), filter.presentationId())
             );
         }
-        return repository.findAll(spec);
+        return repository.findAll(spec, pageable);
     }
 
     @Transactional

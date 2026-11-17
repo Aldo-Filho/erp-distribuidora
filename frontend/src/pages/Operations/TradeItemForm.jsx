@@ -1,3 +1,4 @@
+import BarcodeScanner from "../../components/feedback/BarcodeScanner";
 import { useEffect, useRef, useState } from "react";
 import useAuth from "../../auth/useAuth";
 import Modal from "../../components/feedback/Modal";
@@ -12,8 +13,9 @@ import { useProductResource } from "../Products/useProductResource";
 import { ProductLoad } from "../Products/ProductControls";
 import useProductForm from "../Products/useProductForm";
 import { decimal, quantity, money, textNumber } from "../Products/productFormData";
-import { SalesProductPicker, SkuPicker, WarehouseSelect, skuName } from "./OperationSelectors";
-import { available } from "./StockPage";
+import { SalesProductPicker, SkuPicker, WarehouseSelect } from "./OperationSelectors";
+import { skuName } from "./operationLabels.js";
+import { available } from "./stockBalance.js";
 import { salesError } from "./salesErrors";
 
 export default function TradeItemForm({
@@ -29,7 +31,6 @@ export default function TradeItemForm({
   onStateChange,
   closeRef,
   onDuplicate,
-  quickAdd = false,
 }) {
   const { has } = useAuth();
   const service = purchase ? purchases : orders;
@@ -78,8 +79,6 @@ export default function TradeItemForm({
   const canChangeSaleIdentity = !purchase && has("products.read") && has("warehouses.read");
   const showSalePicker =
     !purchase && (!item || canChangeSaleIdentity) && (picker || !form.value.productId);
-  const canReadStock = has("stock.read");
-  const canReadWarehouses = has("warehouses.read");
   const selectProduct = (next) => {
     if (String(next.id) !== form.value.productId) {
       form.setValue((old) => ({
@@ -123,6 +122,17 @@ export default function TradeItemForm({
     }),
     [form.value.productId],
     Boolean(form.value.productId) && has("stock.read"),
+    (loaded) => {
+      if (
+        purchase ||
+        !has("warehouses.read") ||
+        form.value.warehouseId ||
+        (item && form.value.productId === String(item.product.id))
+      )
+        return;
+      if (loaded.scope === form.value.productId && loaded.records.length === 1)
+        form.change("warehouseId", String(loaded.records[0].warehouse.id));
+    },
   );
   const stock = {
     ...stockRequest,
@@ -162,6 +172,25 @@ export default function TradeItemForm({
     Boolean(product) &&
       (!item || canChangeSaleIdentity) &&
       has(purchase ? "suppliers.read" : "products.read"),
+    (loaded) => {
+      if (
+        purchase ||
+        page !== 0 ||
+        form.value.choiceId ||
+        loaded.scope !== choiceScope ||
+        (item && form.value.productId === String(item.product.id))
+      )
+        return;
+      const base =
+        loaded.content.find(
+          (row) =>
+            row.basePresentation && row.active && String(row.productId) === form.value.productId,
+        ) || (loaded.totalElements === 1 && loaded.content[0]?.active ? loaded.content[0] : null);
+      if (base) {
+        setChoice(base);
+        form.change("choiceId", String(base.id));
+      }
+    },
   );
   const choices = {
     ...choicesRequest,
@@ -266,57 +295,10 @@ export default function TradeItemForm({
     return { gross, discountValue, net: Math.round((gross - discountValue) * 100) / 100 };
   })();
   useEffect(() => {
-    if (
-      purchase ||
-      page !== 0 ||
-      form.value.choiceId ||
-      (item && form.value.productId === String(item.product.id))
-    )
-      return;
-    const base =
-      choices.data?.content.find(
-        (row) =>
-          row.basePresentation && row.active && String(row.productId) === form.value.productId,
-      ) ||
-      (choices.data?.totalElements === 1 && choices.data.content[0]?.active
-        ? choices.data.content[0]
-        : null);
-    if (base) {
-      setChoice(base);
-      form.change("choiceId", String(base.id));
-    }
-  }, [choices.data, form.value.productId, form.value.choiceId, page, purchase, item?.id]);
-  useEffect(() => {
-    if (
-      purchase ||
-      !canReadWarehouses ||
-      !canReadStock ||
-      stock.loading ||
-      stock.error ||
-      form.value.warehouseId ||
-      (item && form.value.productId === String(item.product.id))
-    ) {
-      return;
-    }
-    if (stock.data?.length === 1) {
-      form.change("warehouseId", String(stock.data[0].warehouse.id));
-    }
-  }, [
-    stock.data,
-    stock.loading,
-    stock.error,
-    form.value.productId,
-    form.value.warehouseId,
-    purchase,
-    item?.id,
-    canReadStock,
-    canReadWarehouses,
-  ]);
-  useEffect(() => {
     if (!purchase && product && !showSalePicker) {
       quantityInput.current?.focus({ preventScroll: true });
     }
-  }, [product?.id, showSalePicker, purchase]);
+  }, [product, showSalePicker, purchase]);
   const submit = (event) =>
     form.submit(event, async (value) => {
       if (!has(permission)) throw new Error("Sem permissão para salvar este item.");
@@ -382,6 +364,22 @@ export default function TradeItemForm({
         body.discount = decimal(value.discount, "Desconto");
         body.discountType = value.discountType;
       }
+      if (!purchase && body.discount != null) {
+        if (body.discountType === "PERCENTAGE" && body.discount > 100)
+          throw new Error("Desconto: o percentual deve ser no máximo 100%.");
+        const amount = body.unitPrice ?? automaticAmount;
+        if (body.discountType === "AMOUNT" && amount != null) {
+          const scale = (value, places) => {
+            const [whole, fraction = ""] = String(value).split(".");
+            return BigInt(whole + fraction.padEnd(places, "0"));
+          };
+          const gross = (scale(amount, 2) * scale(quantityValue, 1) + 5n) / 10n;
+          if (scale(body.discount, 2) > gross)
+            throw new Error(
+              "Desconto: o valor não pode superar o bruto deste item. Reduza o desconto ou ajuste a quantidade.",
+            );
+        }
+      }
       if (item && !purchase && !Object.keys(body).length) return undefined;
       if (!purchase && has("products.read")) {
         let currentPresentation;
@@ -439,56 +437,12 @@ export default function TradeItemForm({
     (row) => String(row.warehouse.id) === form.value.warehouseId,
   );
   const embeddedForm = useRef(null);
-  const quickAttempted = useRef(false);
   useEffect(() => {
-    if (
-      !quickAdd ||
-      quickAttempted.current ||
-      item ||
-      !initialSelection?.presentation ||
-      !initialSelection?.warehouseId ||
-      !product ||
-      !selectedChoice ||
-      automaticAmount == null ||
-      priceLoading ||
-      priceRequest.error ||
-      duplicateItem ||
-      showSalePicker ||
-      form.saving ||
-      form.dirty ||
-      overridesSalePrice ||
-      Number(form.value.discount.replace(",", ".")) !== 0 ||
-      form.value.productId !== String(initialSelection.product.id) ||
-      form.value.choiceId !== String(initialSelection.presentation.id) ||
-      form.value.warehouseId !== String(initialSelection.warehouseId) ||
-      (has("stock.read") && (stock.loading || stock.error || !selectedStock))
-    )
-      return;
-    quickAttempted.current = true;
-    embeddedForm.current?.requestSubmit();
-  }, [
-    quickAdd,
-    item,
-    initialSelection,
-    product,
-    selectedChoice,
-    automaticAmount,
-    priceLoading,
-    priceRequest.error,
-    duplicateItem,
-    showSalePicker,
-    form.saving,
-    form.dirty,
-    overridesSalePrice,
-    form.value.discount,
-    form.value.productId,
-    form.value.choiceId,
-    form.value.warehouseId,
-    stock.loading,
-    stock.error,
-    selectedStock,
-    has,
-  ]);
+    if (/Desconto|Discount|discount/.test(form.error || "")) setAdvanced(true);
+  }, [form.error]);
+  useEffect(() => {
+    if (form.error) embeddedForm.current?.querySelector('[aria-invalid="true"]')?.focus();
+  }, [form.error, advanced]);
   const Container = embedded ? EmbeddedTradeItem : Modal;
   return (
     <Container
@@ -510,6 +464,7 @@ export default function TradeItemForm({
         }}
       >
         <ErrorAlert message={purchase ? form.error : salesError(form.error)} />
+        {purchase && !item && has("products.read") && <BarcodeScanner disabled={form.saving} onResolved={selectProduct} />}
         <fieldset disabled={form.saving || !has(permission)} className="customer-form-fields">
           {showSalePicker ? (
             <>
@@ -518,6 +473,7 @@ export default function TradeItemForm({
                   Manter produto selecionado
                 </button>
               )}
+              <BarcodeScanner disabled={form.saving} onResolved={selectProduct} />
               <SalesProductPicker orderId={document.id} onSelect={selectProduct} />
             </>
           ) : purchase ? (
@@ -670,6 +626,7 @@ export default function TradeItemForm({
                     "selecione a apresentação"}
                   <input
                     ref={quantityInput}
+                    aria-invalid={/Quantidade|Quantity|quantity/.test(form.error || "")}
                     required
                     inputMode="decimal"
                     value={form.value.quantity}
@@ -845,6 +802,7 @@ export default function TradeItemForm({
                             inputMode="decimal"
                             required
                             value={form.value.discount}
+                            aria-invalid={/Desconto|Discount|discount/.test(form.error || "")}
                             onInvalid={() => setAdvanced(true)}
                             onChange={(event) => form.change("discount", event.target.value)}
                           />

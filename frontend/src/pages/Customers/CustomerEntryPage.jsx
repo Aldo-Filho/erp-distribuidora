@@ -7,7 +7,7 @@ import { customers } from "../../services/customers";
 import { useProductResource } from "../Products/useProductResource";
 import { ProductLoad } from "../Products/ProductControls";
 import CustomerForm from "./CustomerForm";
-import { customerSections } from "./CustomerDetailsContent";
+import { customerSections } from "./customerSections.js";
 
 export default function CustomerEntryPage() {
   const { id } = useParams();

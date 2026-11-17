@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import DocumentFinancialLink from "../Finance/DocumentFinancialLink";
 import { useEffect, useRef, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { removeDraft, saveDraft, useDraft } from "../../auth/drafts";
@@ -13,14 +15,11 @@ import { ProductLoad } from "../Products/ProductControls";
 import useProductAction from "../Products/useProductAction";
 import { money, quantity } from "../Products/productFormData";
 import { formatRecordDateTime } from "../../utils/dateTime";
-import { partyName } from "./OperationSelectors";
+import { partyName } from "./operationLabels.js";
 import StockHistory from "./StockHistory";
 import DocumentStock from "./DocumentStock";
-import PurchaseReceiptForm, {
-  pendingReceipt,
-  pendingBase,
-  clearPendingReceipt,
-} from "./PurchaseReceiptForm";
+import PurchaseReceiptForm from "./PurchaseReceiptForm";
+import { pendingReceipt, pendingBase, clearPendingReceipt } from "./purchaseReceiptStorage.js";
 import "../Products/products.css";
 import "./operations.css";
 import "./purchases.css";
@@ -49,12 +48,17 @@ export default function PurchaseDetailsContent({
   onEdit,
   embedded = false,
   leaveRef,
+  onStateChange,
+  writeState,
 }) {
   const Container = EmbeddedContent;
   const { has, session } = useAuth();
   const [flow, setFlow] = useState(null);
   const receiptClose = useRef(null);
-  const leave = () => (flow?.type === "receive" ? receiptClose.current?.() : onClose());
+  const leave = () => {
+    if (action.pending) return;
+    return flow?.type === "receive" ? receiptClose.current?.() : onClose();
+  };
   useEffect(() => {
     if (leaveRef) leaveRef.current = leave;
     return () => {
@@ -63,8 +67,22 @@ export default function PurchaseDetailsContent({
   });
   const [revision, setRevision] = useState(0);
   const action = useProductAction();
+  useEffect(() => {
+    onStateChange?.(action.pending);
+    return () => onStateChange?.(false);
+  }, [action.pending, onStateChange]);
   const confirm = useConfirm();
-  const [uncertain, setUncertain] = useDraft(`purchase-write:${session.userId}:${id}`, false);
+  const [localUncertain, setLocalUncertain] = useDraft(
+    `purchase-write:${session.userId}:${id}`,
+    false,
+  );
+  const uncertain = writeState ? writeState.uncertain : localUncertain;
+  const setUncertain = (value) =>
+    writeState
+      ? value
+        ? writeState.markUncertain()
+        : writeState.acknowledge()
+      : setLocalUncertain(value);
   const attemptKey = `purchase-write:${session.userId}:${id}`;
   const write = async (work) => {
     if (uncertain || activePurchaseWrites.has(attemptKey))
@@ -126,15 +144,13 @@ export default function PurchaseDetailsContent({
       setReconciledReceipt(registered.id);
     }
   }, [state.data, flow?.type, session.userId, id]);
-  const canChangeStatus = has("purchases.update");
   const transition = (status, message, label) =>
     action.run(
       async () => {
-        if (
-          !has("purchases.update") ||
-          !has(`purchases.${{ SENT: "send", CONFIRMED: "confirm", CANCELED: "cancel" }[status]}`)
-        )
+        if (!has(`purchases.${{ SENT: "send", CONFIRMED: "confirm", CANCELED: "cancel" }[status]}`))
           throw new Error("Sem permissão para esta operação.");
+        if (status === "SENT" && !state.data?.items.length)
+          throw new Error("Adicione pelo menos um item antes de registrar o envio da compra.");
         await write(() => purchases.update(id, { status }));
         refresh();
       },
@@ -240,7 +256,7 @@ export default function PurchaseDetailsContent({
                 disabled={action.pending || uncertain || flow?.type === "receive"}
                 onClick={refresh}
               >
-                Atualizar
+                Recarregar dados
               </button>
               {purchase.status === "DRAFT" && has("purchases.update") && (
                 <button
@@ -251,21 +267,29 @@ export default function PurchaseDetailsContent({
                   Editar compra
                 </button>
               )}
-              {purchase.status === "DRAFT" && has("purchases.create") && (
+              {purchase.status === "DRAFT" &&
+                !has("purchases.update") &&
+                has("purchases.create") && (
+                  <button
+                    className="secondary"
+                    disabled={action.pending || uncertain || flow?.type === "receive"}
+                    onClick={onEdit}
+                  >
+                    <Plus size={17} /> Voltar à montagem
+                  </button>
+                )}
+              {purchase.status === "DRAFT" && has("purchases.send") && (
                 <button
-                  disabled={action.pending || uncertain || flow?.type === "receive"}
-                  onClick={onEdit}
-                >
-                  <Plus size={17} /> Adicionar item
-                </button>
-              )}
-              {purchase.status === "DRAFT" && canChangeStatus && has("purchases.send") && (
-                <button
-                  disabled={action.pending || uncertain || flow?.type === "receive"}
+                  disabled={
+                    action.pending ||
+                    uncertain ||
+                    flow?.type === "receive" ||
+                    !state.data.items.length
+                  }
                   onClick={() =>
                     transition(
                       "SENT",
-                      "Registrar esta compra como enviada? Produto, embalagem e valores ficarão contratados.",
+                      "Registrar internamente o envio desta compra? Nenhuma mensagem será enviada ao fornecedor. Produto, embalagem e valores ficarão contratados.",
                       "Registrar envio",
                     )
                   }
@@ -273,23 +297,22 @@ export default function PurchaseDetailsContent({
                   Registrar envio
                 </button>
               )}
-              {purchase.status === "SENT" && canChangeStatus && has("purchases.confirm") && (
+              {purchase.status === "SENT" && has("purchases.confirm") && (
                 <button
                   disabled={action.pending || uncertain || flow?.type === "receive"}
                   onClick={() =>
                     transition(
                       "CONFIRMED",
                       "Confirmar esta compra para permitir o recebimento?",
-                      "Confirmar compra",
+                      "Confirmar com fornecedor",
                     )
                   }
                 >
-                  Confirmar compra
+                  Confirmar com fornecedor
                 </button>
               )}
               {["DRAFT", "SENT", "CONFIRMED"].includes(purchase.status) &&
                 !pending &&
-                canChangeStatus &&
                 has("purchases.cancel") && (
                   <button
                     type="button"
@@ -314,7 +337,7 @@ export default function PurchaseDetailsContent({
                     disabled={action.pending || uncertain || flow?.type === "receive"}
                     onClick={() => setFlow({ type: "receive" })}
                   >
-                    {pending ? "Retomar recebimento" : "Receber em BASE"}
+                    {pending ? "Retomar recebimento" : "Receber produtos"}
                   </button>
                 )}
               {has("stock.read") && (
@@ -336,6 +359,15 @@ export default function PurchaseDetailsContent({
                 </>
               )}
             </div>
+            {purchase.purchaseSuggestionId && <p>Originada da geração #{purchase.purchaseSuggestionId}. <Link to="/purchase-suggestions">Consultar sugestões de compra</Link></p>}
+            <DocumentFinancialLink id={id} purchase status={purchase.status} />
+            {purchase.status === "DRAFT" && (
+              <p className="field-hint">
+                Registrar envio é um registro interno: não envia mensagem ao fornecedor. A entrada
+                no estoque ocorre somente no recebimento.
+                {!state.data.items.length && " Adicione ao menos um item para continuar."}
+              </p>
+            )}
             <div className="purchase-section-heading">
               <h3>Itens da compra</h3>
               <span>
@@ -510,7 +542,7 @@ export default function PurchaseDetailsContent({
           disabled={action.pending || uncertain || flow?.type === "receive"}
           onClick={leave}
         >
-          Fechar
+          Voltar à lista
         </button>
       </div>
       {flow?.type === "receive" && purchase && has("purchases.receive") && (

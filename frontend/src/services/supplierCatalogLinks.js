@@ -1,13 +1,13 @@
-import { api } from "./api";
+import { api, allPages } from "./api";
 
 export const supplierCatalogLinks = {
-  brands: (id, options) => api(`/supplier/${id}/brands`, options),
-  categories: (id, options) => api(`/supplier/${id}/categories`, options),
+  brands: (id, options) => allPages(`/suppliers/${id}/brands`, options),
+  categories: (id, options) => allPages(`/suppliers/${id}/categories`, options),
   registerBrand: (id, brandId) =>
-    api(`/supplier/${id}/brands`, { method: "POST", body: { brandId } }),
+    api(`/suppliers/${id}/brands`, { method: "POST", body: { brandId } }),
   registerCategory: (id, categoryId) =>
-    api(`/supplier/${id}/categories`, { method: "POST", body: { categoryId } }),
-  deleteBrand: (id, brandId) => api(`/supplier/${id}/brands/${brandId}`, { method: "DELETE" }),
+    api(`/suppliers/${id}/categories`, { method: "POST", body: { categoryId } }),
+  deleteBrand: (id, brandId) => api(`/suppliers/${id}/brands/${brandId}`, { method: "DELETE" }),
   deleteCategory: (id, categoryId) =>
-    api(`/supplier/${id}/categories/${categoryId}`, { method: "DELETE" }),
+    api(`/suppliers/${id}/categories/${categoryId}`, { method: "DELETE" }),
 };

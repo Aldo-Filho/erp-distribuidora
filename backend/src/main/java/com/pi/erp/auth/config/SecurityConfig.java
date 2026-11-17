@@ -36,17 +36,17 @@ public class SecurityConfig {
     private static final Map<String, Set<String>> PUBLIC = Map.of(
         "/auth/csrf",
         Set.of("GET"),
-        "/auth/login",
+        "/auth/sessions",
         Set.of("POST"),
-        "/auth/sessionReplacement",
+        "/auth/session-replacements",
         Set.of("POST"),
-        "/auth/logout",
+        "/auth/sessions/current",
+        Set.of("DELETE"),
+        "/auth/password-recoveries",
         Set.of("POST"),
-        "/auth/passwordRecovery",
+        "/auth/password-resets",
         Set.of("POST"),
-        "/auth/passwordReset",
-        Set.of("POST"),
-        "/auth/invitationAcceptance",
+        "/auth/invitation-acceptances",
         Set.of("POST")
     );
 
@@ -160,92 +160,121 @@ public class SecurityConfig {
             .map(GrantedAuthority::getAuthority)
             .collect(Collectors.toSet());
         boolean read = method.equals("GET") || method.equals("HEAD");
+        if (path.equals("/dashboard") || path.matches("/dashboard/widgets/[^/]+/details")) return read;
+        if (path.equals("/preferences/current/dashboard")) return read || method.equals("PUT") || method.equals("DELETE");
+        if (Set.of("financial-categories", "bank-accounts").contains(root)) {
+            if (read) return keys.contains("finance.read") || keys.contains("finance.configure");
+            return (method.equals("POST") || method.equals("PATCH")) && keys.contains("finance.configure");
+        }
+        if (root.equals("cash-flow")) return read && keys.contains("finance.read");
+        if (Set.of("receivables", "payables").contains(root)) {
+            if (read) return keys.contains("finance.read");
+            if (method.equals("POST") && path.matches("/(receivables|payables)/[0-9]+/settlements"))
+                return keys.contains("finance.settle");
+            if (method.equals("POST") && path.matches("/(receivables|payables)/[0-9]+/settlements/[0-9]+/reversals"))
+                return keys.contains("finance.reverse");
+            return false;
+        }
+        if (root.equals("product-barcodes")) {
+            if (read && path.equals("/product-barcodes/lookup")) return keys.contains("products.read") || keys.contains("stock.read");
+            if (read) return keys.contains("products.read");
+            return (method.equals("POST") || method.equals("PATCH")) && keys.contains("products.update");
+        }
+        if (root.equals("purchase-suggestions")) {
+            if (read) return keys.contains("purchases.read");
+            return method.equals("POST") && path.equals("/purchase-suggestions") && keys.contains("purchases.suggest") && keys.contains("purchases.create") && keys.contains("purchases.read");
+        }
         if (root.equals("auth")) {
             return (
-                (read && Set.of("/auth/session", "/auth/sessions").contains(path)) ||
+                (read && Set.of("/auth/sessions/current", "/auth/sessions").contains(path)) ||
                 (method.equals("DELETE") && path.matches("/auth/sessions/[^/]+")) ||
-                (method.equals("POST") && path.equals("/auth/activity")) ||
+                (method.equals("POST") && path.equals("/auth/session-activities")) ||
                 (method.equals("PATCH") && path.equals("/auth/password"))
             );
         }
-        if (root.equals("permission")) {
-            // Writes reach read-only controller to return the approved 405 contract.
+        if (path.equals("/company/appearance")) return (
+            read || (method.equals("PATCH") && keys.contains("company.appearance.manage"))
+        );
+        if (path.equals("/company/appearance/logo")) return (
+            read ||
+            (Set.of("PUT", "DELETE").contains(method) && keys.contains("company.appearance.manage"))
+        );
+        if (path.equals("/preferences/current")) return read || method.equals("PATCH");
+        if (root.equals("permissions")) {
+            // Keep the existing read-only registry's 405 response for authenticated writes.
             return !read || keys.contains("access.roles.manage");
         }
-        if (root.equals("user")) {
-            if (path.equals("/user") && method.equals("POST")) {
-                return true;
-            }
-            if (path.matches("/user/[^/]+/sessions(/[^/]+)?")) {
+        if (root.equals("user-invitations")) return keys.contains("access.users.manage");
+        if (root.equals("users")) {
+            if (path.equals("/users") && method.equals("POST")) return true;
+            if (path.matches("/users/[^/]+/sessions(/[^/]+)?")) {
                 return keys.contains("security.sessions.manage");
             }
             return (
                 keys.contains("access.users.manage") ||
-                (read &&
-                    !path.startsWith("/user/invitation") &&
-                    keys.contains("security.sessions.manage"))
+                (read && keys.contains("security.sessions.manage"))
             );
         }
-        if (root.equals("role")) {
+        if (root.equals("roles")) {
             return (
                 keys.contains("access.roles.manage") ||
                 (read && !path.contains("/permissions") && keys.contains("access.users.manage"))
             );
         }
-        if (path.equals("/security/settings")) {
-            return keys.contains("security.settings.manage");
-        }
-        if (path.equals("/security/audit/search") && read) {
-            return keys.contains("security.audit.read");
-        }
+        if (path.equals("/security/settings")) return keys.contains("security.settings.manage");
+        if (path.equals("/security/audit-events") && read) return keys.contains(
+            "security.audit.read"
+        );
         String module = switch (root) {
-            case "customer", "customerAddress" -> "customers";
+            case "customers", "customer-addresses" -> "customers";
             case
-                "supplier",
-                "supplierAddress",
-                "productSupplier",
-                "productSupplierOption" -> "suppliers";
+                "suppliers",
+                "supplier-addresses",
+                "product-suppliers",
+                "product-supplier-options" -> "suppliers";
             case
-                "product",
-                "productCatalog",
-                "productPresentation",
-                "brand",
-                "category" -> "products";
-            case "warehouse", "warehouseAddress" -> "warehouses";
-            case "stockItem", "stockMovement" -> "stock";
-            case "price-table", "priceTableItem" -> "prices";
-            case "order", "orderItem" -> "orders";
-            case "purchase", "purchaseItem" -> "purchases";
+                "products",
+                "product-catalogs",
+                "product-presentations",
+                "brands",
+                "categories" -> "products";
+            case "warehouses", "warehouse-addresses" -> "warehouses";
+            case "stock-items", "stock-movements" -> "stock";
+            case "price-tables", "price-table-items" -> "prices";
+            case "orders", "order-items" -> "orders";
+            case "purchases", "purchase-items" -> "purchases";
             default -> null;
         };
-        if (module == null) {
-            return false;
-        }
+        if (module == null) return false;
         String action;
-        if (read) {
-            action = "read";
-        } else if (root.equals("stockItem")) {
-            action = "configure";
-        } else if (root.equals("stockMovement") && method.equals("POST")) {
-            action = "adjust";
-        } else if (
-            root.equals("productSupplier") ||
-            root.equals("productSupplierOption") ||
-            path.matches("/supplier/[^/]+/(brands|categories)(/[^/]+)?")
-        ) {
-            action = "update";
-        } else if (path.matches("/order/[^/]+/dispatch") && method.equals("POST")) {
-            action = "dispatch";
-        } else if (path.matches("/purchase/[^/]+/receive") && method.equals("POST")) {
-            action = "receive";
-        } else {
-            action = switch (method) {
-                case "POST" -> "create";
-                case "PATCH" -> "update";
-                case "DELETE" -> "delete";
-                default -> "unsupported";
-            };
-        }
+        if (read) action = "read";
+        else if (root.equals("stock-items")) action = "configure";
+        else if (root.equals("stock-movements") && method.equals("POST")) action = "adjust";
+        else if (
+            root.equals("product-suppliers") ||
+            root.equals("product-supplier-options") ||
+            path.matches("/suppliers/[^/]+/(brands|categories)(/[^/]+)?")
+        ) action = "update";
+        else if (method.equals("POST") && path.matches("/orders/[^/]+/confirmations")) action =
+            "confirm";
+        else if (method.equals("POST") && path.matches("/orders/[^/]+/cancellations")) action =
+            "cancel";
+        else if (method.equals("POST") && path.matches("/orders/[^/]+/dispatches")) action =
+            "dispatch";
+        else if (method.equals("POST") && path.matches("/purchases/[^/]+/submissions")) action =
+            "send";
+        else if (method.equals("POST") && path.matches("/purchases/[^/]+/confirmations")) action =
+            "confirm";
+        else if (method.equals("POST") && path.matches("/purchases/[^/]+/cancellations")) action =
+            "cancel";
+        else if (method.equals("POST") && path.matches("/purchases/[^/]+/receipts")) action =
+            "receive";
+        else action = switch (method) {
+            case "POST" -> "create";
+            case "PATCH" -> "update";
+            case "DELETE" -> "delete";
+            default -> "unsupported";
+        };
         return keys.contains(module + "." + action);
     }
 }

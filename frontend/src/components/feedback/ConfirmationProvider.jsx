@@ -1,8 +1,7 @@
-import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ConfirmationContext } from "./ConfirmationContext.js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Modal from "./Modal";
-
-export const ConfirmationContext = createContext(null);
 
 export default function ConfirmationProvider({ children }) {
   const [confirmation, setConfirmation] = useState(null);

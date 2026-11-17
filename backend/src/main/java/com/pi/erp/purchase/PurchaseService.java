@@ -36,6 +36,9 @@ public class PurchaseService {
     private PurchaseRepository repository;
 
     @Autowired
+    private com.pi.erp.financial.FinancialService financialService;
+
+    @Autowired
     private PurchaseItemRepository purchaseItemRepository;
 
     @Autowired
@@ -59,10 +62,10 @@ public class PurchaseService {
     public Page<Purchase> search(PurchaseFilter filter, Pageable pageable) {
         if (
             filter.createdFrom() != null &&
-                filter.createdTo() != null &&
-                filter.createdFrom().isAfter(filter.createdTo())
+            filter.createdTo() != null &&
+            filter.createdFrom().isAfter(filter.createdTo())
         ) {
-            throw new IllegalArgumentException("Start date cannot be after end date.");
+            throw new IllegalArgumentException("A data inicial não pode ser posterior à final.");
         }
 
         Specification<Purchase> spec = Specification.allOf();
@@ -91,6 +94,23 @@ public class PurchaseService {
             );
         }
 
+        if (filter.number() != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("id"), filter.number()));
+        }
+        if (filter.query() != null && !filter.query().isBlank()) {
+            String text = filter.query().trim().toLowerCase(java.util.Locale.ROOT);
+            if (text.length() > 120) throw new IllegalArgumentException(
+                "A busca deve ter até 120 caracteres."
+            );
+            String pattern =
+                "%" + text.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+            spec = spec.and((root, query, cb) ->
+                cb.or(
+                    cb.like(cb.lower(root.get("supplier").get("legalName")), pattern, '!'),
+                    cb.like(cb.lower(root.get("supplier").get("tradeName")), pattern, '!')
+                )
+            );
+        }
         return repository.findAll(spec, pageable);
     }
 
@@ -123,9 +143,9 @@ public class PurchaseService {
 
         boolean hasCommercialChanges =
             data.supplierId() != null ||
-                data.userId() != null ||
-                data.expectedDeliveryDate() != null ||
-                Boolean.TRUE.equals(data.removeExpectedDeliveryDate());
+            data.userId() != null ||
+            data.expectedDeliveryDate() != null ||
+            Boolean.TRUE.equals(data.removeExpectedDeliveryDate());
 
         if (hasCommercialChanges) {
             if (purchase.getStatus() != PurchaseStatus.DRAFT) {
@@ -139,7 +159,7 @@ public class PurchaseService {
         }
         if (
             Boolean.TRUE.equals(data.removeExpectedDeliveryDate()) &&
-                data.expectedDeliveryDate() != null
+            data.expectedDeliveryDate() != null
         ) {
             throw new IllegalArgumentException(
                 "Cannot provide and remove the delivery date at the same time."
@@ -152,7 +172,7 @@ public class PurchaseService {
         if (data.supplierId() != null) {
             if (
                 !data.supplierId().equals(supplier.getId()) &&
-                    purchaseItemRepository.existsByPurchaseId(id)
+                purchaseItemRepository.existsByPurchaseId(id)
             ) {
                 throw new IllegalArgumentException(
                     "Cannot change the supplier of a purchase with items."
@@ -165,17 +185,17 @@ public class PurchaseService {
         }
         if (
             purchase.getStatus() != status &&
-                (status == PurchaseStatus.SENT || status == PurchaseStatus.CONFIRMED)
+            (status == PurchaseStatus.SENT || status == PurchaseStatus.CONFIRMED)
         ) {
             validateReady(purchase, supplier, user, purchase.getStatus() == PurchaseStatus.DRAFT);
         }
         if (
             purchase.getStatus() != status &&
-                status == PurchaseStatus.CANCELED &&
-                purchaseItemRepository.existsByPurchaseIdAndReceivedQuantityGreaterThan(
-                    id,
-                    BigDecimal.ZERO
-                )
+            status == PurchaseStatus.CANCELED &&
+            purchaseItemRepository.existsByPurchaseIdAndReceivedQuantityGreaterThan(
+                id,
+                BigDecimal.ZERO
+            )
         ) {
             throw new IllegalArgumentException("Cannot cancel a purchase after receiving goods.");
         }
@@ -188,6 +208,11 @@ public class PurchaseService {
             expectedDeliveryDate = data.expectedDeliveryDate();
         }
 
+        if (purchase.getStatus() != status && status == PurchaseStatus.CONFIRMED) {
+            financialService.confirmPurchase(purchase);
+        } else if (purchase.getStatus() != status && status == PurchaseStatus.CANCELED) {
+            financialService.cancelPurchase(purchase);
+        }
         purchase.setSupplier(supplier);
         purchase.setUser(user);
         purchase.setExpectedDeliveryDate(expectedDeliveryDate);
@@ -253,13 +278,13 @@ public class PurchaseService {
         }
         if (
             currentStatus == PurchaseStatus.DRAFT &&
-                (status == PurchaseStatus.SENT || status == PurchaseStatus.CANCELED)
+            (status == PurchaseStatus.SENT || status == PurchaseStatus.CANCELED)
         ) {
             return;
         }
         if (
             currentStatus == PurchaseStatus.SENT &&
-                (status == PurchaseStatus.CONFIRMED || status == PurchaseStatus.CANCELED)
+            (status == PurchaseStatus.CONFIRMED || status == PurchaseStatus.CANCELED)
         ) {
             return;
         }
@@ -286,7 +311,9 @@ public class PurchaseService {
         );
 
         if (purchaseItems.isEmpty()) {
-            throw new IllegalArgumentException("Purchase must have at least one item.");
+            throw new IllegalArgumentException(
+                "Adicione pelo menos um item antes de continuar a compra."
+            );
         }
 
         Set<String> productIds = new HashSet<>();
@@ -330,10 +357,10 @@ public class PurchaseService {
             }
             if (
                 purchaseItem.getWarehouse() == null ||
-                    !stockItemRepository.existsByWarehouseIdAndProductId(
-                        purchaseItem.getWarehouse().getId(),
-                        product.getId()
-                    )
+                !stockItemRepository.existsByWarehouseIdAndProductId(
+                    purchaseItem.getWarehouse().getId(),
+                    product.getId()
+                )
             ) {
                 throw new IllegalArgumentException(
                     "Purchase product has no stock item in its warehouse."
@@ -354,13 +381,13 @@ public class PurchaseService {
             }
             if (
                 purchaseItem.getQuantity() == null ||
-                    purchaseItem.getQuantity().signum() <= 0 ||
-                    purchaseItem.getUnitCost() == null ||
-                    purchaseItem.getUnitCost().signum() < 0 ||
-                    purchaseItem.getUnitCost().compareTo(MAX_AMOUNT) > 0 ||
-                    purchaseItem.getUnitCost().stripTrailingZeros().scale() > 2 ||
-                    purchaseItem.getReceivedQuantity() == null ||
-                    purchaseItem.getReceivedQuantity().signum() != 0
+                purchaseItem.getQuantity().signum() <= 0 ||
+                purchaseItem.getUnitCost() == null ||
+                purchaseItem.getUnitCost().signum() < 0 ||
+                purchaseItem.getUnitCost().compareTo(MAX_AMOUNT) > 0 ||
+                purchaseItem.getUnitCost().stripTrailingZeros().scale() > 2 ||
+                purchaseItem.getReceivedQuantity() == null ||
+                purchaseItem.getReceivedQuantity().signum() != 0
             ) {
                 throw new IllegalArgumentException("Purchase item has invalid quantities or cost.");
             }
@@ -375,8 +402,8 @@ public class PurchaseService {
 
         if (
             totalAmount.compareTo(MAX_AMOUNT) > 0 ||
-                purchase.getTotalAmount() == null ||
-                totalAmount.compareTo(purchase.getTotalAmount()) != 0
+            purchase.getTotalAmount() == null ||
+            totalAmount.compareTo(purchase.getTotalAmount()) != 0
         ) {
             throw new IllegalArgumentException(
                 "Purchase total is inconsistent or exceeds the supported amount."

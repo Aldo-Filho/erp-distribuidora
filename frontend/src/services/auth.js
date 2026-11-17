@@ -8,25 +8,25 @@ async function authenticated(path, body) {
 }
 
 export const auth = {
-  session: () => api("/auth/session", { publicRequest: true }),
+  session: () => api("/auth/sessions/current", { publicRequest: true }),
   login: async (body) => {
     await loadCsrf();
-    return authenticated("/auth/login", body);
+    return authenticated("/auth/sessions", body);
   },
-  replace: (body) => authenticated("/auth/sessionReplacement", body),
-  activity: () => api("/auth/activity", { method: "POST" }),
+  replace: (body) => authenticated("/auth/session-replacements", body),
+  activity: () => api("/auth/session-activities", { method: "POST" }),
   logout: async () => {
-    await api("/auth/logout", { method: "POST", publicRequest: true });
+    await api("/auth/sessions/current", { method: "DELETE", publicRequest: true });
     clearCsrf();
   },
   recover: (email) =>
-    api("/auth/passwordRecovery", {
+    api("/auth/password-recoveries", {
       method: "POST",
       body: { email },
       publicRequest: true,
     }),
-  reset: (body) => api("/auth/passwordReset", { method: "POST", body, publicRequest: true }),
+  reset: (body) => api("/auth/password-resets", { method: "POST", body, publicRequest: true }),
   accept: (body) =>
-    api("/auth/invitationAcceptance", { method: "POST", body, publicRequest: true }),
+    api("/auth/invitation-acceptances", { method: "POST", body, publicRequest: true }),
   password: (body) => api("/auth/password", { method: "PATCH", body }),
 };

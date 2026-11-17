@@ -7,9 +7,11 @@ export default function usePostalCode(value, onChange, disabled = false) {
   const request = useRef(null);
   const sequence = useRef(0);
   const latest = useRef(value);
-  latest.current = value;
   const enabled = useRef(!disabled);
-  enabled.current = !disabled;
+  useEffect(() => {
+    latest.current = value;
+    enabled.current = !disabled;
+  }, [value, disabled]);
   const assisted = useRef({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

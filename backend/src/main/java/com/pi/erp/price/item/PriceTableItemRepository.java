@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,6 +41,19 @@ public interface PriceTableItemRepository
     )
     @Override
     List<PriceTableItem> findAll(Specification<PriceTableItem> spec);
+
+    @EntityGraph(
+        type = EntityGraph.EntityGraphType.LOAD,
+        attributePaths = {
+            "product.catalog.brand",
+            "product.catalog.category",
+            "presentation.product.catalog.brand",
+            "presentation.product.catalog.category",
+            "priceTable",
+        }
+    )
+    @Override
+    Page<PriceTableItem> findAll(Specification<PriceTableItem> spec, Pageable pageable);
 
     @Query(
         value = "SELECT * FROM price_table_items WHERE price_table_item_id = :id FOR UPDATE",

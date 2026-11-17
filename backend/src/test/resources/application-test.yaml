@@ -1,0 +1,15 @@
+# No database URL or credentials are inherited as an accepted test destination:
+# the global context guard requires an explicitly configured isolated URL.
+erp:
+  auth:
+    bootstrap-enabled: false
+spring:
+  mail:
+    host: 127.0.0.1
+    port: 11026
+    username: ""
+    password: ""
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+      mail.smtp.starttls.required: false

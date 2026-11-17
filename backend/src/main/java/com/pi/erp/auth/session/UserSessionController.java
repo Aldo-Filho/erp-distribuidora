@@ -31,7 +31,7 @@ public class UserSessionController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/user/{id}/sessions")
+    @GetMapping("/users/{id}/sessions")
     public ResponseEntity<Page<UserSession>> search(
         @PathVariable Long id,
         @RequestParam(defaultValue = "0") int page,
@@ -47,7 +47,7 @@ public class UserSessionController {
         );
     }
 
-    @DeleteMapping("/user/{userId}/sessions/{id}")
+    @DeleteMapping("/users/{userId}/sessions/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long userId, @PathVariable UUID id) {
         CurrentUser.require("security.sessions.manage");
         service.revoke(userId, id);

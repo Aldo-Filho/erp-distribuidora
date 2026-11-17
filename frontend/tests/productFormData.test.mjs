@@ -13,7 +13,7 @@ function initialStock(quantity = "1,5", reservedQuantity = "0") {
 }
 
 test("initial stock accepts comma decimals and preserves zero money and reservations", () => {
-  const body = itemPayload(initialStock(), { type: "SIMPLE", unit: "KG" }, null, true);
+  const body = itemPayload(initialStock(), { type: "SIMPLE", unit: "KG" }, null, true, true);
   assert.equal(body.cost, 0);
   assert.equal(body.price, 0);
   assert.equal(body.stock.quantity, 1.5);

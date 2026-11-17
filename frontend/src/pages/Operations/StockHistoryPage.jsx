@@ -5,7 +5,8 @@ import FilterSelect from "../../components/feedback/FilterSelect";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import useListReturn from "../../hooks/useListReturn";
 import { historyIds, historyDates, parseHistoryQuery } from "../../routes/stockHistoryQuery";
-import StockHistoryContent, { types, reasons } from "./StockHistoryContent";
+import StockHistoryContent from "./StockHistoryContent";
+import { types, reasons } from "./stockHistoryLabels.js";
 
 export default function StockHistoryPage() {
   const location = useLocation();
@@ -125,8 +126,8 @@ function History() {
       </form>
       <ErrorAlert message={failure || error} />
       <p className="field-hint">
-        Identificador de SKU é diferente do catálogo e do saldo. A consulta retorna todos os
-        movimentos encontrados pelos filtros.
+        Identificador de SKU é diferente do catálogo e do saldo. A consulta mostra os movimentos
+        filtrados em páginas de até 25 registros.
       </p>
       {!error && <StockHistoryContent filter={filter} onStateChange={reportCount} />}
     </div>

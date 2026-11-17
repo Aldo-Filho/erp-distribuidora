@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { types, reasons } from "./stockHistoryLabels.js";
+import { useEffect, useState } from "react";
+import Pagination from "../../components/feedback/Pagination";
 import { stockOperations } from "../../services/operations";
 import { useProductResource } from "../Products/useProductResource";
 import { ProductLoad } from "../Products/ProductControls";
@@ -6,21 +8,20 @@ import { quantity } from "../Products/productFormData";
 import { formatRecordDateTime } from "../../utils/dateTime";
 import "./stock.css";
 
-export const types = { INBOUND: "Entrada", OUTBOUND: "Saída", ADJUSTMENT: "Ajuste" };
-export const reasons = {
-  PURCHASE: "Compra",
-  SALE: "Venda",
-  RETURN: "Devolução",
-  MANUAL_ADJUSTMENT: "Manual",
-  LOSS: "Perda",
-};
 export default function StockHistoryContent({ filter, onStateChange }) {
+  const filterKey = JSON.stringify(filter);
+  const [pagination, setPagination] = useState(() => ({ filterKey, page: 0 }));
+  if (pagination.filterKey !== filterKey) setPagination({ filterKey, page: 0 });
+  const page = pagination.filterKey === filterKey ? pagination.page : 0;
   const state = useProductResource(
-    (options) => stockOperations.history(filter, options),
-    [JSON.stringify(filter)],
+    (options) => stockOperations.history({ ...filter, page, size: 25 }, options),
+    [filterKey, page],
   );
+  if (state.data && page > Math.max(0, state.data.totalPages - 1)) {
+    setPagination({ filterKey, page: Math.max(0, state.data.totalPages - 1) });
+  }
   useEffect(() => {
-    onStateChange?.({ total: state.data?.length, loading: Boolean(state.loading) });
+    onStateChange?.({ total: state.data?.totalElements, loading: Boolean(state.loading) });
   }, [state.data, state.loading, onStateChange]);
   return (
     <div className="stock-history-content">
@@ -29,7 +30,7 @@ export default function StockHistoryContent({ filter, onStateChange }) {
           {state.loading
             ? "Carregando movimentos…"
             : state.data
-              ? `${state.data.length} ${state.data.length === 1 ? "movimento registrado" : "movimentos registrados"}`
+              ? `${state.data.totalElements} ${state.data.totalElements === 1 ? "movimento registrado" : "movimentos registrados"}`
               : "Total indisponível"}
         </span>
         <button type="button" className="secondary" onClick={state.reload}>
@@ -54,7 +55,7 @@ export default function StockHistoryContent({ filter, onStateChange }) {
                 </tr>
               </thead>
               <tbody>
-                {state.data?.map((movement) => (
+                {state.data?.content.map((movement) => (
                   <tr key={movement.id}>
                     <td>
                       <strong>
@@ -91,6 +92,11 @@ export default function StockHistoryContent({ filter, onStateChange }) {
           </div>
         </ProductLoad>
       </section>
+      <Pagination
+        page={page}
+        totalPages={state.data?.totalPages}
+        change={(next) => setPagination({ filterKey, page: next })}
+      />
     </div>
   );
 }

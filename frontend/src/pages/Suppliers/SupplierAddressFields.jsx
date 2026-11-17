@@ -1,20 +1,7 @@
+import { addressTypes } from "./supplierAddressData.js";
 import usePostalCode from "../Customers/usePostalCode";
 import ErrorAlert from "../../components/feedback/ErrorAlert";
 import FilterSelect from "../../components/feedback/FilterSelect";
-
-export const addressTypes = { MAIN: "Principal", BILLING: "Cobrança", SHIPPING: "Entrega" };
-export const emptySupplierAddress = {
-  country: "Brasil",
-  addressType: "MAIN",
-  zipCode: "",
-  state: "",
-  city: "",
-  neighborhood: "",
-  street: "",
-  number: "",
-  complement: "",
-};
-export const supplierAddressKeys = Object.keys(emptySupplierAddress);
 
 export default function SupplierAddressFields({ value, onChange, disabled = false }) {
   const brazilian = ["brasil", "br", "bra"].includes(value.country.trim().toLowerCase());

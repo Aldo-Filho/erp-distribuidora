@@ -1,10 +1,10 @@
 package com.pi.erp.stock;
 
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,21 +14,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/stockItem")
+@RequestMapping("/stock-items")
 public class StockItemController {
 
     @Autowired
     private StockItemService service;
 
-    @GetMapping("/search")
+    @GetMapping
     public ResponseEntity<Page<StockItem>> search(
         StockItemFilter filter,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size
+        @RequestParam(defaultValue = "25") int size
     ) {
         if (page < 0 || page > 100000 || size < 1 || size > 100) {
             throw new IllegalArgumentException("Invalid stockitem pagination limits.");
@@ -39,9 +39,7 @@ public class StockItemController {
     }
 
     @PostMapping
-    public ResponseEntity<StockItem> register(
-        @RequestBody @Valid RequestStockItemDTO data
-    ) {
+    public ResponseEntity<StockItem> register(@RequestBody @Valid RequestStockItemDTO data) {
         StockItem stockItem = service.register(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(stockItem);
     }

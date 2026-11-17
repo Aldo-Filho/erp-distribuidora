@@ -1,6 +1,7 @@
 package com.pi.erp.stock.movement;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.springframework.format.annotation.DateTimeFormat;
 
 public record StockMovementFilter(
@@ -13,5 +14,6 @@ public record StockMovementFilter(
     Long purchaseId,
     Long userId,
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime occurredFrom,
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime occurredTo
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime occurredTo,
+    UUID requestId
 ) {}

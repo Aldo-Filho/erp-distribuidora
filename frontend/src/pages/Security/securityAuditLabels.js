@@ -1,4 +1,7 @@
 export const auditActions = {
+  COMPANY_APPEARANCE_UPDATED: "Paleta da empresa atualizada",
+  COMPANY_LOGO_UPDATED: "Logo da empresa atualizado",
+  COMPANY_LOGO_REMOVED: "Logo da empresa removido",
   ACCESS_DENIED: "Acesso negado",
   ACCESS_EMAIL: "Envio de e-mail de acesso",
   ACCESS_OPERATION_REJECTED: "Operação de acesso recusada",
@@ -65,6 +68,7 @@ const targetLabels = {
   ROLE: "Cargo",
   INVITATION: "Convite",
   POLICY: "Política de acesso",
+  APPEARANCE: "Aparência da empresa",
 };
 
 export function auditActor(event) {
@@ -85,7 +89,9 @@ export function auditTarget(event) {
   const type = event.targetType || legacyTargetTypes[event.action];
   return {
     label: targetLabels[type] || "Registro",
-    name: type === "POLICY" ? null : event.targetName || "Nome não registrado",
+    name: ["POLICY", "APPEARANCE"].includes(type)
+      ? null
+      : event.targetName || "Nome não registrado",
   };
 }
 

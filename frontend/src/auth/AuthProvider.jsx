@@ -1,11 +1,11 @@
-import { createContext, useCallback, useEffect, useRef, useState } from "react";
+import AppearanceProvider from "../appearance/AppearanceProvider";
+import { AuthContext } from "./AuthContext.js";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { auth } from "../services/auth";
 import { clearCsrf } from "../services/api";
 import { clearDrafts, setDraftOwner } from "./drafts";
 import SessionActivity from "./SessionActivity";
 import SessionExpiryDialog from "../components/feedback/SessionExpiryDialog";
-
-export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -96,7 +96,9 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{ session, loading, error, expired, has, refresh, signedIn, signedOut, logout }}
     >
-      {children}
+      <AppearanceProvider key={session?.userId || "guest"} userId={session?.userId}>
+        {children}
+      </AppearanceProvider>
       {session && <SessionActivity refresh={refresh} />}
       {session && <SessionExpiryDialog session={session} refresh={refresh} logout={logout} />}
     </AuthContext.Provider>

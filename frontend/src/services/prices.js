@@ -1,6 +1,6 @@
-import { api } from "./api";
+import { allPages } from "./api";
 import { queryString } from "./customers";
 
 export const prices = {
-  search: (filter = {}, options) => api("/price-table/search?" + queryString(filter), options),
+  search: (filter = {}, options) => allPages("/price-tables?" + queryString(filter), options),
 };

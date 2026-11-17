@@ -8,5 +8,17 @@ public record PurchaseFilter(
     Long userId,
     PurchaseStatus status,
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdFrom,
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdTo
-) {}
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdTo,
+    Long number,
+    String query
+) {
+    public PurchaseFilter(
+        Long supplierId,
+        Long userId,
+        PurchaseStatus status,
+        LocalDateTime createdFrom,
+        LocalDateTime createdTo
+    ) {
+        this(supplierId, userId, status, createdFrom, createdTo, null, null);
+    }
+}

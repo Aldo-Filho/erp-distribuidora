@@ -1,5 +1,5 @@
 import useConfirm from "../../components/feedback/useConfirm";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { security } from "../../services/security";
 import useAuth from "../../auth/useAuth";
 import useLoad from "../../components/feedback/useLoad";
@@ -7,16 +7,17 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 
 export default function SecuritySettingsPage() {
   const confirm = useConfirm();
-  const loader = useCallback(security.settings, []);
-  const { data, loading, error, reload } = useLoad(loader);
-  const { refresh } = useAuth();
   const [form, setForm] = useState(null);
+  const loader = useCallback(async () => {
+    const settings = await security.settings();
+    setForm(settings);
+    return settings;
+  }, []);
+  const { loading, error, reload } = useLoad(loader);
+  const { refresh } = useAuth();
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState("");
   const [notice, setNotice] = useState("");
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
   const field = (key) => (event) => setForm({ ...form, [key]: event.target.value });
   return (
     <>

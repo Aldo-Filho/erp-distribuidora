@@ -12,19 +12,18 @@ export default function ThemeSettings() {
     <section className="panel narrow">
       <h2>Tema da minha conta</h2>
       <p className="field-hint">
-        Sua escolha acompanha sua conta. Conforme o sistema segue automaticamente a preferência
-        deste dispositivo.
+        O modo claro é o padrão. Sua escolha acompanha sua conta, independentemente do tema do dispositivo.
       </p>
       <label>
         Tema
         <FilterSelect
-          value={theme || "system"}
+          value={theme || "LIGHT"}
           disabled={busy}
           onChange={async (event) => {
             setError("");
             setNotice("");
             try {
-              await saveTheme(event.target.value === "system" ? null : event.target.value);
+              await saveTheme(event.target.value);
               setNotice("Tema salvo na sua conta.");
             } catch (issue) {
               setError(issue.message);

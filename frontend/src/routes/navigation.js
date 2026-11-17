@@ -14,13 +14,14 @@ export const navigationGroups = [
   { id: "operations", label: "Operações" },
   { id: "catalogs", label: "Cadastros" },
   { id: "finance", label: "Financeiro" },
-  { id: "team", label: "Equipe" },
-  { id: "security", label: "Segurança" },
-  { id: "settings", label: "Preferências" },
+  { id: "settings", label: "Empresa e aparência", parent: "settings" },
+  { id: "finance-settings", label: "Cadastros financeiros", parent: "settings" },
+  { id: "team", label: "Equipe", parent: "settings" },
+  { id: "security", label: "Segurança", parent: "settings" },
 ];
 
 export const navigation = [
-  { path: "/dashboard", group: "overview", label: "Visão geral", icon: "dashboard" },
+  { path: "/dashboard", group: "overview", label: "Início", icon: "dashboard" },
   {
     path: "/products", group: "catalogs",
     label: "Produtos",
@@ -34,7 +35,11 @@ export const navigation = [
   { path: "/purchases", group: "operations", label: "Compras", permission: "purchases.read", icon: "purchases" },
   { path: "/purchase-suggestions", group: "operations", label: "Sugestões de compra", permission: "purchases.read", icon: "purchases" },
   ...Object.entries(financialRoutePermissions).map(([path, permission]) => ({
-    path, permission, group: "finance", icon: "finance", label: ({
+    path, permission, group: permission === "finance.configure" ? "finance-settings" : "finance", icon: ({
+      "/finance/receivables": "receivables", "/finance/payables": "payables",
+      "/finance/cash-flow": "cashFlow", "/finance/categories": "categories",
+      "/finance/bank-accounts": "finance",
+    })[path], label: ({
       "/finance/receivables": "Contas a receber", "/finance/payables": "Contas a pagar",
       "/finance/cash-flow": "Fluxo de caixa", "/finance/categories": "Categorias financeiras",
       "/finance/bank-accounts": "Contas bancárias e caixa",
@@ -67,7 +72,11 @@ export const navigation = [
     permission: "company.appearance.manage",
     icon: "appearance",
   },
-  { path: "/account", group: "settings", label: "Minha conta", icon: "account" },
+  {
+    path: "/settings/company", group: "settings", label: "Dados da empresa",
+    permission: "company.read", icon: "company",
+  },
+  { path: "/account", group: "account", label: "Minha conta", icon: "account" },
 ];
 
 export function canAccessEntry(entry, session) {

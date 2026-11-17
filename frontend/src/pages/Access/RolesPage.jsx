@@ -7,6 +7,7 @@ import ErrorAlert from "../../components/feedback/ErrorAlert";
 import RecordMetadata from "../../components/record/RecordMetadata";
 
 const modules = {
+  company: "Dados da empresa",
   finance: "Financeiro",
   customers: "Clientes",
   suppliers: "Fornecedores",

@@ -6,7 +6,7 @@ import DashboardFilters from "./DashboardFilters";
 import DashboardGrid from "./DashboardGrid";
 import DashboardCustomization from "./DashboardCustomization";
 import DashboardDetailsDialog from "./DashboardDetailsDialog";
-import { defaults, today, knownIds } from "./dashboardCatalog";
+import { knownIds } from "./dashboardCatalog";
 import "./dashboard.css";
 export default function DashboardPage() {
   const {session,has}=useAuth();
@@ -38,9 +38,27 @@ function Dashboard({has}) {
     try{const p=await dashboard.preference();state.setPreference(p);state.setFilter(p.filter);setDraft(null);setConflict(false);setNotice("Configuração recarregada.");}catch(e){setNotice(e.message);}finally{setBusy(false);}
   }
   async function reset() {
-    if(editing){setDraft(defaults(catalog));state.setFilter({preset:"MONTH",referenceDate:today(),from:null,to:null,compare:false});return;}
     setBusy(true);
-    try{const p=await dashboard.reset(state.preference.revision);state.setPreference(p);state.setFilter(p.filter);setNotice("Padrão restaurado no servidor.");setConflict(false);}catch(e){setNotice(e.status===409?"Outra aba alterou este painel. Recarregue a configuração antes de restaurar.":e.message);setConflict(e.status===409);}finally{setBusy(false);}
+    setNotice("");
+    try {
+      if (editing) {
+        const defaults = await dashboard.defaultPreference();
+        setDraft(defaults.widgets);
+        state.setFilter(defaults.filter);
+        return;
+      }
+
+      const restored = await dashboard.reset(state.preference.revision);
+      state.setPreference(restored);
+      state.setFilter(restored.filter);
+      setNotice("Padrão restaurado no servidor.");
+      setConflict(false);
+    } catch (error) {
+      setNotice(error.status === 409 ? "Outra aba alterou este painel. Recarregue a configuração antes de restaurar." : error.message);
+      if (!editing) setConflict(error.status === 409);
+    } finally {
+      setBusy(false);
+    }
   }
   return <div className="dashboard-page" aria-busy={busy}>
     <header className="page-title"><div><span className="dashboard-eyebrow">Seu espaço de trabalho</span><h1>Visão geral</h1><p className="field-hint">Indicadores conforme seus acessos{state.data?.roleName?` · ${state.data.roleName}`:""}</p></div>

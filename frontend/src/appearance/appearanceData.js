@@ -8,7 +8,6 @@ export const palettes = [
 ];
 export const defaultAppearance = { palette: "jade", logoUrl: null, version: 0 };
 export const themes = [
-  { value: "system", name: "Conforme o sistema" },
   { value: "LIGHT", name: "Claro" },
   { value: "DARK", name: "Escuro" },
 ];
@@ -36,7 +35,5 @@ export function cache(key, value) {
 }
 export function initializeAppearance() {
   document.documentElement.dataset.palette = cached("jamshub:palette", "jade", validPalette);
-  document.documentElement.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  document.documentElement.dataset.theme = "light";
 }

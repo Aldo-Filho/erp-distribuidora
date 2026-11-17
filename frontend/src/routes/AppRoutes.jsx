@@ -23,6 +23,7 @@ import SessionsPage from "../pages/Security/SessionsPage";
 import SecuritySettingsPage from "../pages/Security/SecuritySettingsPage";
 import SecurityAuditPage from "../pages/Security/SecurityAuditPage";
 import AppearancePage from "../pages/Settings/AppearancePage";
+import CompanyPage from "../pages/Settings/CompanyPage";
 import AccountPage from "../pages/Account/AccountPage";
 import SuppliersPage from "../pages/Suppliers/SuppliersPage";
 import CustomersPage from "../pages/Customers/CustomersPage";
@@ -124,6 +125,9 @@ export default function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute permission="company.appearance.manage" />}>
             <Route path="/settings/appearance" element={<AppearancePage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="company.read" />}>
+            <Route path="/settings/company" element={<CompanyPage />} />
           </Route>
           <Route element={<ProtectedRoute permission="security.audit.read" />}>
             <Route path="/security/audit" element={<SecurityAuditPage />} />

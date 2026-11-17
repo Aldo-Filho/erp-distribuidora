@@ -36,8 +36,6 @@ export function pack(widgets) {
     const next={...w,x,y};x+=w.w;height=Math.max(height,w.h);return next;
   });
 }
-export function defaults(catalog) { return pack(catalog.map(d=>({id:d.id,visible:true,x:0,y:0,w:d.kind==="STAT"?3:6,h:d.minH}))); }
-
 export const knownIds=new Set(["sales.revenue","cash.in","cash.out","cash.net","receivables.balance","payables.balance","finance.overdue","finance.agenda","sales.count","sales.status","sales.dispatch","sales.products","sales.prices","purchases.status","purchases.receiving","purchases.created","purchases.suggestions","stock.low","stock.empty","stock.composition","stock.movements"]);
 const labels={PENDING:"Pendente",CONFIRMED:"Confirmada",INVOICED:"Despachada",CANCELED:"Cancelada",DRAFT:"Rascunho",SENT:"Enviada",PARTIALLY_RECEIVED:"Recebida parcialmente",RECEIVED:"Recebida",INBOUND:"Entrada",OUTBOUND:"Saída",ADJUSTMENT:"Ajuste",RECEIVABLE:"A receber",PAYABLE:"A pagar",COUNT:"Registros",DADOS_INCOMPLETOS:"Dados incompletos"};
 export function displayLabel(value) { const text=String(value??"—");return text.split(" · ").map(p=>labels[p]||p).join(" · "); }

@@ -57,6 +57,8 @@ public final class PermissionKey {
         "security.settings.manage",
         "security.sessions.manage",
         "company.appearance.manage",
+        "company.read",
+        "company.manage",
         "security.audit.read"
     );
 }

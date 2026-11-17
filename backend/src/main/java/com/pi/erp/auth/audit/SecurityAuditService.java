@@ -126,6 +126,7 @@ public class SecurityAuditService {
                 "INVITATION_CANCELED",
                 "ACCESS_EMAIL" -> "INVITATION";
             case "SESSION_POLICY_UPDATED" -> "POLICY";
+            case "COMPANY_PROFILE_UPDATED" -> "COMPANY";
             case
                 "COMPANY_APPEARANCE_UPDATED",
                 "COMPANY_LOGO_UPDATED",
@@ -139,6 +140,10 @@ public class SecurityAuditService {
             return null;
         }
         return switch (type) {
+            case "COMPANY" -> jdbc.queryForList(
+                "SELECT legal_name FROM companies WHERE company_id = ?",
+                String.class, Long.valueOf(target)
+            ).stream().findFirst().orElse(null);
             case "USER" -> findUserName(target);
             case "ROLE" -> jdbc.queryForList(
                 "SELECT name FROM roles WHERE role_id = ?",

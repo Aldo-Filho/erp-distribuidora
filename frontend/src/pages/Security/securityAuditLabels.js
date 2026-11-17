@@ -1,4 +1,5 @@
 export const auditActions = {
+  COMPANY_PROFILE_UPDATED: "Dados da empresa atualizados",
   COMPANY_APPEARANCE_UPDATED: "Paleta da empresa atualizada",
   COMPANY_LOGO_UPDATED: "Logo da empresa atualizado",
   COMPANY_LOGO_REMOVED: "Logo da empresa removido",
@@ -64,6 +65,7 @@ const legacyTargetTypes = {
 };
 
 const targetLabels = {
+  COMPANY: "Empresa",
   USER: "Funcionário",
   ROLE: "Cargo",
   INVITATION: "Convite",

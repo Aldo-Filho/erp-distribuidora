@@ -12,9 +12,6 @@ export default function AppearanceProvider({ userId, children }) {
   const [theme, setTheme] = useState(() =>
     userId ? cached(`jamshub:theme:${userId}`, null, validTheme) : null,
   );
-  const [systemDark, setSystemDark] = useState(
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
-  );
   const [ready, setReady] = useState(!userId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -64,15 +61,8 @@ export default function AppearanceProvider({ userId, children }) {
   useLayoutEffect(() => {
     document.documentElement.dataset.palette = settings.palette;
     document.documentElement.dataset.theme =
-      theme === "DARK" || (theme === null && systemDark) ? "dark" : "light";
-  }, [settings.palette, theme, systemDark]);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const changed = (event) => setSystemDark(event.matches);
-    media.addEventListener("change", changed);
-    return () => media.removeEventListener("change", changed);
-  }, []);
+      theme === "DARK" ? "dark" : "light";
+  }, [settings.palette, theme]);
 
   useEffect(() => {
     live.current = true;

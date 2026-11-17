@@ -19,6 +19,9 @@ public class DemonstrativeInvoiceProvider implements InvoiceProvider {
     @Override
     public Snapshot snapshot(Order order) {
         List<String> warnings = new ArrayList<>();
+        // Acquire before reading the issuer: a concurrent profile edit may finish while we wait.
+        // The following statements then see the same profile, held until dispatch commits.
+        jdbc.queryForList("SELECT id FROM company_appearance WHERE id=1 FOR SHARE");
         var issuers = jdbc.queryForList("""
             SELECT c.company_id, c.legal_name, c.trade_name, c.tax_id, c.state_reg
             FROM company_appearance a LEFT JOIN companies c ON c.company_id=a.company_id

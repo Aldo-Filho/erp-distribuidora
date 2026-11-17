@@ -18,26 +18,55 @@ public class DashboardPreferenceController {
     @Autowired private ObjectMapper mapper;
     private static final Set<String> PRESETS=Set.of("DAY","WEEK","FORTNIGHT","MONTH","YEAR","CUSTOM");
     private Filter defaultFilter() { return new Filter("MONTH",periods.today(),null,null,false); }
+
+    private static void appendRows(List<Widget> layout, List<DashboardCatalog.Definition> blocks, int columns) {
+        int y = layout.stream().mapToInt(w -> w.y() + w.h()).max().orElse(0);
+        for (int start = 0; start < blocks.size(); start += columns) {
+            var row = blocks.subList(start, Math.min(start + columns, blocks.size()));
+            int width = 12 / row.size();
+            for (int i = 0; i < row.size(); i++) {
+                var block = row.get(i);
+                layout.add(new Widget(block.id(), true, i * width, y, width, block.minH()));
+            }
+            y += row.stream().mapToInt(DashboardCatalog.Definition::minH).max().orElseThrow();
+        }
+    }
+
     private List<Widget> reconcile(List<Widget> saved) {
         var allowed=catalog.allowed(); List<Widget> result=new ArrayList<>();
         Set<String> seen=new HashSet<>();
         for(var w:saved) if(allowed.stream().anyMatch(d->d.id().equals(w.id()))) {result.add(w);seen.add(w.id());}
-        int y=result.stream().mapToInt(w->w.y()+w.h()).max().orElse(0);
-        int x=0,rowHeight=0;
-        for(var d:allowed) if(!seen.contains(d.id())) {
-            int width=d.kind().equals("STAT")?3:6;
-            if(x+width>12) {y+=rowHeight;x=0;rowHeight=0;}
-            result.add(new Widget(d.id(),true,x,y,width,d.minH()));x+=width;rowHeight=Math.max(rowHeight,d.minH());
+
+        var missing = allowed.stream().filter(d -> !seen.contains(d.id())).toList();
+        appendRows(result, missing.stream().filter(d -> d.kind().equals("STAT")).toList(), 4);
+        appendRows(result, missing.stream().filter(d -> d.id().equals("sales.revenue")).toList(), 1);
+        appendRows(result, missing.stream().filter(d -> d.kind().equals("LINE") && !d.id().equals("sales.revenue")).toList(), 2);
+
+        var charts = missing.stream().filter(d -> d.kind().equals("BAR")).toList();
+        for (String profile : charts.stream().map(DashboardCatalog.Definition::profile).distinct().toList()) {
+            appendRows(result, charts.stream().filter(d -> d.profile().equals(profile)).toList(), 2);
         }
+        appendRows(result, missing.stream().filter(d -> d.kind().equals("RANKING")).toList(), 2);
+        appendRows(result, missing.stream().filter(d -> d.kind().equals("AGENDA")).toList(), 2);
         return result;
+    }
+    private DashboardPreferenceDTO defaults(long revision) {
+        return new DashboardPreferenceDTO(1, revision, reconcile(List.of()), defaultFilter());
     }
     private DashboardPreferenceDTO read() {
         var stored=repository.find(CurrentUser.requireId());
-        var dto=stored==null?new DashboardPreferenceDTO(1,0,List.of(),defaultFilter()):mapper.readValue(stored.payload(),DashboardPreferenceDTO.class);
-        return new DashboardPreferenceDTO(1,stored==null?0:stored.revision(),reconcile(dto.widgets()),dto.filter());
+        if (stored == null) return defaults(0);
+        var dto=mapper.readValue(stored.payload(),DashboardPreferenceDTO.class);
+        return new DashboardPreferenceDTO(1,stored.revision(),reconcile(dto.widgets()),dto.filter());
     }
     @GetMapping public ResponseEntity<DashboardPreferenceDTO> get() {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(read());
+    }
+    @GetMapping(params = "defaults=true")
+    public ResponseEntity<DashboardPreferenceDTO> getDefaults() {
+        var stored = repository.find(CurrentUser.requireId());
+        long revision = stored == null ? 0 : stored.revision();
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(defaults(revision));
     }
     private void keys(JsonNode node,Set<String> allowed) {
         if(node==null||!node.isObject()) throw new IllegalArgumentException("Objeto inválido.");
@@ -88,8 +117,7 @@ public class DashboardPreferenceController {
         // Logical deletion keeps a monotonic revision, preventing stale tabs from overwriting a reset (ABA).
         var old=read();
         if(revision!=old.revision()) throw new org.springframework.web.server.ResponseStatusException(HttpStatus.CONFLICT);
-        var defaults=new DashboardPreferenceDTO(1,old.revision(),reconcile(List.of()),defaultFilter());
-        repository.save(CurrentUser.requireId(),mapper.writeValueAsString(defaults),old.revision());
+        repository.save(CurrentUser.requireId(),mapper.writeValueAsString(defaults(old.revision())),old.revision());
         return get();
     }
 }

@@ -4,6 +4,7 @@ export const dashboard = {
   current: (filter, options) => api(`/dashboard?${query(filter)}`, options),
   details: (id, filter, page, options) => api(`/dashboard/widgets/${encodeURIComponent(id)}/details?${query({...filter, page, size:20})}`, options),
   preference: options => api("/preferences/current/dashboard", options),
+  defaultPreference: () => api("/preferences/current/dashboard?defaults=true"),
   save: body => api("/preferences/current/dashboard", { method:"PUT", body }),
   reset: revision => api(`/preferences/current/dashboard?revision=${revision}`, { method:"DELETE" }),
 };

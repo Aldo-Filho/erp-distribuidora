@@ -6,3 +6,30 @@ fieldset.dashboard-filter-fields{border:0;padding:0;margin:0;min-width:0}
 .dashboard-widget-content>*{flex-shrink:0}
 .dashboard-agenda>div>span{min-width:0;overflow-wrap:anywhere}
 .dashboard-agenda strong,.dashboard-product strong{overflow-wrap:anywhere;min-width:0}
+
+.dashboard-widget.panel {
+  margin-bottom: 0;
+}
+
+.dashboard-mobile-grid--two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-mobile-grid > div {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.dashboard-mobile-grid--two-columns > .dashboard-mobile-stat {
+  grid-column: auto;
+}
+
+.dashboard-mobile-grid--two-columns .dashboard-mobile-stat .dashboard-widget {
+  height: 100%;
+  padding: 12px;
+}
+
+.dashboard-mobile-grid--two-columns .dashboard-mobile-stat .dashboard-value {
+  font-size: 1.25rem;
+}

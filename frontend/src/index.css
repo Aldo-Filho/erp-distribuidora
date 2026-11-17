@@ -426,7 +426,7 @@ p {
   color: var(--muted);
 }
 .app-shell {
-  --sidebar-width: 244px;
+  --sidebar-width: 260px;
   --sidebar-motion: 220ms ease;
   min-height: 100dvh;
   display: flex;
@@ -495,9 +495,7 @@ p {
   flex-shrink: 0;
 }
 .sidebar-group + .sidebar-group {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--sidebar-border);
+  margin-top: 14px;
 }
 .sidebar-group-title {
   margin: 0 12px 6px;
@@ -506,7 +504,15 @@ p {
   font-weight: 650;
   line-height: 18px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: none;
+}
+.sidebar-group-title.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 .sidebar-group-links {
   display: flex;
@@ -536,14 +542,74 @@ p {
 .sidebar nav a.active {
   background: var(--sidebar-active);
   color: var(--on-accent);
-  box-shadow: 0 2px 6px var(--shadow);
+}
+.sidebar-disclosure {
+  flex-shrink: 0;
+}
+.sidebar nav > .sidebar-disclosure {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sidebar-border);
+}
+.sidebar-disclosure-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sidebar-muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+.sidebar-disclosure-toggle:hover,
+.sidebar-disclosure-toggle.has-active-page {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+.sidebar-disclosure-chevron {
+  margin-left: auto;
+  transition: transform 150ms ease;
+}
+.sidebar-disclosure-toggle[aria-expanded="true"] > .sidebar-disclosure-chevron {
+  transform: rotate(180deg);
+}
+.sidebar-disclosure-content {
+  padding: 4px 0 0 10px;
+}
+.sidebar-disclosure-content .sidebar-disclosure-toggle {
+  font-size: 12px;
+}
+.sidebar-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  border-radius: 6px;
+}
+.sidebar-account:hover {
+  color: var(--palette-dark);
+}
+.sidebar-account.active {
+  color: var(--palette-dark);
+}
+.mobile-menu-button,
+.mobile-menu-close,
+.sidebar-backdrop {
+  display: none;
 }
 .sidebar-footer {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-top: 0;
-  padding: 16px 24px;
+  padding: 16px;
   border-top: 1px solid var(--sidebar-border);
   flex-shrink: 0;
 }
@@ -633,6 +699,16 @@ p {
   }
   .is-collapsed .sidebar-footer {
     gap: 0;
+    flex-direction: column;
+  }
+  .is-collapsed .sidebar-disclosure-content,
+  .is-collapsed .sidebar-disclosure-chevron {
+    display: none;
+  }
+  .is-collapsed .sidebar-account {
+    flex: none;
+    justify-content: center;
+    min-height: 32px;
   }
 }
 main {
@@ -672,6 +748,12 @@ main {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+}
+.company-profile-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
 }
 .form-grid label {
   margin: 0;
@@ -1339,29 +1421,53 @@ td strong {
 }
 @media (max-width: 780px) {
   .app-shell {
-    --sidebar-width: 78px;
+    --sidebar-width: min(300px, 88vw);
   }
   .sidebar {
-    transition: none;
+    visibility: hidden;
+    transform: translateX(-100%);
+    z-index: 50;
   }
-  .sidebar .sidebar-label {
-    opacity: 0;
-    width: 0;
-    pointer-events: none;
+  .is-menu-open .sidebar {
+    visibility: visible;
+    transform: translateX(0);
   }
-  .brand .sidebar-label {
-    margin-left: 0;
+  .mobile-menu-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: fixed;
+    top: 12px;
+    left: 16px;
+    min-height: 40px;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    z-index: 20;
   }
-  .sidebar-user {
-    flex: 0 0 0;
-    height: 0;
-    opacity: 0;
+  .mobile-menu-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 16px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    background: transparent;
+    color: var(--sidebar-text);
   }
-  .sidebar-footer {
-    margin-top: auto;
-    gap: 0;
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    z-index: 40;
   }
   .workspace {
+    width: 100%;
+    margin-left: 0;
+    padding-top: 64px;
     transition: none;
   }
   .sidebar-toggle {

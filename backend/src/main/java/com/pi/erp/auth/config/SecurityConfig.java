@@ -192,6 +192,8 @@ public class SecurityConfig {
                 (method.equals("PATCH") && path.equals("/auth/password"))
             );
         }
+        if (path.equals("/company/profile")) return keys.contains("company.read") &&
+            (read || (method.equals("PUT") && keys.contains("company.manage")));
         if (path.equals("/company/appearance")) return (
             read || (method.equals("PATCH") && keys.contains("company.appearance.manage"))
         );

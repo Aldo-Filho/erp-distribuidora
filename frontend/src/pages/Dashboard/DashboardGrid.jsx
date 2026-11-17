@@ -31,7 +31,12 @@ export default function DashboardGrid({widgets,layout,catalog,editing,onLayout,o
     if(JSON.stringify(next)!==JSON.stringify(layout))onLayout(next);
   };
   return <div ref={container} className="dashboard-grid-container">
-    {!visible.length?<section className="panel">Nenhum bloco selecionado. Personalize o painel para exibir indicadores.</section>:width<700?<div className="dashboard-mobile-grid">{visible.map((w,i)=><div key={w.id}>{content(w,i)}</div>)}</div>:<GridLayout width={width} cols={12} rowHeight={40} margin={[16,16]} containerPadding={[0,0]} compactType="vertical" isDraggable={editing} isResizable={editing} draggableHandle=".dashboard-drag" onDragStop={update} onResizeStop={update}
+    {!visible.length?<section className="panel">Nenhum bloco selecionado. Personalize o painel para exibir indicadores.</section>:width<700?<div className={width>=340?"dashboard-mobile-grid dashboard-mobile-grid--two-columns":"dashboard-mobile-grid"}>
+      {visible.map((w,i)=>{
+        const compact = w.w <= 6 && catalog.find(d => d.id === w.id)?.kind === "STAT";
+        return <div className={compact ? "dashboard-mobile-stat" : undefined} key={w.id}>{content(w,i)}</div>;
+      })}
+    </div>:<GridLayout width={width} cols={12} rowHeight={40} margin={[16,16]} containerPadding={[0,0]} compactType="vertical" isDraggable={editing} isResizable={editing} draggableHandle=".dashboard-drag" onDragStop={update} onResizeStop={update}
       layout={visible.map(w=>{
         const d=catalog.find(x=>x.id===w.id);
         // A row is 40px plus 16px between rows. Content sets the lower resize bound.
